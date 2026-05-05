@@ -24,13 +24,8 @@ component LooseStyledButton (any: props) {
 }
 
 fn show() {
-    Box {
-        width = 100
-        Label { text: "hi" }
-
-        StyledButton {
-            bg_color = "#000000"
-        }
+    StyledButton {
+        bg_color = "#000000"
     }
 }
 
