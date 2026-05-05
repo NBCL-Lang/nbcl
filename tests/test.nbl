@@ -1,0 +1,37 @@
+# Comment
+#-
+    This is a
+    multi line comment
+-#
+
+local var = 10
+global var = 10
+
+component StyledButton (bg_color?) {
+    Button "id" {
+        # Simple default value pattern
+        background = bg_color || "#ffffff"
+    }
+}
+
+component LooseStyledButton (any: props) {
+    local bg_color = props.bg_color
+
+    Button "id" {
+        # Simple default value pattern
+        background = bg_color || "#ffffff"
+    }
+}
+
+fn show() {
+    Box {
+        width = 100
+        Label { text: "hi" }
+
+        StyledButton {
+            bg_color = "#000000"
+        }
+    }
+}
+
+show()

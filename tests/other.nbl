@@ -1,0 +1,8 @@
+local test = (null || 10) + 10/2
+print(test)
+
+fn test(pram1) {
+    print(pram1)
+}
+
+test("test1")

@@ -1,0 +1,345 @@
+// === Whitespace & Comments ===
+
+WHITESPACE = _{ " " | "\t" | "\r" | "\n" }
+
+COMMENT = _{
+    block_comment
+  | line_comment
+}
+
+line_comment  = _{ "#" ~ (!"\n" ~ ANY)* }
+block_comment = _{ "#-" ~ (!"-#" ~ ANY)* ~ "-#" }
+
+// === Entry point ===
+
+file = {
+    SOI
+  ~ top_level_item*
+  ~ EOI
+}
+
+top_level_item = {
+    import_stmt
+  | import_lib_stmt
+  | component_def
+  | fn_def
+  | node_invocation   // e.g. Window "name" { … }  at the top level
+  | stmt
+}
+
+// === Import ===
+
+import_stmt = { "import" ~ string_lit ~ "as" ~ snake_ident }
+import_lib_stmt = { "import" ~ snake_ident }
+
+// === Identifiers ===
+//
+//  snake_case: variables, function names, prop keys
+//  PascalCase: node type names  (Rust-registered)
+
+// Reserved keywords cannot be used as identifiers
+keyword = _{
+    "any" | "local" | "global" | "fn" | "for" | "in" | "while" | "if" 
+  | "else" | "match" | "return" | "import" | "true" | "false" | "null"
+}
+
+// snake_ident must not be a reserved keyword
+// The !keyword prevents "local" from parsing as an ident even though
+// it matches the character pattern.
+snake_ident  = @{ !(keyword ~ !ASCII_ALPHANUMERIC) ~ ASCII_ALPHA_LOWER ~ (ASCII_ALPHANUMERIC | "_")* }
+pascal_ident = @{ ASCII_ALPHA_UPPER ~ ASCII_ALPHANUMERIC* }
+
+// A prop key is always snake_case
+prop_key = { snake_ident }
+
+// === Literals ===
+
+literal = {
+    float_lit
+  | int_lit
+  | bool_lit
+  | null_lit
+  | string_lit
+  | list_lit
+  | map_lit
+}
+
+// numbers
+int_lit   = @{ "-"? ~ ASCII_DIGIT+ }
+float_lit = @{ "-"? ~ ASCII_DIGIT+ ~ "." ~ ASCII_DIGIT+ }
+
+// boolean
+bool_lit = { "true" | "false" }
+
+// null
+null_lit = { "null" }
+
+// string
+// "hello"  or  'hello'
+string_lit = ${ 
+    "\"" ~ double_quoted_inner ~ "\""
+  | "'"  ~ single_quoted_inner ~ "'"
+}
+
+double_quoted_inner = @{ (!"\"" ~ !"\\" ~ ANY | escape_seq)* }
+single_quoted_inner = @{ (!"'"  ~ !"\\" ~ ANY | escape_seq)* }
+
+escape_seq = @{ "\\" ~ ("n" | "t" | "r" | "\\" | "\"" | "'" | "u" ~ ASCII_HEX_DIGIT{4}) }
+
+// lists
+list_lit = { "[" ~ (expr ~ ("," ~ expr)*)? ~ ","? ~ "]" }
+
+// map literals  (key = value inside a prop value position)
+map_lit = { "{" ~ (map_entry ~ ("," ~ map_entry)*)? ~ ","? ~ "}" }
+map_entry = { prop_key ~ "=" ~ expr }
+
+// === Ranges  (used in for loops) ===
+
+range_expr = {
+    expr ~ ".." ~ expr  // exclusive: 1..10
+  | expr ~ "..=" ~ expr // inclusive: 1..=10
+}
+
+// === Expressions ===
+
+expr = { or_expr }
+
+or_expr  = { and_expr  ~ (or_op ~ and_expr)*  }
+or_op    = { "||" }
+
+and_expr = { cmp_expr  ~ (and_op ~ cmp_expr)*  }
+and_op   = { "&&" }
+
+cmp_expr = { add_expr  ~ (cmp_op ~ add_expr)? }
+
+add_expr = { mul_expr  ~ (add_op ~ mul_expr)* }
+add_op   = { "+" | "-" }
+
+mul_expr = { unary_expr ~ (mul_op ~ unary_expr)* }
+mul_op   = { "*" | "/" | "%" }
+
+cmp_op = { "==" | "!=" | "<=" | ">=" | "<" | ">" }
+
+unary_expr = {
+    ("!" | "-") ~ unary_expr
+  | postfix_expr
+}
+
+postfix_expr = {
+    primary_expr
+  ~ (
+      "." ~ snake_ident          // field access:  foo.bar
+    | "[" ~ expr ~ "]"           // index:         foo[0]
+    | call_args                  // call:          foo(a, b)
+    )*
+}
+
+call_args = { "(" ~ (expr ~ ("," ~ expr)*)? ~ ")" }
+
+primary_expr = {
+    literal
+  | lambda_expr
+  | if_expr
+  | match_expr
+  | "(" ~ expr ~ ")"
+  | snake_ident               // variable reference or function name
+}
+
+
+// === Lambda ===
+//    |x, y| expr        single expression
+//    |x, y| { stmts }   block body
+
+lambda_expr = {
+    "|" ~ (lambda_param ~ ("," ~ lambda_param)*)? ~ "|"
+  ~ lambda_body
+}
+
+lambda_param = { snake_ident ~ (":" ~ type_hint)? }
+
+lambda_body = {
+    block_body  // { stmt* }
+  | expr        // implicit return
+}
+
+block_body = { "{" ~ stmt* ~ expr? ~ "}" }
+
+
+// == Type hints  (optional, for documentation / future use) ==
+
+type_hint = {
+    "String" | "Int" | "Float" | "Bool" | "List" | "Map" | "Any"
+}
+
+
+// === Statements  (expression world) ===
+
+stmt = {
+    local_stmt
+  | global_stmt
+  | for_stmt
+  | while_stmt
+  | return_stmt
+  | expr_stmt
+}
+
+// Statements allowed inside a Node Block
+node_stmt = {
+    local_stmt
+  | for_stmt
+  | while_stmt
+  | if_expr
+}
+
+// Separate local and global statements
+local_stmt  = { "local" ~ snake_ident ~ (":" ~ type_hint)? ~ "=" ~ expr }
+global_stmt = { "global" ~ snake_ident ~ (":" ~ type_hint)? ~ "=" ~ expr }
+
+// for x in range/list { stmts }
+for_stmt = {
+    "for" ~ for_pattern ~ "in" ~ (range_expr | expr) ~ block_body
+}
+
+for_pattern = {
+    "(" ~ snake_ident ~ ("," ~ snake_ident)+ ~ ")"  // destructure: (k, v)
+  | snake_ident
+}
+
+// while cond { stmts }
+while_stmt = { "while" ~ expr ~ block_body }
+
+// return expr
+return_stmt = { "return" ~ expr? }
+
+// bare expression used as statement (e.g. a function call)
+expr_stmt = { expr }
+
+// Shared if/match: valid in both worlds as expressions
+if_expr = {
+    "if" ~ expr ~ block_body
+  ~ ("else" ~ "if" ~ expr ~ block_body)*
+  ~ ("else" ~ block_body)?
+}
+
+match_expr = {
+    "match" ~ expr ~ "{"
+  ~ match_arm+
+  ~ "}"
+}
+
+match_arm = {
+    match_pattern ~ "=>" ~ (block_body | expr ~ ","?)
+}
+
+match_pattern = {
+    "_"           // wildcard
+  | literal
+  | snake_ident
+}
+
+
+// === Function definitions ===
+
+fn_def = {
+    "fn" ~ snake_ident
+  ~ "(" ~ (fn_param ~ ("," ~ fn_param)*)? ~ ")"
+  ~ fn_return_type?
+  ~ fn_body
+}
+
+fn_param = {
+    snake_ident ~ (":" ~ type_hint)?
+}
+
+fn_return_type = { "->" ~ type_hint }
+
+// Function body can contain statements AND node invocations
+// (a fn can build and return a tree of nodes)
+fn_body = { "{" ~ fn_item* ~ "}" }
+
+fn_item = {
+    node_invocation   // emit a node into the output tree
+  | stmt
+}
+
+// === Component Definition ===
+
+component_def = {
+    "component" ~ pascal_ident ~ component_params ~ node_block
+}
+
+component_params = {
+    "(" ~ (any_params | named_params)? ~ ")"
+}
+
+// Case: (any: props)
+any_params = {
+    "any" ~ ":" ~ snake_ident
+}
+
+// Case: (bg_color, width?)
+named_params = {
+    param_item ~ ("," ~ param_item)*
+}
+
+param_item = {
+    snake_ident ~ (":" ~ type_hint)? ~ "?"?
+}
+
+// === NODE WORLD ===
+//
+//  Syntax:  TypeName "optional_id" { node_body }
+//           TypeName { node_body }
+//
+//  node_body contains:
+//    - prop assignments:       key = value
+//    - child nodes:            TypeName { … }
+//    - inline shorthand node:  TypeName { key: value }
+//    - control flow:           for / if (bodies are node bodies)
+
+node_invocation = {
+    pascal_ident
+  ~ string_lit?            // optional ID: Window "main" { … }
+  ~ node_block
+}
+
+node_block = { "{" ~ node_item* ~ "}" }
+
+node_item = {
+    node_stmt
+  | node_prop          // key = value
+  | node_invocation    // child node
+  | node_inline        // TypeName { key: val, key: val }  (no nested nodes)
+  | node_for           // for i in range { … }  → emits child nodes
+  | node_if            // if cond { … } else { … }
+}
+
+// prop = value  (value is from the expression world)
+node_prop = { prop_key ~ "=" ~ prop_value }
+
+prop_value = {
+    expr               // literals, variables, fn calls, lambdas, map { }
+}
+
+// Inline shorthand:  Label { text: "Hi", color: "red" }
+// Only props, no child nodes, uses ":" separator
+node_inline = {
+    pascal_ident
+  ~ string_lit?
+  ~ "{" ~ (inline_prop ~ ("," ~ inline_prop)*)? ~ ","? ~ "}"
+}
+
+inline_prop = { prop_key ~ ":" ~ prop_value }
+
+// for inside a node block
+node_for = {
+    "for" ~ for_pattern ~ "in" ~ (range_expr | expr)
+  ~ node_block
+}
+
+// if inside a node block
+node_if = {
+    "if" ~ expr ~ node_block
+  ~ ("else" ~ "if" ~ expr ~ node_block)*
+  ~ ("else" ~ node_block)?
+}

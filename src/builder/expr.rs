@@ -1,0 +1,137 @@
+use pest::iterators::Pair;
+use crate::parser::Rule;
+use crate::ast::source::*;
+use crate::error::{Result, Span, NbclError};
+use super::unquote;
+
+pub fn build_stmt(pair: Pair<Rule>) -> Result<Stmt> {
+    let inner = match pair.as_rule() {
+        Rule::stmt | Rule::node_stmt => pair.into_inner().next().unwrap(),
+        _ => pair,
+    };
+    let span = Span::from_pair(&inner);
+
+    match inner.as_rule() {
+        Rule::local_stmt | Rule::global_stmt => {
+            let mut ii = inner.clone().into_inner();
+            let name = ii.next().unwrap().as_str().to_string();
+            let mut next = ii.next().unwrap();
+            
+            let type_hint = if next.as_rule() == Rule::type_hint {
+                let t = Some(next.as_str().to_string());
+                next = ii.next().unwrap();
+                t
+            } else { None };
+
+            let value = build_expr(next)?;
+            if inner.as_rule() == Rule::local_stmt {
+                Ok(Stmt::Local(name, type_hint, value))
+            } else {
+                Ok(Stmt::Global(name, type_hint, value))
+            }
+        }
+        Rule::expr_stmt => Ok(Stmt::Expr(build_expr(inner.into_inner().next().unwrap())?)),
+        _ => Err(NbclError::Ast { message: format!("Todo: {:?}", inner.as_rule()), span: Some(span) }),
+    }
+}
+
+pub fn build_expr(pair: Pair<Rule>) -> Result<Expr> {
+    let span = Span::from_pair(&pair);
+    match pair.as_rule() {
+        Rule::expr | Rule::or_expr | Rule::and_expr | Rule::add_expr | Rule::mul_expr => {
+            build_binop(pair)
+        }
+        Rule::cmp_expr => {
+            let mut inner = pair.into_inner();
+            let lhs = build_expr(inner.next().unwrap())?;
+            if let Some(op_pair) = inner.next() {
+                let op = op_pair.as_str().to_string();
+                let rhs = build_expr(inner.next().unwrap())?;
+                Ok(Expr { kind: ExprKind::Binary(Box::new(lhs), op, Box::new(rhs)), span })
+            } else {
+                Ok(lhs)
+            }
+        }
+        Rule::unary_expr => {
+            let mut inner = pair.into_inner();
+            let first = inner.next().unwrap();
+            if first.as_rule() == Rule::postfix_expr {
+                build_expr(first)
+            } else {
+                let op = first.as_str().to_string();
+                let operand = build_expr(inner.next().unwrap())?;
+                Ok(Expr { kind: ExprKind::Unary(op, Box::new(operand)), span })
+            }
+        }
+        Rule::postfix_expr => {
+            let mut inner = pair.into_inner();
+            let mut res = build_expr(inner.next().unwrap())?;
+            
+            for suffix in inner {
+                res = match suffix.as_rule() {
+                    Rule::snake_ident => Expr {
+                        kind: ExprKind::Field(Box::new(res), suffix.as_str().to_string()),
+                        span: span.clone()
+                    },
+                    Rule::expr => Expr {
+                        kind: ExprKind::Index(Box::new(res), Box::new(build_expr(suffix)?)),
+                        span: span.clone()
+                    },
+                    Rule::call_args => {
+                        let mut args = Vec::new();
+                        for arg_pair in suffix.into_inner() {
+                            args.push(build_expr(arg_pair)?);
+                        }
+                        
+                        Expr {
+                            kind: ExprKind::Call(Box::new(res), args),
+                            span: span.clone(),
+                        }
+                    },
+                    _ => res
+                };
+            }
+            Ok(res)
+        }
+        Rule::primary_expr => build_expr(pair.into_inner().next().unwrap()),
+        Rule::literal => Ok(Expr { kind: ExprKind::Literal(build_literal(pair)?), span }),
+        Rule::snake_ident => Ok(Expr { kind: ExprKind::Variable(pair.as_str().to_string()), span }),
+        _ => Err(NbclError::Ast { message: format!("Unknown expr: {:?}", pair.as_rule()), span: Some(span) }),
+    }
+}
+
+fn build_binop(pair: Pair<Rule>) -> Result<Expr> {
+    let span = Span::from_pair(&pair);
+    let mut inner = pair.into_inner();
+    
+    let mut lhs = build_expr(inner.next().unwrap())?;
+
+    while let Some(op_pair) = inner.next() {
+        let op_str = op_pair.as_str().to_string();
+        
+        let rhs_pair = inner.next().ok_or_else(|| NbclError::Ast {
+            message: "Expected operand after operator".to_string(),
+            span: Some(span.clone()),
+        })?;
+        
+        let rhs = build_expr(rhs_pair)?;
+
+        lhs = Expr {
+            kind: ExprKind::Binary(Box::new(lhs), op_str, Box::new(rhs)),
+            span: span.clone(),
+        };
+    }
+    
+    Ok(lhs)
+}
+
+fn build_literal(pair: Pair<Rule>) -> Result<Literal> {
+    let inner = pair.into_inner().next().unwrap();
+    match inner.as_rule() {
+        Rule::int_lit => Ok(Literal::Int(inner.as_str().parse().unwrap())),
+        Rule::float_lit => Ok(Literal::Float(inner.as_str().parse().unwrap())),
+        Rule::bool_lit => Ok(Literal::Bool(inner.as_str() == "true")),
+        Rule::string_lit => Ok(Literal::Str(unquote(inner.as_str()))),
+        _ => Ok(Literal::Null),
+    }
+}
