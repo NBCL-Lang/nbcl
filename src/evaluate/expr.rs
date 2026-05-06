@@ -92,6 +92,16 @@ impl Evaluator {
             ExprKind::Call(callee, args_exprs) => {
                 let func_name = match &callee.kind {
                     ExprKind::Variable(name) => name,
+                    ExprKind::Field(source, field) => {
+                        if let ExprKind::Variable(ref alias) = source.kind {
+                            &format!("{}.{}", alias, field) 
+                        } else {
+                            return Err(NbclError::Runtime {
+                                message: "Complex paths in calls are not supported yet".into(),
+                                span: Some(callee.span.clone()),
+                            });
+                        }
+                    }
                     _ => return Err(NbclError::Runtime {
                         message: "Only variables can be called as functions currently".into(),
                         span: Some(callee.span.clone()),

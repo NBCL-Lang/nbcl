@@ -1,5 +1,6 @@
 use crate::parser::Rule;
 use pest::iterators::Pair;
+use std::path::PathBuf;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Span {
@@ -28,6 +29,10 @@ impl Span {
 pub enum NbclError {
     Parse(Box<pest::error::Error<Rule>>),
     Ast { message: String, span: Option<Span> },
+    IO {
+        message: String,
+        path: PathBuf,
+    },
     Runtime { message: String, span: Option<Span> },
 }
 
@@ -42,6 +47,8 @@ impl std::fmt::Display for NbclError {
                     write!(f, "Error: {}", message)
                 }
             }
+            NbclError::IO { message, path } => 
+                write!(f, "IO error: {} at {}", message, path.display()),
             NbclError::Runtime { message, span } => {
                 if let Some(s) = span {
                     write!(f, "Error at {}:{}: {}", s.line, s.col, message)

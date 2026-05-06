@@ -15,7 +15,7 @@ fn main() {
 
     let engine = NbclEngine::new();
 
-    match engine.parse(&source) {
+    match engine.parse_str(&source) {
         Ok(ast) => {
             println!("{:#?}", ast);
             let evaled = engine.evaluate(ast);

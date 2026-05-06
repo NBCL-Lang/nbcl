@@ -9,8 +9,10 @@ use crate::{
     ast::resolved::ResolvedTree,
     registry::Registry,
     error::Result,
+    module_resolver::FileModuleResolver,
 };
-use std::collections::HashMap;
+use std::path::PathBuf;
+use std::collections::{HashMap, HashSet};
 
 pub enum FlowControl {
     None,
@@ -20,14 +22,18 @@ pub enum FlowControl {
 pub(crate) struct Evaluator {
     registry: Registry,
     scopes: Vec<HashMap<String, Value>>,
+    loaded_files: HashSet<PathBuf>,
+    mod_resolver: Option<FileModuleResolver>,
     flow: FlowControl,
 }
 
 impl Evaluator {
-    pub fn new(registry: Registry) -> Self {
+    pub fn new(registry: Registry, mod_resolver: Option<FileModuleResolver>) -> Self {
         Self {
             registry,
             scopes: vec![HashMap::new()],
+            loaded_files: HashSet::new(),
+            mod_resolver,
             flow: FlowControl::None,
         }
     }

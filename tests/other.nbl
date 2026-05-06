@@ -1,3 +1,8 @@
+import "tests/imported.nbl" as imported
+
+imported.test()
+local globalz = true
+
 local test = (null || 10) + 10/2
 print(test)
 

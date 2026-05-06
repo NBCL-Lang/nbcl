@@ -17,7 +17,7 @@ pub(crate) fn build_file(pair: Pair<Rule>) -> Result<File> {
                 let child = inner.into_inner().next().unwrap();
                 let item = match child.as_rule() {
                     Rule::import_stmt => {
-                        let mut inner = child.into_inner();
+                        let mut inner = child.clone().into_inner();
                         
                         let path_pair = inner.next().unwrap();
                         let path = unquote(path_pair.as_str());
@@ -29,15 +29,21 @@ pub(crate) fn build_file(pair: Pair<Rule>) -> Result<File> {
                         
                         let alias = alias_pair.as_str().to_string();
 
-                        TopLevelItem::Import(ImportDef::Module(path, alias))
+                        TopLevelItem::Import(ImportDef {
+                            def: ImportDefType::Module(path, alias),
+                            span: Span::from_pair(&child),
+                        })
                     }
                     Rule::import_lib_stmt => {
-                        let mut inner = child.into_inner();
+                        let mut inner = child.clone().into_inner();
                         
                         let library_pair = inner.next().unwrap();
                         let library = unquote(library_pair.as_str());
 
-                        TopLevelItem::Import(ImportDef::Library(library))
+                        TopLevelItem::Import(ImportDef {
+                            def: ImportDefType::Library(library),
+                            span: Span::from_pair(&child),
+                        })
                     }
                     Rule::component_def => TopLevelItem::ComponentDef(component::build_component_def(child)?),
                     Rule::fn_def => TopLevelItem::FnDef(build_fn_def(child)?),

@@ -1,7 +1,8 @@
-use crate::error::Span;
 use crate::ast::{Value, Type};
-use crate::error;
+use crate::error::Span;
+use std::path::PathBuf;
 use std::sync::Arc;
+use crate::error;
 use std::fmt;
 
 /// This essentially is the root of the AST.
@@ -21,7 +22,13 @@ pub enum TopLevelItem {
 }
 
 #[derive(Debug, Clone)]
-pub enum ImportDef {
+pub struct ImportDef {
+    pub(crate) def: ImportDefType,
+    pub(crate) span: Span,
+}
+
+#[derive(Debug, Clone)]
+pub enum ImportDefType {
     Module(String, String),
     Library(String)
 }
