@@ -39,7 +39,7 @@ import_lib_stmt = { "import" ~ snake_ident }
 
 // Reserved keywords cannot be used as identifiers
 keyword = _{
-    "any" | "local" | "global" | "fn" | "for" | "in" | "while" | "if" 
+    "any" | "set" | "local" | "global" | "fn" | "for" | "in" | "while" | "if" 
   | "else" | "match" | "return" | "import" | "true" | "false" | "null"
 }
 
@@ -163,7 +163,7 @@ lambda_body = {
 block_body = { "{" ~ stmt* ~ expr? ~ "}" }
 
 
-// == Type hints  (optional, for documentation / future use) ==
+// == Type hints  (for documentation / future use) ==
 
 type_hint = {
     "String" | "Int" | "Float" | "Bool" | "List" | "Map" | "Any"
@@ -173,7 +173,8 @@ type_hint = {
 // === Statements  (expression world) ===
 
 stmt = {
-    local_stmt
+    assign_stmt
+  | local_stmt
   | global_stmt
   | for_stmt
   | while_stmt
@@ -183,13 +184,15 @@ stmt = {
 
 // Statements allowed inside a Node Block
 node_stmt = {
-    local_stmt
+    assign_stmt
+  | local_stmt
   | for_stmt
   | while_stmt
   | if_expr
 }
 
-// Separate local and global statements
+// Assign, local, and global statements
+assign_stmt = { "set" ~ snake_ident ~ "=" ~ expr }
 local_stmt  = { "local" ~ snake_ident ~ (":" ~ type_hint)? ~ "=" ~ expr }
 global_stmt = { "global" ~ snake_ident ~ (":" ~ type_hint)? ~ "=" ~ expr }
 

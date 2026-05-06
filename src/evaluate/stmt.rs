@@ -22,10 +22,45 @@ impl Evaluator {
                 };
                 self.flow = FlowControl::Return(val);
             }
+            // TODO: Use typehint in global and local
+            Stmt::Global(name, _type_hint, expr) => {
+                let val = self.eval_expr(&expr)?;
+                
+                // A 'global' always goes into the very first scope (index 0),
+                // regardless of how many components or blocks deep we are.
+                if let Some(global_scope) = self.scopes.first_mut() {
+                    global_scope.insert(name, val);
+                } else {
+                    // Fallback: if somehow scopes is empty (shouldn't happen),
+                    // create a new one.
+                    let mut map = HashMap::new();
+                    map.insert(name, val);
+                    self.scopes.push(map);
+                }
+            }
             Stmt::Local(name, _type_hint, expr) => {
                 let val = self.eval_expr(&expr)?;
                 if let Some(current_scope) = self.scopes.last_mut() {
                     current_scope.insert(name, val);
+                }
+            }
+            Stmt::Assign(name, expr, span) => {
+                let new_val = self.eval_expr(&expr)?;
+                let mut found = false;
+
+                for scope in self.scopes.iter_mut().rev() {
+                    if scope.contains_key(&name) {
+                        scope.insert(name.clone(), new_val);
+                        found = true;
+                        break;
+                    }
+                }
+
+                if !found {
+                    return Err(NbclError::Runtime {
+                        message: format!("Variable '{}' doesn't exist.", name),
+                        span: Some(span),
+                    });
                 }
             }
             Stmt::Expr(expr) => {
@@ -74,22 +109,6 @@ impl Evaluator {
                     self.scopes.pop();
                     
                     if let FlowControl::Return(_) = self.flow { break; }
-                }
-            }
-
-            Stmt::Global(name, _type_hint, expr) => {
-                let val = self.eval_expr(&expr)?;
-                
-                // A 'global' always goes into the very first scope (index 0),
-                // regardless of how many components or blocks deep we are.
-                if let Some(global_scope) = self.scopes.first_mut() {
-                    global_scope.insert(name, val);
-                } else {
-                    // Fallback: if somehow scopes is empty (shouldn't happen),
-                    // create a new one.
-                    let mut map = HashMap::new();
-                    map.insert(name, val);
-                    self.scopes.push(map);
                 }
             }
         }

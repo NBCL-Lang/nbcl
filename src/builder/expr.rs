@@ -30,7 +30,19 @@ pub fn build_stmt(pair: Pair<Rule>) -> Result<Stmt> {
                 Ok(Stmt::Global(name, type_hint, value))
             }
         }
+        Rule::assign_stmt => {
+            let span = Span::from_pair(&inner);
 
+            // name
+            let mut ii = inner.clone().into_inner();
+            let name = ii.next().unwrap().as_str().to_string();
+
+            // expr
+            let mut next = ii.next().unwrap();
+            let value = build_expr(next)?;
+
+            Ok(Stmt::Assign(name, value, span))
+        }
         Rule::for_stmt => {
             let mut ii = inner.into_inner();
             let pattern_pair = ii.next().unwrap();
@@ -46,7 +58,6 @@ pub fn build_stmt(pair: Pair<Rule>) -> Result<Stmt> {
 
             Ok(Stmt::For(patterns, iter_expr, body))
         }
-
         Rule::while_stmt => {
             let mut ii = inner.into_inner();
             let condition = build_expr(ii.next().unwrap())?;

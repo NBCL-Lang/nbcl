@@ -113,6 +113,7 @@ pub struct Block {
 
 #[derive(Debug, Clone)]
 pub enum Stmt {
+    Assign(String, Expr, Span),
     Local(String, Option<String>, Expr),
     Global(String, Option<String>, Expr),
     For(Vec<String>, Expr, Block),
