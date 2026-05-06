@@ -1,5 +1,5 @@
 use crate::{
-    ast::{Value, Type, NativeNodeSchema, PropValidation},
+    ast::{Value, Type, PropValidation},
     ast::source::File,
     ast::resolved::ResolvedTree,
     error::{NbclError, Result},
@@ -26,6 +26,7 @@ impl NbclEngine {
     pub fn new() -> Self {
         let mut registry = Registry::default();
         crate::builtin::functions::register_builtin_functions(&mut registry);
+        crate::builtin::nodes::register_builtin_nodes(&mut registry);
 
         // default module resolver follows relative path
         let mod_resolver = FileModuleResolver::new(PathBuf::from("."));
@@ -82,13 +83,7 @@ impl NbclEngine {
         enforce_id: bool,
         prop_validation: PropValidation,
     ) {
-        let node_schema = NativeNodeSchema {
-            type_name: name.to_string(),
-            enforce_id,
-            validation: prop_validation
-        };
-
-        self.registry.native_nodes.insert(name.to_string(), node_schema);
+        self.registry.add_node(name, enforce_id, prop_validation);
     }
 
     /// Registers a native function into the engine.

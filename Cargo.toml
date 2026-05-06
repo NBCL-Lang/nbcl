@@ -7,3 +7,4 @@ edition = "2024"
 [dependencies]
 pest = "2.8.6"
 pest_derive = "2.8.6"
+serde = { version = "1.0.228", features = ["derive"] }

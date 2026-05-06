@@ -3,9 +3,14 @@ pub mod resolved;
 use std::fmt;
 use std::sync::Arc;
 use crate::error;
+use serde::{Serialize, Deserialize};
 
 /// Possible data types in Nbcl (used interanally to hold value)
-#[derive(Debug, Clone, PartialEq)]
+#[derive(
+    Debug, Clone, 
+    PartialEq, Serialize, 
+    Deserialize
+)]
 pub enum Value {
     /// Integers (1)
     Int(i64),

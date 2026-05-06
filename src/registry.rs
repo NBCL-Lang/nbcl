@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 use crate::ast::source::{ComponentDef, FnDef};
-use crate::ast::{Value, Type, NativeNodeSchema, NativeFnSchema};
+use crate::ast::{Value, Type, NativeNodeSchema, NativeFnSchema, PropValidation};
 use crate::error::Result;
 use std::fmt;
 use std::sync::Arc;
@@ -53,6 +53,21 @@ impl Registry {
             body: Arc::new(f),
         };
         self.native_functions.insert(name.to_string(), schema);
+    }
+
+    pub fn add_node(
+        &mut self, 
+        name: &str, 
+        enforce_id: bool,
+        prop_validation: PropValidation,
+    ) {
+        let node_schema = NativeNodeSchema {
+            type_name: name.to_string(),
+            enforce_id,
+            validation: prop_validation
+        };
+
+        self.native_nodes.insert(name.to_string(), node_schema);
     }
 
     pub fn register_component(&mut self, def: ComponentDef) {

@@ -1,7 +1,12 @@
 use super::Value;
 use std::collections::HashMap;
+use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(
+    Debug, Clone, 
+    PartialEq, Serialize, 
+    Deserialize
+)]
 pub struct ResolvedNode {
     /// The name of the native node (e.g., "Service")
     pub type_name: String,
@@ -16,7 +21,11 @@ pub struct ResolvedNode {
     pub children: Vec<ResolvedNode>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(
+    Debug, Clone, 
+    PartialEq, Serialize, 
+    Deserialize
+)]
 pub struct ResolvedTree {
     pub root_nodes: Vec<ResolvedNode>,
 }
