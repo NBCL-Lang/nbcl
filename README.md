@@ -1,4 +1,6 @@
 <div align="center">
-    <h3>NBCL</h3>
+    <img src=".github/NBCL Logo.svg" alt="NBCL Logo" width="100">
+    <br/>
+    <img src=".github/NBCL Text.svg" alt="NBCL">
     <p>Node Based Configuration Language</p>
 </div>
