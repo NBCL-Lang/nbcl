@@ -35,23 +35,83 @@ impl Evaluator {
             Stmt::For(patterns, iter_expr, body) => {
                 let iter_val = self.eval_expr(&iter_expr)?;
                 if let Value::List(items) = iter_val {
-                    for item in items {
-                        // Create a sub-scope for the loop iteration
+                    for (i, item) in items.into_iter().enumerate() {
+                        if let FlowControl::Return(_) = self.flow { break; }
+
                         let mut loop_scope = HashMap::new();
+                        
+                        // Handle pattern matching (len 1 or len 2)
                         if patterns.len() == 1 {
                             loop_scope.insert(patterns[0].clone(), item);
+                        } else if patterns.len() == 2 {
+                            loop_scope.insert(patterns[0].clone(), Value::Int(i as i64));
+                            loop_scope.insert(patterns[1].clone(), item);
                         }
-                        // push, execute, pop
+
                         self.scopes.push(loop_scope);
-                        for s in &body {
-                            self.execute_stmt(s.clone())?;
-                        }
+                        
+                        // Execute the block logic
+                        self.execute_block_internal(&body)?;
+                        
                         self.scopes.pop();
+                        
+                        if let FlowControl::Return(_) = self.flow { break; }
                     }
                 }
             }
-            _ => todo!("Implement While/Return/Global"),
+            
+            Stmt::While(condition_expr, body) => {
+                // Keep looping as long as the condition evaluates to truthy
+                // and we haven't hit a Return statement.
+                while self.eval_expr(&condition_expr)?.is_truthy() {
+                    if let FlowControl::Return(_) = self.flow { break; }
+
+                    self.scopes.push(HashMap::new());
+                    
+                    // Execute the block logic
+                    self.execute_block_internal(&body)?;
+                    
+                    self.scopes.pop();
+                    
+                    if let FlowControl::Return(_) = self.flow { break; }
+                }
+            }
+
+            Stmt::Global(name, _type_hint, expr) => {
+                let val = self.eval_expr(&expr)?;
+                
+                // A 'global' always goes into the very first scope (index 0),
+                // regardless of how many components or blocks deep we are.
+                if let Some(global_scope) = self.scopes.first_mut() {
+                    global_scope.insert(name, val);
+                } else {
+                    // Fallback: if somehow scopes is empty (shouldn't happen),
+                    // create a new one.
+                    let mut map = HashMap::new();
+                    map.insert(name, val);
+                    self.scopes.push(map);
+                }
+            }
         }
         Ok(())
+    }
+
+    /// Executes the statements in a block and evaluates the terminator if present.
+    fn execute_block_internal(&mut self, block: &Block) -> Result<Value> {
+        // Run all statements
+        for s in &block.stmts {
+            self.execute_stmt(s.clone())?;
+            if let FlowControl::Return(_) = self.flow {
+                return Ok(Value::Null); 
+            }
+        }
+
+        // Evaluate the implicit return (terminator) if it exists
+        if let Some(expr) = &block.terminator {
+            let val = self.eval_expr(expr)?;
+            return Ok(val);
+        }
+
+        Ok(Value::Null)
     }
 }

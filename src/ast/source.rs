@@ -106,11 +106,17 @@ pub struct NodeIf {
 
 // Expressions
 #[derive(Debug, Clone)]
+pub struct Block {
+    pub stmts: Vec<Stmt>,
+    pub terminator: Option<Expr>,
+}
+
+#[derive(Debug, Clone)]
 pub enum Stmt {
     Local(String, Option<String>, Expr),
     Global(String, Option<String>, Expr),
-    For(Vec<String>, Expr, Vec<Stmt>),
-    While(Expr, Vec<Stmt>),
+    For(Vec<String>, Expr, Block),
+    While(Expr, Block),
     Return(Option<Expr>),
     Expr(Expr),
 }

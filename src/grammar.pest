@@ -95,10 +95,8 @@ map_entry = { prop_key ~ "=" ~ expr }
 
 // === Ranges  (used in for loops) ===
 
-range_expr = {
-    expr ~ ".." ~ expr  // exclusive: 1..10
-  | expr ~ "..=" ~ expr // inclusive: 1..=10
-}
+range_expr = { expr ~ range_op ~ expr }
+range_op   = { "..=" | ".." }
 
 // === Expressions ===
 

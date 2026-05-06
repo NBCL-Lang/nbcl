@@ -30,6 +30,43 @@ pub fn build_stmt(pair: Pair<Rule>) -> Result<Stmt> {
                 Ok(Stmt::Global(name, type_hint, value))
             }
         }
+
+        Rule::for_stmt => {
+            let mut ii = inner.into_inner();
+            let pattern_pair = ii.next().unwrap();
+            let mut patterns = Vec::new();
+            for ident in pattern_pair.into_inner() {
+                patterns.push(ident.as_str().to_string());
+            }
+
+            let iter_expr = build_expr(ii.next().unwrap())?;
+            
+            let block_pair = ii.next().unwrap(); 
+            let body = build_block(block_pair)?;
+
+            Ok(Stmt::For(patterns, iter_expr, body))
+        }
+
+        Rule::while_stmt => {
+            let mut ii = inner.into_inner();
+            let condition = build_expr(ii.next().unwrap())?;
+            
+            let block_pair = ii.next().unwrap();
+            let body = build_block(block_pair)?;
+
+            Ok(Stmt::While(condition, body))
+        }
+
+        Rule::return_stmt => {
+            let mut ii = inner.into_inner();
+            let expr = if let Some(e_pair) = ii.next() {
+                Some(build_expr(e_pair)?)
+            } else {
+                None
+            };
+            Ok(Stmt::Return(expr))
+        }
+
         Rule::expr_stmt => Ok(Stmt::Expr(build_expr(inner.into_inner().next().unwrap())?)),
         _ => Err(NbclError::Ast { message: format!("Todo: {:?}", inner.as_rule()), span: Some(span) }),
     }
@@ -93,6 +130,21 @@ pub fn build_expr(pair: Pair<Rule>) -> Result<Expr> {
             }
             Ok(res)
         }
+        Rule::range_expr => {
+            let mut inner = pair.into_inner();
+            let start = build_expr(inner.next().unwrap())?;
+            
+            // The operator (.. or ..=)
+            let op = inner.next().unwrap();
+            let inclusive = op.as_str() == "..=";
+            
+            let end = build_expr(inner.next().unwrap())?;
+            
+            Ok(Expr {
+                kind: ExprKind::Range(Box::new(start), Box::new(end), inclusive),
+                span,
+            })
+        }
         Rule::primary_expr => build_expr(pair.into_inner().next().unwrap()),
         Rule::literal => Ok(Expr { kind: ExprKind::Literal(build_literal(pair)?), span }),
         Rule::snake_ident => Ok(Expr { kind: ExprKind::Variable(pair.as_str().to_string()), span }),
@@ -134,4 +186,26 @@ fn build_literal(pair: Pair<Rule>) -> Result<Literal> {
         Rule::string_lit => Ok(Literal::Str(unquote(inner.as_str()))),
         _ => Ok(Literal::Null),
     }
+}
+
+pub fn build_block(pair: Pair<Rule>) -> Result<Block> {
+    let mut stmts = Vec::new();
+    let mut terminator = None;
+
+    // inner will be the contents of the { ... }
+    for inner_pair in pair.into_inner() {
+        match inner_pair.as_rule() {
+            Rule::stmt => {
+                stmts.push(build_stmt(inner_pair)?);
+            }
+            Rule::expr => {
+                // In the grammar: { stmt* ~ expr? }
+                // If we hit an expr, it's the implicit return/terminator
+                terminator = Some(build_expr(inner_pair)?);
+            }
+            _ => {}
+        }
+    }
+
+    Ok(Block { stmts, terminator })
 }
