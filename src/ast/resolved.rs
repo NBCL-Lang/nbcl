@@ -1,7 +1,7 @@
 use super::Value;
 use std::collections::HashMap;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct ResolvedNode {
     /// The name of the native node (e.g., "Service")
     pub type_name: String,

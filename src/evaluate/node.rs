@@ -2,7 +2,6 @@ use crate::{
     ast::{Value, Type},
     ast::source::*,
     ast::resolved::ResolvedNode,
-    registry::Registry,
     error::{Result, NbclError},
 };
 use super::Evaluator;

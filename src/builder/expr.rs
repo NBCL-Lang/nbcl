@@ -38,7 +38,7 @@ pub fn build_stmt(pair: Pair<Rule>) -> Result<Stmt> {
             let name = ii.next().unwrap().as_str().to_string();
 
             // expr
-            let mut next = ii.next().unwrap();
+            let next = ii.next().unwrap();
             let value = build_expr(next)?;
 
             Ok(Stmt::Assign(name, value, span))

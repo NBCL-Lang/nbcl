@@ -3,7 +3,7 @@ pub mod resolved;
 use std::fmt;
 
 // TODO: Maybe add `Any` value
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum Value {
     Int(i64),
     Float(f64),

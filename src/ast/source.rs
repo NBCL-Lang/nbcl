@@ -1,6 +1,5 @@
 use crate::ast::{Value, Type};
 use crate::error::Span;
-use std::path::PathBuf;
 use std::sync::Arc;
 use crate::error;
 use std::fmt;

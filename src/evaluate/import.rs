@@ -3,7 +3,6 @@ use crate::error::{Result, NbclError};
 use crate::parser::NbclParser;
 use crate::parser::Rule;
 use super::Evaluator;
-use std::path::Path;
 use pest::Parser;
 use std::fs;
 

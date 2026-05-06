@@ -1,8 +1,6 @@
 use crate::{
     ast::Value,
     ast::source::*,
-    ast::resolved::ResolvedTree,
-    registry::Registry,
     error::{Result, NbclError},
 };
 use std::collections::HashMap;
