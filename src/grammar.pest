@@ -226,9 +226,12 @@ expr_stmt = { expr }
 // Shared if/match: valid in both worlds as expressions
 if_expr = {
     "if" ~ expr ~ block_body
-  ~ ("else" ~ "if" ~ expr ~ block_body)*
-  ~ ("else" ~ block_body)?
+  ~ else_if_branch*
+  ~ else_branch?
 }
+
+else_if_branch = { "else" ~ "if" ~ expr ~ block_body }
+else_branch    = { "else" ~ block_body }
 
 match_expr = {
     "match" ~ expr ~ "{"

@@ -39,9 +39,9 @@ impl NbclEngine {
         let source = fs::read_to_string(&file_path).map_err(|e| {
             let (msg, hint) = match e.kind() {
                 ErrorKind::NotFound => {
-                    let msg = format!("Module not found: '{}'", file_path.display());
+                    let msg = format!("File not found: '{}'", file_path.display());
                     let hint =
-                        "Ensure that the module exists and try adjusting the path.".to_string();
+                        "Ensure that the file exists and try again".to_string();
 
                     (msg, Some(hint))
                 }

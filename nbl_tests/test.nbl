@@ -5,7 +5,12 @@
 -#
 
 local var = 1
-global var = 10
+global var = if true {
+    10
+} else {
+    5
+}
+print(var)
 
 component StyledButton (bg_color?) {
     Object "id" {

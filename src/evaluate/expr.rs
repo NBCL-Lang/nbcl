@@ -307,11 +307,41 @@ impl Evaluator {
             ExprKind::Lambda(_, _) => todo!(),
 
             ExprKind::If(if_expr) => {
-                let condition = self.eval_expr(&if_expr.condition)?;
-                if condition.is_truthy() {
-                    self.eval_block(&if_expr.then_branch.0, &if_expr.then_branch.1)
-                } else if let Some(else_branch) = &if_expr.else_branch {
-                    self.eval_block(&else_branch.0, &else_branch.1)
+                let mut target_branch = None;
+
+                // Evaluate main condition
+                if self.eval_expr(&if_expr.condition)?.is_truthy() {
+                    target_branch = Some(&if_expr.then_branch);
+                } else {
+                    // Evaluate else-ifs
+                    for (cond, branch) in &if_expr.else_ifs {
+                        if self.eval_expr(cond)?.is_truthy() {
+                            target_branch = Some(branch);
+                            break;
+                        }
+                    }
+                    // Evaluate else
+                    if target_branch.is_none() {
+                        target_branch = if_expr.else_branch.as_ref();
+                    }
+                }
+
+                // Execute the chosen branch
+                if let Some((stmts, final_expr)) = target_branch {
+                    self.scopes.push(HashMap::new());
+                    
+                    for stmt in stmts {
+                        self.execute_stmt(stmt.clone())?;
+                    }
+
+                    let result = if let Some(e) = final_expr {
+                        self.eval_expr(e)?
+                    } else {
+                        Value::Null
+                    };
+
+                    self.scopes.pop();
+                    Ok(result)
                 } else {
                     Ok(Value::Null)
                 }
@@ -425,17 +455,5 @@ impl Evaluator {
                 span: Some(span.clone()),
             }),
         }
-    }
-
-    fn eval_block(&mut self, stmts: &[Stmt], expr: &Option<Expr>) -> Result<Value> {
-        for stmt in stmts {
-            self.execute_stmt(stmt.clone())?;
-            // If a statement was a 'return', stop immediately
-            if let FlowControl::Return(val) = &self.flow {
-                return Ok(val.clone());
-            }
-        }
-
-        if let Some(final_expr) = expr { self.eval_expr(final_expr) } else { Ok(Value::Null) }
     }
 }

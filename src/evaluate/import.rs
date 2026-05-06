@@ -3,6 +3,7 @@ use crate::ast::source::*;
 use crate::error::{NbclError, Result};
 use crate::parser::NbclParser;
 use crate::parser::Rule;
+use std::io::ErrorKind;
 use pest::Parser;
 use std::fs;
 
@@ -27,8 +28,30 @@ impl Evaluator {
                 }
 
                 // Read and Parse
-                let source = fs::read_to_string(&target_path)
-                    .map_err(|e| todo!("Handle read error: {}", e))?;
+                let source = fs::read_to_string(&target_path).map_err(|e| {
+                    let (msg, hint) = match e.kind() {
+                        ErrorKind::NotFound => {
+                            let msg = format!("Module not found: '{}'", target_path.display());
+                            let hint =
+                                "Ensure that the module exists and try adjusting the path.".to_string();
+
+                            (msg, Some(hint))
+                        }
+                        ErrorKind::PermissionDenied => {
+                            let msg =
+                                format!("Permission denied reading module: '{}'", target_path.display());
+                            let hint = "Set proper file permissions".to_string();
+
+                            (msg, Some(hint))
+                        }
+                        _ => {
+                            let msg = format!("Failed to read module '{}': {}", target_path.display(), e);
+                            (msg, None)
+                        }
+                    };
+
+                    NbclError::IO { message: msg, hint, path: target_path.clone() }
+                })?;
 
                 let mut tokens = NbclParser::parse(Rule::file, &source)
                     .map_err(|e| NbclError::Parse(Box::new(e)))?;

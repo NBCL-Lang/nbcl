@@ -168,6 +168,7 @@ pub fn build_expr(pair: Pair<Rule>) -> Result<Expr> {
         }
         Rule::primary_expr => build_expr(pair.into_inner().next().unwrap()),
         Rule::literal => Ok(Expr { kind: ExprKind::Literal(build_literal(pair)?), span }),
+        Rule::if_expr => Ok(Expr { kind: ExprKind::If(Box::new(build_if(pair)?)), span }),
         Rule::snake_ident => Ok(Expr { kind: ExprKind::Variable(pair.as_str().to_string()), span }),
         _ => Err(NbclError::Ast {
             message: format!("Unknown expr: {:?}", pair.as_rule()),
@@ -233,6 +234,64 @@ fn build_literal(pair: Pair<Rule>) -> Result<Literal> {
         }
         _ => Ok(Literal::Null),
     }
+}
+
+pub fn build_if(pair: Pair<Rule>) -> Result<IfExpr> {
+    let mut inner = pair.into_inner();
+
+    // Handle main 'if'
+    let condition = build_expr(inner.next().unwrap())?;
+    let then_branch = build_branch(inner.next().unwrap())?;
+
+    let mut else_ifs = Vec::new();
+    let mut else_branch = None;
+
+    // Handle remaining 'else if' and 'else'
+    while let Some(next) = inner.next() {
+        match next.as_rule() {
+            Rule::else_if_branch => {
+                let mut ei_inner = next.into_inner();
+                let cond = build_expr(ei_inner.next().unwrap())?;
+                let body = build_branch(ei_inner.next().unwrap())?;
+                else_ifs.push((cond, body));
+            }
+            Rule::else_branch => {
+                else_branch = Some(build_branch(next.into_inner().next().unwrap())?);
+            }
+            _ => unreachable!("Unexpected rule in if_expr: {:?}", next.as_rule()),
+        }
+    }
+
+    Ok(IfExpr {
+        condition,
+        then_branch,
+        else_ifs,
+        else_branch,
+    })
+}
+
+fn build_branch(pair: Pair<Rule>) -> Result<(Vec<Stmt>, Option<Expr>)> {
+    let mut stmts = Vec::new();
+    let mut final_expr = None;
+
+    for p in pair.into_inner() {
+        match p.as_rule() {
+            Rule::stmt => stmts.push(build_stmt(p)?),
+            Rule::expr => final_expr = Some(build_expr(p)?),
+            _ => {}
+        }
+    }
+
+    if final_expr.is_none() {
+        if let Some(last_stmt) = stmts.last() {
+            if let Stmt::Expr(expr) = last_stmt {
+                final_expr = Some(expr.clone());
+                stmts.pop(); 
+            }
+        }
+    }
+
+    Ok((stmts, final_expr))
 }
 
 pub fn build_block(pair: Pair<Rule>) -> Result<Block> {
