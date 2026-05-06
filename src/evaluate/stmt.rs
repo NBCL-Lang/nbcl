@@ -1,10 +1,10 @@
+use super::{Evaluator, FlowControl};
 use crate::{
     ast::Value,
     ast::source::*,
-    error::{Result, NbclError},
+    error::{NbclError, Result},
 };
 use std::collections::HashMap;
-use super::{Evaluator, FlowControl};
 
 impl Evaluator {
     pub(crate) fn execute_stmt(&mut self, stmt: Stmt) -> Result<()> {
@@ -23,7 +23,7 @@ impl Evaluator {
             // TODO: Use typehint in global and local
             Stmt::Global(name, _type_hint, expr) => {
                 let val = self.eval_expr(&expr)?;
-                
+
                 // A 'global' always goes into the very first scope (index 0),
                 // regardless of how many components or blocks deep we are.
                 if let Some(global_scope) = self.scopes.first_mut() {
@@ -75,10 +75,12 @@ impl Evaluator {
                 let iter_val = self.eval_expr(&iter_expr)?;
                 if let Value::List(items) = iter_val {
                     for (i, item) in items.into_iter().enumerate() {
-                        if let FlowControl::Return(_) = self.flow { break; }
+                        if let FlowControl::Return(_) = self.flow {
+                            break;
+                        }
 
                         let mut loop_scope = HashMap::new();
-                        
+
                         // Handle pattern matching (len 1 or len 2)
                         if patterns.len() == 1 {
                             loop_scope.insert(patterns[0].clone(), item);
@@ -88,31 +90,37 @@ impl Evaluator {
                         }
 
                         self.scopes.push(loop_scope);
-                        
+
                         // Execute the block logic
                         self.execute_block_internal(&body)?;
-                        
+
                         self.scopes.pop();
-                        
-                        if let FlowControl::Return(_) = self.flow { break; }
+
+                        if let FlowControl::Return(_) = self.flow {
+                            break;
+                        }
                     }
                 }
             }
-            
+
             Stmt::While(condition_expr, body) => {
                 // Keep looping as long as the condition evaluates to truthy
                 // and we haven't hit a Return statement.
                 while self.eval_expr(&condition_expr)?.is_truthy() {
-                    if let FlowControl::Return(_) = self.flow { break; }
+                    if let FlowControl::Return(_) = self.flow {
+                        break;
+                    }
 
                     self.scopes.push(HashMap::new());
-                    
+
                     // Execute the block logic
                     self.execute_block_internal(&body)?;
-                    
+
                     self.scopes.pop();
-                    
-                    if let FlowControl::Return(_) = self.flow { break; }
+
+                    if let FlowControl::Return(_) = self.flow {
+                        break;
+                    }
                 }
             }
         }
@@ -125,7 +133,7 @@ impl Evaluator {
         for s in &block.stmts {
             self.execute_stmt(s.clone())?;
             if let FlowControl::Return(_) = self.flow {
-                return Ok(Value::Null); 
+                return Ok(Value::Null);
             }
         }
 

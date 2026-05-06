@@ -1,17 +1,13 @@
-pub mod source;
 pub mod resolved;
+pub mod source;
+use crate::error;
+use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 use std::fmt;
 use std::sync::Arc;
-use crate::error;
-use std::collections::HashMap;
-use serde::{Serialize, Deserialize};
 
 /// Possible data types in Nbcl (used interanally to hold value)
-#[derive(
-    Debug, Clone, 
-    PartialEq, Serialize, 
-    Deserialize
-)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub enum Value {
     /// Integers (1)
     Int(i64),
@@ -44,9 +40,8 @@ impl fmt::Display for Value {
                 write!(f, "[{}]", parts.join(", "))
             }
             Value::Map(entries) => {
-                let parts: Vec<String> = entries.iter()
-                    .map(|(k, v)| format!("{} = {}", k, v))
-                    .collect();
+                let parts: Vec<String> =
+                    entries.iter().map(|(k, v)| format!("{} = {}", k, v)).collect();
                 write!(f, "{{{}}}", parts.join(", "))
             }
             Value::Nodes(_) => write!(f, "<nodes>"),
@@ -153,7 +148,7 @@ pub struct NativeNodeSchema {
     /// Whether the property validation should be loose or strict
     pub validation: PropValidation,
     /// Children count in <(min, max)>.
-    /// Use None for default functionlaity 
+    /// Use None for default functionlaity
     /// (allows any number of children).
     pub child_count: Option<(u32, u32)>,
 }

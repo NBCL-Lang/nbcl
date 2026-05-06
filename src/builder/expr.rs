@@ -1,8 +1,8 @@
-use pest::iterators::Pair;
-use crate::parser::Rule;
-use crate::ast::source::*;
-use crate::error::{Result, Span, NbclError};
 use super::unquote;
+use crate::ast::source::*;
+use crate::error::{NbclError, Result, Span};
+use crate::parser::Rule;
+use pest::iterators::Pair;
 
 pub fn build_stmt(pair: Pair<Rule>) -> Result<Stmt> {
     let inner = match pair.as_rule() {
@@ -16,12 +16,14 @@ pub fn build_stmt(pair: Pair<Rule>) -> Result<Stmt> {
             let mut ii = inner.clone().into_inner();
             let name = ii.next().unwrap().as_str().to_string();
             let mut next = ii.next().unwrap();
-            
+
             let type_hint = if next.as_rule() == Rule::type_hint {
                 let t = Some(next.as_str().to_string());
                 next = ii.next().unwrap();
                 t
-            } else { None };
+            } else {
+                None
+            };
 
             let value = build_expr(next)?;
             if inner.as_rule() == Rule::local_stmt {
@@ -52,8 +54,8 @@ pub fn build_stmt(pair: Pair<Rule>) -> Result<Stmt> {
             }
 
             let iter_expr = build_expr(ii.next().unwrap())?;
-            
-            let block_pair = ii.next().unwrap(); 
+
+            let block_pair = ii.next().unwrap();
             let body = build_block(block_pair)?;
 
             Ok(Stmt::For(patterns, iter_expr, body))
@@ -61,7 +63,7 @@ pub fn build_stmt(pair: Pair<Rule>) -> Result<Stmt> {
         Rule::while_stmt => {
             let mut ii = inner.into_inner();
             let condition = build_expr(ii.next().unwrap())?;
-            
+
             let block_pair = ii.next().unwrap();
             let body = build_block(block_pair)?;
 
@@ -70,19 +72,15 @@ pub fn build_stmt(pair: Pair<Rule>) -> Result<Stmt> {
 
         Rule::return_stmt => {
             let mut ii = inner.into_inner();
-            let expr = if let Some(e_pair) = ii.next() {
-                Some(build_expr(e_pair)?)
-            } else {
-                None
-            };
+            let expr = if let Some(e_pair) = ii.next() { Some(build_expr(e_pair)?) } else { None };
             Ok(Stmt::Return(expr))
         }
 
         Rule::expr_stmt => Ok(Stmt::Expr(build_expr(inner.into_inner().next().unwrap())?)),
-        _ => Err(NbclError::Ast { 
-            message: format!("Todo: {:?}", inner.as_rule()), 
+        _ => Err(NbclError::Ast {
+            message: format!("Todo: {:?}", inner.as_rule()),
             hint: None,
-            span: Some(span) 
+            span: Some(span),
         }),
     }
 }
@@ -120,33 +118,31 @@ pub fn build_expr(pair: Pair<Rule>) -> Result<Expr> {
             let mut res = build_expr(inner.next().unwrap())?;
 
             let mut it = inner.peekable();
-            
+
             while let Some(suffix) = it.next() {
                 res = match suffix.as_rule() {
                     Rule::accessor => {
                         let is_safe = suffix.as_str() == "?.";
                         let ident = it.next().unwrap().as_str().to_string();
-                        
+
                         Expr {
                             kind: ExprKind::Field(Box::new(res), ident, is_safe),
-                            span: span.clone()
-                        }
-                    },
-                    Rule::expr => Expr {
-                        kind: ExprKind::Index(Box::new(res), Box::new(build_expr(suffix)?)),
-                        span: span.clone()
-                    },
-                    Rule::call_args => {
-                        let args = suffix.into_inner()
-                            .map(|arg_pair| build_expr(arg_pair))
-                            .collect::<Result<Vec<_>>>()?;
-                        
-                        Expr {
-                            kind: ExprKind::Call(Box::new(res), args),
                             span: span.clone(),
                         }
+                    }
+                    Rule::expr => Expr {
+                        kind: ExprKind::Index(Box::new(res), Box::new(build_expr(suffix)?)),
+                        span: span.clone(),
                     },
-                    _ => res
+                    Rule::call_args => {
+                        let args = suffix
+                            .into_inner()
+                            .map(|arg_pair| build_expr(arg_pair))
+                            .collect::<Result<Vec<_>>>()?;
+
+                        Expr { kind: ExprKind::Call(Box::new(res), args), span: span.clone() }
+                    }
+                    _ => res,
                 };
             }
             Ok(res)
@@ -154,25 +150,22 @@ pub fn build_expr(pair: Pair<Rule>) -> Result<Expr> {
         Rule::range_expr => {
             let mut inner = pair.into_inner();
             let start = build_expr(inner.next().unwrap())?;
-            
+
             // The operator (.. or ..=)
             let op = inner.next().unwrap();
             let inclusive = op.as_str() == "..=";
-            
+
             let end = build_expr(inner.next().unwrap())?;
-            
-            Ok(Expr {
-                kind: ExprKind::Range(Box::new(start), Box::new(end), inclusive),
-                span,
-            })
+
+            Ok(Expr { kind: ExprKind::Range(Box::new(start), Box::new(end), inclusive), span })
         }
         Rule::primary_expr => build_expr(pair.into_inner().next().unwrap()),
         Rule::literal => Ok(Expr { kind: ExprKind::Literal(build_literal(pair)?), span }),
         Rule::snake_ident => Ok(Expr { kind: ExprKind::Variable(pair.as_str().to_string()), span }),
-        _ => Err(NbclError::Ast { 
-            message: format!("Unknown expr: {:?}", pair.as_rule()), 
+        _ => Err(NbclError::Ast {
+            message: format!("Unknown expr: {:?}", pair.as_rule()),
             hint: None,
-            span: Some(span) 
+            span: Some(span),
         }),
     }
 }
@@ -180,18 +173,20 @@ pub fn build_expr(pair: Pair<Rule>) -> Result<Expr> {
 fn build_binop(pair: Pair<Rule>) -> Result<Expr> {
     let span = Span::from_pair(&pair);
     let mut inner = pair.into_inner();
-    
+
     let mut lhs = build_expr(inner.next().unwrap())?;
 
     while let Some(op_pair) = inner.next() {
         let op_str = op_pair.as_str().to_string();
-        
+
         let rhs_pair = inner.next().ok_or_else(|| NbclError::Ast {
             message: "Expected operand after operator".to_string(),
-            hint: Some("An operator like '+' must be followed by a value, variable, or '('.".to_string()),
+            hint: Some(
+                "An operator like '+' must be followed by a value, variable, or '('.".to_string(),
+            ),
             span: Some(span.clone()),
         })?;
-        
+
         let rhs = build_expr(rhs_pair)?;
 
         lhs = Expr {
@@ -199,7 +194,7 @@ fn build_binop(pair: Pair<Rule>) -> Result<Expr> {
             span: span.clone(),
         };
     }
-    
+
     Ok(lhs)
 }
 

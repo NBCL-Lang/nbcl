@@ -1,38 +1,34 @@
+use super::{Evaluator, FlowControl};
 use crate::{
     ast::Value,
     ast::source::*,
-    error::{Result, NbclError, Span},
+    error::{NbclError, Result, Span},
 };
 use std::collections::HashMap;
-use super::{Evaluator, FlowControl};
 
 // Extend for expr support.
 impl Evaluator {
     pub(crate) fn eval_expr(&mut self, expr: &Expr) -> Result<Value> {
         match &expr.kind {
             ExprKind::Literal(lit) => self.eval_literal(lit),
-            
-            ExprKind::Variable(name) => {
-                self.lookup_var(name)
-                    .ok_or_else(|| {
-                        let candidates = self.scopes.iter()
-                            .flat_map(|s| s.keys())
-                            .chain(self.registry.globals.keys());
-                        
-                        let suggestion = crate::utils::find_best_match(name, candidates);
-                        let hint = suggestion.map(|s| format!("Did you mean \"{}\"?", s));
 
-                        NbclError::Runtime {
-                            message: format!("Undefined variable: {}", name),
-                            hint,
-                            span: Some(expr.span.clone()),
-                        }
-                    })
-            }
+            ExprKind::Variable(name) => self.lookup_var(name).ok_or_else(|| {
+                let candidates =
+                    self.scopes.iter().flat_map(|s| s.keys()).chain(self.registry.globals.keys());
+
+                let suggestion = crate::utils::find_best_match(name, candidates);
+                let hint = suggestion.map(|s| format!("Did you mean \"{}\"?", s));
+
+                NbclError::Runtime {
+                    message: format!("Undefined variable: {}", name),
+                    hint,
+                    span: Some(expr.span.clone()),
+                }
+            }),
 
             ExprKind::Binary(lhs, op, rhs) => {
                 let left = self.eval_expr(lhs)?;
-                
+
                 // Short-circuit logic for logical OR (||) and AND (&&)
                 if op == "||" {
                     return Ok(if left.is_truthy() { left } else { self.eval_expr(rhs)? });
@@ -56,29 +52,29 @@ impl Evaluator {
 
             ExprKind::Field(source, field, is_safe) => {
                 let val = self.eval_expr(source)?;
-                
+
                 if let Value::Map(pairs) = val {
-                    let found = pairs.iter()
-                        .find(|(k, _)| k == field)
-                        .map(|(_, v)| v.clone());
+                    let found = pairs.iter().find(|(k, _)| k == field).map(|(_, v)| v.clone());
 
                     match found {
                         Some(v) => Ok(v),
                         None => {
                             if *is_safe {
                                 // If it's a ?. access, missing keys are just null
-                                Ok(Value::Null) 
+                                Ok(Value::Null)
                             } else {
                                 Err(NbclError::Runtime {
                                     message: format!("Map has no field: {}", field),
                                     hint: {
                                         let candidates = pairs.iter().map(|(k, _)| k);
-                                        if let Some(suggestion) = crate::utils::find_best_match(field, candidates) {
+                                        if let Some(suggestion) =
+                                            crate::utils::find_best_match(field, candidates)
+                                        {
                                             Some(format!("Did you mean \"{}\"?", suggestion))
                                         } else {
                                             Some(format!(
                                                 "If this field is optional, try using the safe access operator: \"?.\"{}{}",
-                                                if field.is_empty() { "" } else { "" }, 
+                                                if field.is_empty() { "" } else { "" },
                                                 field
                                             ))
                                         }
@@ -93,7 +89,10 @@ impl Evaluator {
                     Ok(Value::Null)
                 } else {
                     Err(NbclError::Runtime {
-                        message: format!("Cannot access field '{}' on non-map type: {:?}", field, val),
+                        message: format!(
+                            "Cannot access field '{}' on non-map type: {:?}",
+                            field, val
+                        ),
                         hint: None,
                         span: Some(expr.span.clone()),
                     })
@@ -113,21 +112,18 @@ impl Evaluator {
                         })
                     }
                     (Value::Map(map), Value::Str(s)) => {
-                        map.iter()
-                            .find(|(k, _)| k == &s)
-                            .map(|(_, v)| v.clone())
-                            .ok_or_else(|| {
-                                let candidates = map.iter().map(|(k, _)| k);
-                                let suggestion = crate::utils::find_best_match(&s, candidates);
-                                
-                                let hint = suggestion.map(|best| format!("Did you mean \"{}\"?", best));
+                        map.iter().find(|(k, _)| k == &s).map(|(_, v)| v.clone()).ok_or_else(|| {
+                            let candidates = map.iter().map(|(k, _)| k);
+                            let suggestion = crate::utils::find_best_match(&s, candidates);
 
-                                NbclError::Runtime {
-                                    message: format!("Key '{}' not found in map", s),
-                                    hint,
-                                    span: Some(expr.span.clone()),
-                                }
-                            })
+                            let hint = suggestion.map(|best| format!("Did you mean \"{}\"?", best));
+
+                            NbclError::Runtime {
+                                message: format!("Key '{}' not found in map", s),
+                                hint,
+                                span: Some(expr.span.clone()),
+                            }
+                        })
                     }
                     _ => Err(NbclError::Runtime {
                         message: "Invalid index operation".into(),
@@ -142,7 +138,7 @@ impl Evaluator {
                     ExprKind::Variable(name) => name,
                     ExprKind::Field(source, field, _) => {
                         if let ExprKind::Variable(ref alias) = source.kind {
-                            &format!("{}.{}", alias, field) 
+                            &format!("{}.{}", alias, field)
                         } else {
                             return Err(NbclError::Runtime {
                                 message: "Complex paths in calls are not supported yet".into(),
@@ -151,11 +147,13 @@ impl Evaluator {
                             });
                         }
                     }
-                    _ => return Err(NbclError::Runtime {
-                        message: "Only variables can be called as functions currently".into(),
-                        hint: None,
-                        span: Some(callee.span.clone()),
-                    }),
+                    _ => {
+                        return Err(NbclError::Runtime {
+                            message: "Only variables can be called as functions currently".into(),
+                            hint: None,
+                            span: Some(callee.span.clone()),
+                        });
+                    }
                 };
 
                 let mut args = Vec::new();
@@ -165,20 +163,20 @@ impl Evaluator {
 
                 // Native functions built into it
                 if let Some(native_schema) = self.registry.native_functions.get(func_name) {
-                    
                     if args.len() != native_schema.params.len() {
-                        let expected_params: Vec<String> = native_schema.params.iter()
-                            .map(|p| format!("{:?}", p))
-                            .collect();
+                        let expected_params: Vec<String> =
+                            native_schema.params.iter().map(|p| format!("{:?}", p)).collect();
 
                         return Err(NbclError::Runtime {
                             message: format!(
-                                "Native function '{}' expected {} args, got {}", 
-                                func_name, native_schema.params.len(), args.len()
+                                "Native function '{}' expected {} args, got {}",
+                                func_name,
+                                native_schema.params.len(),
+                                args.len()
                             ),
                             hint: Some(format!(
-                                "Usage: {}({})", 
-                                func_name, 
+                                "Usage: {}({})",
+                                func_name,
                                 expected_params.join(", ")
                             )),
                             span: Some(expr.span.clone()),
@@ -188,14 +186,19 @@ impl Evaluator {
                     for (i, (arg, expected)) in args.iter().zip(&native_schema.params).enumerate() {
                         if !expected.matches_value(arg) {
                             let hint = match (arg, expected) {
-                                (Value::Str(s), _) if s.parse::<i64>().is_ok() => 
+                                (Value::Str(s), _) if s.parse::<i64>().is_ok() =>
                                     Some("This value is a string, but the function needs a number. Try removing the quotes.".to_string()),
                                 _ => Some(format!("Check the {} argument. It must be a {:?}.", crate::utils::ordinal(i + 1), expected)),
                             };
 
                             return Err(NbclError::Runtime {
-                                message: format!("Native function '{}' arg {} expected {:?}, got {}", 
-                                    func_name, i, expected, arg.type_name()),
+                                message: format!(
+                                    "Native function '{}' arg {} expected {:?}, got {}",
+                                    func_name,
+                                    i,
+                                    expected,
+                                    arg.type_name()
+                                ),
                                 hint,
                                 span: Some(expr.span.clone()),
                             });
@@ -205,13 +208,15 @@ impl Evaluator {
                     return (native_schema.body)(args);
                 }
 
-                let func_def = self.registry.functions.get(func_name)
-                    .cloned()
-                    .ok_or_else(|| {
+                let func_def =
+                    self.registry.functions.get(func_name).cloned().ok_or_else(|| {
                         // Collect all possible function names for the suggestion
-                        let all_funcs = self.registry.native_functions.keys()
+                        let all_funcs = self
+                            .registry
+                            .native_functions
+                            .keys()
                             .chain(self.registry.functions.keys());
-                        
+
                         let suggestion = crate::utils::find_best_match(func_name, all_funcs);
                         let hint = suggestion.map(|s| format!("Did you mean \"{}\"?", s));
 
@@ -224,12 +229,15 @@ impl Evaluator {
 
                 // Validate argument count
                 if args.len() != func_def.params.len() {
-                    let param_names: Vec<String> = func_def.params.iter()
-                        .map(|p| p.name.clone())
-                        .collect();
+                    let param_names: Vec<String> =
+                        func_def.params.iter().map(|p| p.name.clone()).collect();
 
                     return Err(NbclError::Runtime {
-                        message: format!("Expected {} arguments, got {}", func_def.params.len(), args.len()),
+                        message: format!(
+                            "Expected {} arguments, got {}",
+                            func_def.params.len(),
+                            args.len()
+                        ),
                         hint: Some(format!("Signature: {}({})", func_name, param_names.join(", "))),
                         span: Some(expr.span.clone()),
                     });
@@ -239,7 +247,7 @@ impl Evaluator {
                 for (param, value) in func_def.params.iter().zip(args) {
                     if let Some(expected_type) = &param.type_hint {
                         let actual_type = value.type_name();
-                        
+
                         if expected_type != actual_type && expected_type != "Any" {
                             return Err(NbclError::Runtime {
                                 message: format!(
@@ -267,21 +275,21 @@ impl Evaluator {
                             nodes.extend(resolved);
                         }
                     }
-                    
+
                     // If the statement set a return value, stop executing the body immediately
                     if let FlowControl::Return(_) = self.flow {
                         break;
                     }
                 }
-                
+
                 let explicit_return = std::mem::replace(&mut self.flow, FlowControl::None);
                 self.scopes.pop();
-                
+
                 match explicit_return {
                     FlowControl::Return(val) => Ok(val),
                     FlowControl::None => {
                         if !nodes.is_empty() {
-                            Ok(Value::Nodes(nodes)) 
+                            Ok(Value::Nodes(nodes))
                         } else {
                             Ok(Value::Null)
                         }
@@ -371,7 +379,9 @@ impl Evaluator {
                 if b == 0 {
                     return Err(NbclError::Runtime {
                         message: "Division by zero".to_string(),
-                        hint: Some("Try replacing the zero with another number, silly!".to_string()),
+                        hint: Some(
+                            "Try replacing the zero with another number, silly!".to_string(),
+                        ),
                         span: Some(span.clone()),
                     });
                 }
@@ -415,14 +425,10 @@ impl Evaluator {
             self.execute_stmt(stmt.clone())?;
             // If a statement was a 'return', stop immediately
             if let FlowControl::Return(val) = &self.flow {
-                return Ok(val.clone()); 
+                return Ok(val.clone());
             }
         }
-        
-        if let Some(final_expr) = expr {
-            self.eval_expr(final_expr)
-        } else {
-            Ok(Value::Null)
-        }
+
+        if let Some(final_expr) = expr { self.eval_expr(final_expr) } else { Ok(Value::Null) }
     }
 }

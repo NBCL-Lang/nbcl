@@ -1,13 +1,13 @@
-use pest::iterators::Pair;
-use crate::parser::Rule;
+use super::{expr, unquote};
 use crate::ast::source::*;
 use crate::error::{Result, Span};
-use super::{expr, unquote};
+use crate::parser::Rule;
+use pest::iterators::Pair;
 
 pub fn build_node_invocation(pair: Pair<Rule>) -> Result<NodeInvocation> {
     let span = Span::from_pair(&pair);
     let mut inner = pair.into_inner();
-    
+
     let type_name = inner.next().unwrap().as_str().to_string();
     let mut id = None;
     let mut next = inner.next().unwrap();
@@ -39,6 +39,6 @@ pub fn build_node_item(pair: Pair<Rule>) -> Result<NodeItem> {
             let stmt = expr::build_stmt(inner.into_inner().next().unwrap())?;
             Ok(NodeItem::Stmt(stmt))
         }
-        _ => Ok(NodeItem::Prop("error".into(), expr::build_expr(inner)?)), 
+        _ => Ok(NodeItem::Prop("error".into(), expr::build_expr(inner)?)),
     }
 }

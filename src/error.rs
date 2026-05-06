@@ -31,32 +31,20 @@ impl Span {
 #[derive(Debug)]
 pub enum NbclError {
     Parse(Box<pest::error::Error<Rule>>),
-    Ast { 
-        message: String, 
-        hint: Option<String>,
-        span: Option<Span>,
-    },
-    IO {
-        message: String,
-        hint: Option<String>,
-        path: PathBuf,
-    },
-    Runtime { 
-        message: String, 
-        hint: Option<String>,
-        span: Option<Span>,
-    },
+    Ast { message: String, hint: Option<String>, span: Option<Span> },
+    IO { message: String, hint: Option<String>, path: PathBuf },
+    Runtime { message: String, hint: Option<String>, span: Option<Span> },
 }
 
 impl std::fmt::Display for NbclError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             NbclError::Parse(e) => write!(f, "Parsing failed:\n{}", e),
-            
+
             NbclError::Ast { message, hint, span } => {
                 format_diagnostic(f, "Syntax Error", message, hint, span)
             }
-            
+
             NbclError::Runtime { message, hint, span } => {
                 format_diagnostic(f, "Runtime Error", message, hint, span)
             }

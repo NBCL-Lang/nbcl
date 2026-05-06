@@ -1,11 +1,11 @@
+pub mod component;
 pub mod expr;
 pub mod node;
-pub mod component;
 
-use pest::iterators::Pair;
-use crate::parser::Rule;
 use crate::ast::source::*;
 use crate::error::{NbclError, Result, Span};
+use crate::parser::Rule;
+use pest::iterators::Pair;
 
 pub(crate) fn build_file(pair: Pair<Rule>) -> Result<File> {
     let span = Span::from_pair(&pair);
@@ -18,16 +18,16 @@ pub(crate) fn build_file(pair: Pair<Rule>) -> Result<File> {
                 let item = match child.as_rule() {
                     Rule::import_stmt => {
                         let mut inner = child.clone().into_inner();
-                        
+
                         let path_pair = inner.next().unwrap();
                         let path = unquote(path_pair.as_str());
-                        
+
                         let alias_pair = inner.next().ok_or_else(|| NbclError::Ast {
                             message: "Import statement missing 'as' alias".into(),
                             hint: None,
                             span: Some(Span::from_pair(&path_pair)),
                         })?;
-                        
+
                         let alias = alias_pair.as_str().to_string();
 
                         TopLevelItem::Import(ImportDef {
@@ -37,7 +37,7 @@ pub(crate) fn build_file(pair: Pair<Rule>) -> Result<File> {
                     }
                     Rule::import_lib_stmt => {
                         let mut inner = child.clone().into_inner();
-                        
+
                         let library_pair = inner.next().unwrap();
                         let library = unquote(library_pair.as_str());
 
@@ -46,9 +46,13 @@ pub(crate) fn build_file(pair: Pair<Rule>) -> Result<File> {
                             span: Span::from_pair(&child),
                         })
                     }
-                    Rule::component_def => TopLevelItem::ComponentDef(component::build_component_def(child)?),
+                    Rule::component_def => {
+                        TopLevelItem::ComponentDef(component::build_component_def(child)?)
+                    }
                     Rule::fn_def => TopLevelItem::FnDef(build_fn_def(child)?),
-                    Rule::node_invocation => TopLevelItem::Node(node::build_node_invocation(child)?),
+                    Rule::node_invocation => {
+                        TopLevelItem::Node(node::build_node_invocation(child)?)
+                    }
                     Rule::stmt => TopLevelItem::Stmt(expr::build_stmt(child)?),
                     _ => continue,
                 };
@@ -64,9 +68,9 @@ pub(crate) fn build_file(pair: Pair<Rule>) -> Result<File> {
 fn build_fn_def(pair: Pair<Rule>) -> Result<FnDef> {
     let span = Span::from_pair(&pair);
     let mut inner = pair.into_inner();
-    
+
     let name = inner.next().unwrap().as_str().to_string();
-    
+
     let mut params = Vec::new();
     let mut return_type = None;
     let mut body = Vec::new();
@@ -105,13 +109,7 @@ fn build_fn_def(pair: Pair<Rule>) -> Result<FnDef> {
         }
     }
 
-    Ok(FnDef {
-        name,
-        params,
-        return_type,
-        body,
-        span,
-    })
+    Ok(FnDef { name, params, return_type, body, span })
 }
 
 pub fn unquote(s: &str) -> String {

@@ -1,7 +1,7 @@
-use std::collections::HashMap;
 use crate::ast::source::{ComponentDef, FnDef};
-use crate::ast::{Value, Type, NativeNodeSchema, NativeFnSchema};
+use crate::ast::{NativeFnSchema, NativeNodeSchema, Type, Value};
 use crate::error::Result;
+use std::collections::HashMap;
 use std::fmt;
 use std::sync::Arc;
 
@@ -10,7 +10,7 @@ use std::sync::Arc;
 pub struct Registry {
     /// Built-in nodes defined in Rust
     pub(crate) native_nodes: HashMap<String, NativeNodeSchema>,
-    
+
     /// User-defined components from the .nbl file
     pub(crate) components: HashMap<String, ComponentDef>,
 
@@ -19,7 +19,7 @@ pub struct Registry {
 
     /// User-defined functions from the .nbl file
     pub(crate) functions: HashMap<String, FnDef>,
-    
+
     /// Pre-evaluated global variables
     pub(crate) globals: HashMap<String, Value>,
 }
@@ -37,21 +37,12 @@ impl fmt::Debug for Registry {
 }
 
 impl Registry {
-    pub fn add_native_fn<F>(
-        &mut self, 
-        name: &str, 
-        params: Vec<Type>, 
-        return_type: Type, 
-        f: F
-    ) where 
-        F: Fn(Vec<Value>) -> Result<Value> + Send + Sync + 'static 
+    pub fn add_native_fn<F>(&mut self, name: &str, params: Vec<Type>, return_type: Type, f: F)
+    where
+        F: Fn(Vec<Value>) -> Result<Value> + Send + Sync + 'static,
     {
-        let schema = NativeFnSchema {
-            name: name.to_string(),
-            params,
-            return_type,
-            body: Arc::new(f),
-        };
+        let schema =
+            NativeFnSchema { name: name.to_string(), params, return_type, body: Arc::new(f) };
         self.native_functions.insert(name.to_string(), schema);
     }
 

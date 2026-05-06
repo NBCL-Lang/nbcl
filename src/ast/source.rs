@@ -30,7 +30,7 @@ pub struct ImportDef {
 #[derive(Debug, Clone)]
 pub enum ImportDefType {
     Module(String, String),
-    Library(String)
+    Library(String),
 }
 
 /// Component definitions
@@ -44,8 +44,8 @@ pub struct ComponentDef {
 
 #[derive(Debug, Clone)]
 pub enum ComponentInterface {
-    Loose(String),            // (any: props)
-    Strict(Vec<Parameter>),   // (a, b?, c: Int)
+    Loose(String),          // (any: props)
+    Strict(Vec<Parameter>), // (a, b?, c: Int)
     None,
 }
 
@@ -172,7 +172,7 @@ pub struct IfExpr {
     pub else_branch: Option<(Vec<Stmt>, Option<Expr>)>,
 }
 
-/// Match 
+/// Match
 #[derive(Debug, Clone)]
 pub struct MatchArm {
     pub pattern: String,

@@ -1,18 +1,14 @@
-mod import;
 mod expr;
+mod import;
 mod node;
 mod stmt;
 
 use crate::{
-    ast::Value,
-    ast::source::*,
-    ast::resolved::ResolvedTree,
-    registry::Registry,
-    error::Result,
-    module_resolver::FileModuleResolver,
+    ast::Value, ast::resolved::ResolvedTree, ast::source::*, error::Result,
+    module_resolver::FileModuleResolver, registry::Registry,
 };
-use std::path::PathBuf;
 use std::collections::{HashMap, HashSet};
+use std::path::PathBuf;
 
 pub enum FlowControl {
     None,
@@ -47,8 +43,8 @@ impl Evaluator {
         // In NBCL, developers should be able to use components/functions
         // that are defined after the lines where it is used.
         //
-        // So for this feature, we only evaluate imports, globals, 
-        // components, and functions first. Then loop through the items 
+        // So for this feature, we only evaluate imports, globals,
+        // components, and functions first. Then loop through the items
         // again to handle nodes and statements.
         //
         // This ensures that data is present first before using it anywhere.

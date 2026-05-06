@@ -1,15 +1,15 @@
-use pest::iterators::Pair;
-use crate::parser::Rule;
+use super::node;
 use crate::ast::source::*;
 use crate::error::{Result, Span};
-use super::node;
+use crate::parser::Rule;
+use pest::iterators::Pair;
 
 pub fn build_component_def(pair: Pair<Rule>) -> Result<ComponentDef> {
     let span = Span::from_pair(&pair);
     let mut inner = pair.into_inner();
-    
+
     let name = inner.next().unwrap().as_str().to_string();
-    
+
     let mut next = inner.next().unwrap();
     let interface = if next.as_rule() == Rule::component_params {
         let interf = build_interface(next)?;
@@ -37,7 +37,8 @@ fn build_interface(pair: Pair<Rule>) -> Result<ComponentInterface> {
     match inner.as_rule() {
         Rule::any_params => {
             // any_params -> "any" ~ ":" ~ snake_ident
-            let ident = inner.into_inner()
+            let ident = inner
+                .into_inner()
                 .find(|p| p.as_rule() == Rule::snake_ident)
                 .expect("Grammar guaranteed a snake_ident in any_params")
                 .as_str()

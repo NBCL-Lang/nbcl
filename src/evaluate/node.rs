@@ -1,10 +1,10 @@
-use crate::{
-    ast::{Value, Type, PropValidation},
-    ast::source::*,
-    ast::resolved::ResolvedNode,
-    error::{Result, NbclError},
-};
 use super::Evaluator;
+use crate::{
+    ast::resolved::ResolvedNode,
+    ast::source::*,
+    ast::{PropValidation, Type, Value},
+    error::{NbclError, Result},
+};
 use std::collections::HashMap;
 
 impl Evaluator {
@@ -29,7 +29,7 @@ impl Evaluator {
 
             let mut props = HashMap::new();
             let mut children = Vec::new();
-            
+
             self.resolve_node_items(inv.body, &mut props, &mut children)?;
 
             // Check: Are these properties allowed and are their type correct?
@@ -37,16 +37,18 @@ impl Evaluator {
                 for (key, value) in props.iter() {
                     // Existence Check
                     if let Some(expected_type) = allowed_map.get(key) {
-                        
                         // Type Check
                         if expected_type.matches_value(value) {
                             return Err(NbclError::Runtime {
                                 message: format!(
-                                    "Type mismatch for '{}' on '{}': expected {:?}, found {:?}", 
-                                    key, inv.type_name, expected_type, value.type_name()
+                                    "Type mismatch for '{}' on '{}': expected {:?}, found {:?}",
+                                    key,
+                                    inv.type_name,
+                                    expected_type,
+                                    value.type_name()
                                 ),
                                 hint: None,
-                                span: Some(inv.span.clone()), 
+                                span: Some(inv.span.clone()),
                             });
                         }
                     } else {
@@ -55,7 +57,10 @@ impl Evaluator {
                         let hint = suggestion.map(|s| format!("Did you mean \"{}\"?", s));
 
                         return Err(NbclError::Runtime {
-                            message: format!("Property '{}' is not allowed on node '{}'", key, inv.type_name),
+                            message: format!(
+                                "Property '{}' is not allowed on node '{}'",
+                                key, inv.type_name
+                            ),
                             hint,
                             span: Some(inv.span.clone()),
                         });
@@ -71,8 +76,8 @@ impl Evaluator {
             }]);
         }
 
-        let all_node_names = self.registry.native_nodes.keys()
-            .chain(self.registry.components.keys());
+        let all_node_names =
+            self.registry.native_nodes.keys().chain(self.registry.components.keys());
 
         let suggestion = crate::utils::find_best_match(&inv.type_name, all_node_names);
         let hint = suggestion.map(|s| format!("Did you mean \"{}\"?", s));
@@ -84,7 +89,11 @@ impl Evaluator {
         })
     }
 
-    fn expand_component(&mut self, def: &ComponentDef, inv: NodeInvocation) -> Result<Vec<ResolvedNode>> {
+    fn expand_component(
+        &mut self,
+        def: &ComponentDef,
+        inv: NodeInvocation,
+    ) -> Result<Vec<ResolvedNode>> {
         let mut component_scope = HashMap::new();
 
         // Resolve caller props once to avoid re-evaluating in different branches
@@ -101,11 +110,11 @@ impl Evaluator {
                 }
                 component_scope.insert(name.clone(), Value::Map(prop_list));
             }
-            
+
             ComponentInterface::Strict(params) => {
                 for param in params {
                     let value = caller_props.remove(&param.name);
-                    
+
                     match value {
                         Some(v) => {
                             // Validate Type Hint if it exists
@@ -113,8 +122,13 @@ impl Evaluator {
                                 if let Some(expected_type) = Type::from_str(hint) {
                                     if !expected_type.matches_value(&v) {
                                         return Err(NbclError::Runtime {
-                                            message: format!("Component '{}' expected {} for prop '{}', got {}", 
-                                                def.name, hint, param.name, v.type_name()),
+                                            message: format!(
+                                                "Component '{}' expected {} for prop '{}', got {}",
+                                                def.name,
+                                                hint,
+                                                param.name,
+                                                v.type_name()
+                                            ),
                                             hint: None,
                                             span: Some(inv.span.clone()),
                                         });
@@ -125,14 +139,18 @@ impl Evaluator {
                         }
                         None => {
                             if !param.is_optional {
-                                let suggestion = crate::utils::find_best_match(&param.name, caller_props.keys());
-                                        
-                                let hint = suggestion.map(|s| 
+                                let suggestion =
+                                    crate::utils::find_best_match(&param.name, caller_props.keys());
+
+                                let hint = suggestion.map(|s|
                                     format!("You provided \"{}\", which is not a parameter. Did you mean \"{}\"?", s, param.name)
                                 );
 
                                 return Err(NbclError::Runtime {
-                                    message: format!("Missing required prop '{}' for component '{}'", param.name, def.name),
+                                    message: format!(
+                                        "Missing required prop '{}' for component '{}'",
+                                        param.name, def.name
+                                    ),
                                     hint,
                                     span: Some(inv.span.clone()),
                                 });
@@ -141,7 +159,7 @@ impl Evaluator {
                         }
                     }
                 }
-                
+
                 if !caller_props.is_empty() {
                     let (extra_key, _) = caller_props.into_iter().next().unwrap();
 
@@ -149,9 +167,12 @@ impl Evaluator {
                     let suggestion = crate::utils::find_best_match(&extra_key, param_names);
 
                     let hint = suggestion.map(|s| format!("Did you mean \"{}\"?", s));
-                    
+
                     return Err(NbclError::Runtime {
-                        message: format!("Unexpected property '{}' for component '{}'.", extra_key, def.name),
+                        message: format!(
+                            "Unexpected property '{}' for component '{}'.",
+                            extra_key, def.name
+                        ),
                         hint,
                         span: Some(inv.span.clone()),
                     });
@@ -161,7 +182,7 @@ impl Evaluator {
         }
 
         self.scopes.push(component_scope);
-        
+
         let mut final_nodes = Vec::new();
         let mut ignored_props = HashMap::new(); // Components usually don't "output" props, only nodes
 
@@ -187,7 +208,7 @@ impl Evaluator {
                     children.extend(self.resolve_node(child_inv)?);
                 }
                 NodeItem::Stmt(stmt) => self.execute_stmt(stmt)?,
-                
+
                 NodeItem::If(node_if) => {
                     let mut target_body = None;
 
@@ -218,11 +239,11 @@ impl Evaluator {
 
                 NodeItem::For(node_for) => {
                     let iter_value = self.eval_expr(&node_for.iter)?;
-                    
+
                     if let Value::List(items) = iter_value {
                         for val in items {
                             let mut loop_scope = HashMap::new();
-                            
+
                             // Support for `for item in list` (pattern len 1)
                             // or `for i, item in list` (pattern len 2)
                             if node_for.pattern.len() == 1 {

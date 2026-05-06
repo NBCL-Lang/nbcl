@@ -1,8 +1,8 @@
+use super::Evaluator;
 use crate::ast::source::*;
-use crate::error::{Result, NbclError};
+use crate::error::{NbclError, Result};
 use crate::parser::NbclParser;
 use crate::parser::Rule;
-use super::Evaluator;
 use pest::Parser;
 use std::fs;
 
@@ -27,10 +27,9 @@ impl Evaluator {
                 }
 
                 // Read and Parse
-                let source = fs::read_to_string(&target_path).map_err(|e| {
-                   todo!("Handle read error: {}", e)
-                })?;
-                
+                let source = fs::read_to_string(&target_path)
+                    .map_err(|e| todo!("Handle read error: {}", e))?;
+
                 let mut tokens = NbclParser::parse(Rule::file, &source)
                     .map_err(|e| NbclError::Parse(Box::new(e)))?;
 

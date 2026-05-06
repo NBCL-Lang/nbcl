@@ -1,6 +1,6 @@
+use nbcl::NbclEngine;
 use std::env;
 use std::fs;
-use nbcl::NbclEngine;
 
 fn main() {
     let path = env::args().nth(1).unwrap_or_else(|| {
@@ -20,8 +20,7 @@ fn main() {
             println!("{:#?}", ast);
             let evaled = engine.evaluate(ast);
             println!("{:#?}", evaled);
-
-        },
-        Err(e)  => eprintln!("{e}"),
+        }
+        Err(e) => eprintln!("{e}"),
     }
 }

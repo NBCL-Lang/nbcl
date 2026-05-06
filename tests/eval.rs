@@ -1,4 +1,4 @@
-use nbcl::ast::{Value, Type, PropValidation};
+use nbcl::ast::{PropValidation, Type, Value};
 use std::sync::{Arc, Mutex};
 
 #[test]
@@ -7,16 +7,11 @@ fn test_native_fn_registration() {
     let call_count_captured = Arc::clone(&call_count);
 
     let mut engine = nbcl::NbclEngine::new();
-    engine.register_native_fn(
-        "increment",
-        vec![],
-        Type::Null,
-        move |_| {
-            let mut count = call_count_captured.lock().unwrap();
-            *count += 1;
-            Ok(Value::Null)
-        }
-    );
+    engine.register_native_fn("increment", vec![], Type::Null, move |_| {
+        let mut count = call_count_captured.lock().unwrap();
+        *count += 1;
+        Ok(Value::Null)
+    });
 
     let file = engine.parse_str("increment() increment()").unwrap();
     engine.evaluate(file).unwrap();
@@ -27,11 +22,7 @@ fn test_native_fn_registration() {
 #[test]
 fn test_complex_logic_and_scoping() {
     let mut engine = nbcl::NbclEngine::new();
-    engine.register_node(
-        "Result",
-        false,
-        PropValidation::Loose
-    );
+    engine.register_node("Result", false, PropValidation::Loose);
 
     let code = r#"
         local base_cpu = 2
@@ -52,7 +43,7 @@ fn test_complex_logic_and_scoping() {
 
     let file = engine.parse_str(code).unwrap();
     let resolved = engine.evaluate(file).unwrap();
-    
+
     let node = &resolved.root_nodes[0];
     assert_eq!(node.props.get("cpu").unwrap(), &Value::Int(8));
     assert_eq!(node.props.get("valid").unwrap(), &Value::Bool(true));

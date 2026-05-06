@@ -1,18 +1,18 @@
 use crate::{
-    ast::{Value, Type, NativeNodeSchema},
-    ast::source::File,
     ast::resolved::ResolvedTree,
+    ast::source::File,
+    ast::{NativeNodeSchema, Type, Value},
+    builder::build_file,
     error::{NbclError, Result},
+    evaluate::Evaluator,
+    module_resolver::FileModuleResolver,
     parser::{NbclParser, Rule},
     registry::Registry,
-    evaluate::Evaluator,
-    builder::build_file,
-    module_resolver::FileModuleResolver,
 };
-use std::io::ErrorKind;
-use std::path::PathBuf;
 use pest::Parser;
 use std::fs;
+use std::io::ErrorKind;
+use std::path::PathBuf;
 
 /// Nbcl Engine used for parsing and evaluation
 #[derive(Debug, Clone)]
@@ -31,10 +31,7 @@ impl NbclEngine {
         // default module resolver follows relative path
         let mod_resolver = FileModuleResolver::new(PathBuf::from("."));
 
-        Self {
-            registry,
-            mod_resolver: Some(mod_resolver),
-        }
+        Self { registry, mod_resolver: Some(mod_resolver) }
     }
 
     /// Parse the a file into a source AST
@@ -43,27 +40,25 @@ impl NbclEngine {
             let (msg, hint) = match e.kind() {
                 ErrorKind::NotFound => {
                     let msg = format!("Module not found: '{}'", file_path.display());
-                    let hint = "Ensure that the module exists and try adjusting the path.".to_string();
+                    let hint =
+                        "Ensure that the module exists and try adjusting the path.".to_string();
 
                     (msg, Some(hint))
-                },
+                }
                 ErrorKind::PermissionDenied => {
-                    let msg = format!("Permission denied reading module: '{}'", file_path.display());
+                    let msg =
+                        format!("Permission denied reading module: '{}'", file_path.display());
                     let hint = "Set proper file permissions".to_string();
 
                     (msg, Some(hint))
-                },
+                }
                 _ => {
                     let msg = format!("Failed to read module '{}': {}", file_path.display(), e);
                     (msg, None)
-                },
+                }
             };
 
-            NbclError::IO {
-                message: msg,
-                hint,
-                path: file_path.clone(),
-            }
+            NbclError::IO { message: msg, hint, path: file_path.clone() }
         })?;
 
         self.parse_str(&source)
@@ -71,8 +66,8 @@ impl NbclEngine {
 
     /// Parse a source string into AST
     pub fn parse_str(&self, source: &str) -> Result<File> {
-        let mut pairs = NbclParser::parse(Rule::file, source)
-            .map_err(|e| NbclError::Parse(Box::new(e)))?;
+        let mut pairs =
+            NbclParser::parse(Rule::file, source).map_err(|e| NbclError::Parse(Box::new(e)))?;
 
         let file_pair = pairs.next().ok_or_else(|| NbclError::Ast {
             message: "Empty file".into(),
@@ -89,7 +84,7 @@ impl NbclEngine {
         evaluator.run(file)
     }
 
-    // === Registration API's === 
+    // === Registration API's ===
 
     /// Registers a custom node into the engine.
     pub fn register_node(&mut self, schema: NativeNodeSchema) {
@@ -97,14 +92,9 @@ impl NbclEngine {
     }
 
     /// Registers a native function into the engine.
-    pub fn register_native_fn<F>(
-        &mut self, 
-        name: &str, 
-        params: Vec<Type>, 
-        return_type: Type, 
-        f: F
-    ) where 
-        F: Fn(Vec<Value>) -> Result<Value> + Send + Sync + 'static 
+    pub fn register_native_fn<F>(&mut self, name: &str, params: Vec<Type>, return_type: Type, f: F)
+    where
+        F: Fn(Vec<Value>) -> Result<Value> + Send + Sync + 'static,
     {
         self.registry.add_native_fn(name, params, return_type, f)
     }

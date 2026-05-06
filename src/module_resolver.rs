@@ -1,25 +1,24 @@
-use std::path::{PathBuf, Path};
-use crate::error::{Result, NbclError};
+use crate::error::{NbclError, Result};
+use std::path::{Path, PathBuf};
 
 /// Simple module resolver.
 #[derive(Debug, Clone)]
 pub struct FileModuleResolver {
-    file_path: PathBuf
+    file_path: PathBuf,
 }
 
 impl FileModuleResolver {
     /// Create a new FileModuleResolver
     pub fn new(fpath: PathBuf) -> Self {
-        Self {
-            file_path: fpath,
-        }
+        Self { file_path: fpath }
     }
 
     /// Resolve a module based on relative string (e.g. test/node.nbl)
     pub fn find_target(&self, path_str: &str) -> Result<PathBuf> {
         // Determine the base directory
         // If file_path is "main.nbl", parent() might be empty, so we default to "."
-        let current_dir = self.file_path
+        let current_dir = self
+            .file_path
             .parent()
             .filter(|p| !p.as_os_str().is_empty())
             .unwrap_or_else(|| Path::new("."));
@@ -30,15 +29,15 @@ impl FileModuleResolver {
         full_path.canonicalize().map_err(|e| {
             let (message, hint) = match e.kind() {
                 std::io::ErrorKind::NotFound => {
-                    let msg =  format!(
-                        "Module not found: '{}' (searched in '{}')", 
-                        path_str, 
+                    let msg = format!(
+                        "Module not found: '{}' (searched in '{}')",
+                        path_str,
                         current_dir.display()
                     );
-                    let hint = "Ensure that the module exists and try adjusting the path".to_string();
+                    let hint =
+                        "Ensure that the module exists and try adjusting the path".to_string();
 
                     (msg, Some(hint))
-
                 }
                 std::io::ErrorKind::PermissionDenied => {
                     let msg = format!("Permission denied accessing module: '{}'", path_str);
@@ -49,11 +48,7 @@ impl FileModuleResolver {
                 _ => (format!("Failed to resolve module path '{}': {}", path_str, e), None),
             };
 
-            NbclError::IO {
-                message,
-                hint,
-                path: full_path,
-            }
+            NbclError::IO { message, hint, path: full_path }
         })
     }
 }
