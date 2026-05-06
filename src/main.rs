@@ -17,10 +17,13 @@ fn main() {
 
     match engine.parse_str(&source) {
         Ok(ast) => {
-            println!("{:#?}", ast);
-            let evaled = engine.evaluate(ast);
-            println!("{:#?}", evaled);
+            println!("AST: {:#?}", ast);
+
+            match engine.evaluate(ast) {
+                Ok(evaled) => println!("{:#?}", evaled),
+                Err(e) => eprintln!("{}", e), 
+            }
         }
-        Err(e) => eprintln!("{e}"),
+        Err(e) => eprintln!("{}", e),
     }
 }

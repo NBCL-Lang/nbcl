@@ -78,7 +78,7 @@ pub fn build_stmt(pair: Pair<Rule>) -> Result<Stmt> {
 
         Rule::expr_stmt => Ok(Stmt::Expr(build_expr(inner.into_inner().next().unwrap())?)),
         _ => Err(NbclError::Ast {
-            message: format!("Todo: {:?}", inner.as_rule()),
+            message: format!("Unkown Statement: {:?}", inner.as_rule()),
             hint: None,
             span: Some(span),
         }),
@@ -205,6 +205,25 @@ fn build_literal(pair: Pair<Rule>) -> Result<Literal> {
         Rule::float_lit => Ok(Literal::Float(inner.as_str().parse().unwrap())),
         Rule::bool_lit => Ok(Literal::Bool(inner.as_str() == "true")),
         Rule::string_lit => Ok(Literal::Str(unquote(inner.as_str()))),
+        Rule::list_lit => {
+            let mut exprs = Vec::new();
+            for p in inner.into_inner() {
+                exprs.push(build_expr(p)?);
+            }
+            Ok(Literal::List(exprs))
+        }
+        Rule::map_lit => {
+            let mut pairs = Vec::new();
+            for p in inner.into_inner() {
+                let mut inner_pair = p.into_inner();
+                
+                let key = inner_pair.next().unwrap().as_str().to_string();
+                let value = build_expr(inner_pair.next().unwrap())?;
+                
+                pairs.push((key, value));
+            }
+            Ok(Literal::Map(pairs))
+        }
         _ => Ok(Literal::Null),
     }
 }

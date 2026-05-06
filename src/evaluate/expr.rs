@@ -261,6 +261,8 @@ impl Evaluator {
                                 span: Some(expr.span.clone()),
                             });
                         }
+
+                        call_scope.insert(param.name.clone(), value);
                     }
                 }
 
@@ -402,7 +404,7 @@ impl Evaluator {
             (Value::Str(a), "==", Value::Str(b)) => Ok(Value::Bool(a == b)),
             (l, o, r) => Err(NbclError::Runtime {
                 message: format!("Operation '{}' not supported between {:?} and {:?}", o, l, r),
-                hint: None,
+                hint: Some("Try converting both sides to the same type using to_string() or to_int().".to_string()),
                 span: Some(span.clone()),
             }),
         }

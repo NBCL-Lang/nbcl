@@ -24,7 +24,7 @@ pub(crate) fn build_file(pair: Pair<Rule>) -> Result<File> {
 
                         let alias_pair = inner.next().ok_or_else(|| NbclError::Ast {
                             message: "Import statement missing 'as' alias".into(),
-                            hint: None,
+                            hint: Some("All imports must follow this structure: import \"..\" as example".to_string()),
                             span: Some(Span::from_pair(&path_pair)),
                         })?;
 
