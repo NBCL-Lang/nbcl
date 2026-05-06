@@ -250,62 +250,6 @@ impl Evaluator {
                         children.extend(returned_nodes);
                     }
                 },
-
-                NodeItem::If(node_if) => {
-                    let mut target_body = None;
-
-                    // Check main 'if' condition
-                    if self.eval_expr(&node_if.condition)?.is_truthy() {
-                        target_body = Some(&node_if.then_body);
-                    } else {
-                        // Check 'else if' branches
-                        for (cond_expr, body) in &node_if.else_ifs {
-                            if self.eval_expr(cond_expr)?.is_truthy() {
-                                target_body = Some(body);
-                                break;
-                            }
-                        }
-                        // Check 'else' branch
-                        if target_body.is_none() {
-                            if let Some(else_body) = &node_if.else_body {
-                                target_body = Some(else_body);
-                            }
-                        }
-                    }
-
-                    if let Some(body) = target_body {
-                        // Recursively resolve the items in the chosen branch
-                        self.resolve_node_items(body.clone(), props, children)?;
-                    }
-                }
-
-                NodeItem::For(node_for) => {
-                    let iter_value = self.eval_expr(&node_for.iter)?;
-
-                    if let Value::List(items) = iter_value {
-                        for val in items {
-                            let mut loop_scope = HashMap::new();
-
-                            // Support for `for item in list` (pattern len 1)
-                            // or `for i, item in list` (pattern len 2)
-                            if node_for.pattern.len() == 1 {
-                                loop_scope.insert(node_for.pattern[0].clone(), val);
-                            } else if node_for.pattern.len() == 2 {
-                                todo!("Handle index patterns in for loops");
-                            }
-
-                            self.scopes.push(loop_scope);
-                            self.resolve_node_items(node_for.body.clone(), props, children)?;
-                            self.scopes.pop();
-                        }
-                    } else {
-                        return Err(NbclError::Runtime {
-                            message: "Can only iterate over a List in a for-node".into(),
-                            hint: None,
-                            span: Some(node_for.span),
-                        });
-                    }
-                }
             }
         }
         Ok(())

@@ -326,8 +326,6 @@ node_item = {
   | node_stmt          // local, for, while, etc.
   | node_invocation    // child node
   | node_inline        // TypeName { key: val, key: val }  (no nested nodes)
-  | node_for           // for i in range { … }
-  | node_if            // if cond { … } else { … }
 }
 
 // prop = value  (value is from the expression world)
@@ -346,16 +344,3 @@ node_inline = {
 }
 
 inline_prop = { prop_key ~ ":" ~ prop_value }
-
-// for inside a node block
-node_for = {
-    "for" ~ for_pattern ~ "in" ~ (range_expr | expr)
-  ~ node_block
-}
-
-// if inside a node block
-node_if = {
-    "if" ~ expr ~ node_block
-  ~ ("else" ~ "if" ~ expr ~ node_block)*
-  ~ ("else" ~ node_block)?
-}

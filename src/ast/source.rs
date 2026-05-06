@@ -92,26 +92,7 @@ pub struct NodeInvocation {
 pub enum NodeItem {
     Prop(String, Expr),
     Child(NodeInvocation),
-    For(NodeFor),
-    If(NodeIf),
     Stmt(Stmt),
-}
-
-#[derive(Debug, Clone)]
-pub struct NodeFor {
-    pub pattern: Vec<String>,
-    pub iter: Expr,
-    pub body: Vec<NodeItem>,
-    pub span: Span,
-}
-
-#[derive(Debug, Clone)]
-pub struct NodeIf {
-    pub condition: Expr,
-    pub then_body: Vec<NodeItem>,
-    pub else_ifs: Vec<(Expr, Vec<NodeItem>)>,
-    pub else_body: Option<Vec<NodeItem>>,
-    pub span: Span,
 }
 
 // Expressions
