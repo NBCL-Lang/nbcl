@@ -19,6 +19,7 @@ pub enum FlowControl {
     Return(Value),
 }
 
+/// An internal structure that evaluates the source AST
 pub(crate) struct Evaluator {
     registry: Registry,
     scopes: Vec<HashMap<String, Value>>,
@@ -28,6 +29,7 @@ pub(crate) struct Evaluator {
 }
 
 impl Evaluator {
+    /// Create a new [`Evaluator`]
     pub fn new(registry: Registry, mod_resolver: Option<FileModuleResolver>) -> Self {
         Self {
             registry,
@@ -54,8 +56,8 @@ impl Evaluator {
         for item in &file.items {
             match item {
                 TopLevelItem::Import(imp) => self.handle_import(imp.clone())?,
-                TopLevelItem::ComponentDef(def) => self.register_component(def.clone()),
-                TopLevelItem::FnDef(def) => self.register_function(def.clone()),
+                TopLevelItem::ComponentDef(def) => self.registry.register_component(def.clone()),
+                TopLevelItem::FnDef(def) => self.registry.register_function(def.clone()),
                 TopLevelItem::Stmt(Stmt::Global(name, _, expr)) => {
                     // We evaluate globals now so they are available in Loop 2
                     let val = self.eval_expr(expr)?;
@@ -79,13 +81,5 @@ impl Evaluator {
         }
 
         Ok(ResolvedTree { root_nodes })
-    }
-
-    fn register_component(&mut self, def: ComponentDef) {
-        self.registry.components.insert(def.name.clone(), def);
-    }
-
-    fn register_function(&mut self, def: FnDef) {
-        self.registry.functions.insert(def.name.clone(), def);
     }
 }

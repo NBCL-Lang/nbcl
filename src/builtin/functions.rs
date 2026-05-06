@@ -2,6 +2,7 @@ use crate::registry::Registry;
 use crate::ast::{Value, Type};
 use crate::error::NbclError;
 
+/// Register a set of core functions like print.
 pub(crate) fn register_builtin_functions(registry: &mut Registry) {
     // print(Any) -> Null
     registry.add_native_fn(

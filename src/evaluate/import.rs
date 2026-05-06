@@ -44,11 +44,11 @@ impl Evaluator {
                     match item {
                         TopLevelItem::FnDef(mut f) => {
                             f.name = format!("{}.{}", alias, f.name);
-                            self.register_function(f);
+                            self.registry.register_function(f);
                         }
                         TopLevelItem::ComponentDef(mut c) => {
                             c.name = format!("{}.{}", alias, c.name);
-                            self.register_component(c);
+                            self.registry.register_component(c);
                         }
                         _ => {} // Skip top-level statements/imports in the target file for now
                     }

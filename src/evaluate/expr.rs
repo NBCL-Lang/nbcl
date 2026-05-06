@@ -8,7 +8,7 @@ use super::{Evaluator, FlowControl};
 
 // Extend for expr support.
 impl Evaluator {
-    pub fn eval_expr(&mut self, expr: &Expr) -> Result<Value> {
+    pub(crate) fn eval_expr(&mut self, expr: &Expr) -> Result<Value> {
         match &expr.kind {
             ExprKind::Literal(lit) => self.eval_literal(lit),
             

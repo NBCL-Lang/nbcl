@@ -1,6 +1,6 @@
 use crate::{
-    ast::{Value, Type},
-    ast::source::{File, NativeNodeSchema},
+    ast::{Value, Type, NativeNodeSchema, PropValidation},
+    ast::source::File,
     ast::resolved::ResolvedTree,
     error::{NbclError, Result},
     parser::{NbclParser, Rule},
@@ -14,12 +14,15 @@ use std::path::PathBuf;
 use pest::Parser;
 use std::fs;
 
+/// Nbcl Engine used for parsing and evaluation
+#[derive(Debug, Clone)]
 pub struct NbclEngine {
     registry: Registry,
     mod_resolver: Option<FileModuleResolver>,
 }
 
 impl NbclEngine {
+    /// Create a ew Nbcl Engine
     pub fn new() -> Self {
         let mut registry = Registry::default();
         crate::builtin::functions::register_builtin_functions(&mut registry);
@@ -73,8 +76,19 @@ impl NbclEngine {
     // === Registration API's === 
 
     /// Registers a custom node into the engine.
-    pub fn register_node(&mut self, name: &str, schema: NativeNodeSchema) {
-        self.registry.native_nodes.insert(name.to_string(), schema);
+    pub fn register_node(
+        &mut self, 
+        name: &str, 
+        enforce_id: bool,
+        prop_validation: PropValidation,
+    ) {
+        let node_schema = NativeNodeSchema {
+            type_name: name.to_string(),
+            enforce_id,
+            validation: prop_validation
+        };
+
+        self.registry.native_nodes.insert(name.to_string(), node_schema);
     }
 
     /// Registers a native function into the engine.

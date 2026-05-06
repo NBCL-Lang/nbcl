@@ -7,7 +7,7 @@ use std::collections::HashMap;
 use super::{Evaluator, FlowControl};
 
 impl Evaluator {
-    pub fn execute_stmt(&mut self, stmt: Stmt) -> Result<()> {
+    pub(crate) fn execute_stmt(&mut self, stmt: Stmt) -> Result<()> {
         if let FlowControl::Return(_) = self.flow {
             return Ok(());
         }

@@ -1,8 +1,4 @@
-use crate::ast::{Value, Type};
 use crate::error::Span;
-use std::sync::Arc;
-use crate::error;
-use std::fmt;
 
 /// This essentially is the root of the AST.
 #[derive(Debug, Clone)]
@@ -11,6 +7,7 @@ pub struct File {
     pub span: Span,
 }
 
+/// Everything that can be found at the top level of the source
 #[derive(Debug, Clone)]
 pub enum TopLevelItem {
     Import(ImportDef),
@@ -20,18 +17,23 @@ pub enum TopLevelItem {
     Stmt(Stmt),
 }
 
+/// Import definitions
+/// Example: `import "colors.nbl" as colors`
 #[derive(Debug, Clone)]
 pub struct ImportDef {
     pub(crate) def: ImportDefType,
     pub(crate) span: Span,
 }
 
+/// Types of import definition. Includes,
+/// Module (e.g. `import "file" ...`), and Library (e.g. stdlib).
 #[derive(Debug, Clone)]
 pub enum ImportDefType {
     Module(String, String),
     Library(String)
 }
 
+/// Component definitions
 #[derive(Debug, Clone)]
 pub struct ComponentDef {
     pub name: String,
@@ -54,6 +56,7 @@ pub struct Parameter {
     pub is_optional: bool,
 }
 
+/// Function definition
 #[derive(Debug, Clone)]
 pub struct FnDef {
     pub name: String,
@@ -63,6 +66,7 @@ pub struct FnDef {
     pub span: Span,
 }
 
+/// Parameters in a function
 #[derive(Debug, Clone)]
 pub struct FnParam {
     pub name: String,
@@ -117,6 +121,7 @@ pub struct Block {
     pub terminator: Option<Expr>,
 }
 
+/// Statements supported in the language
 #[derive(Debug, Clone)]
 pub enum Stmt {
     Assign(String, Expr, Span),
@@ -134,6 +139,7 @@ pub struct Expr {
     pub span: Span,
 }
 
+/// Kinds of expression supported in the language
 #[derive(Debug, Clone)]
 pub enum ExprKind {
     Binary(Box<Expr>, String, Box<Expr>),
@@ -149,12 +155,14 @@ pub enum ExprKind {
     Range(Box<Expr>, Box<Expr>, bool), // bool is inclusive
 }
 
+/// Lambda functions
 #[derive(Debug, Clone)]
 pub enum LambdaBody {
     Expr(Expr),
     Block(Vec<Stmt>, Option<Expr>),
 }
 
+/// If/else expressions
 #[derive(Debug, Clone)]
 pub struct IfExpr {
     pub condition: Expr,
@@ -163,6 +171,7 @@ pub struct IfExpr {
     pub else_branch: Option<(Vec<Stmt>, Option<Expr>)>,
 }
 
+/// Match 
 #[derive(Debug, Clone)]
 pub struct MatchArm {
     pub pattern: String,
@@ -178,75 +187,4 @@ pub enum Literal {
     List(Vec<Expr>),
     Map(Vec<(String, Expr)>),
     Null,
-}
-
-/// Defines a host-provided node
-#[derive(Debug, Clone)]
-pub enum PropValidation {
-    /// Allow any properties
-    Loose,
-    /// Only allow specific keys
-    Strict(Vec<String>),
-}
-
-#[derive(Debug, Clone)]
-pub struct NativeNodeSchema {
-    pub(crate) type_name: String,
-    pub(crate) enforce_id: bool,
-    pub(crate) validation: PropValidation,
-}
-
-pub struct NativeNodeSchemaBuilder {
-    type_name: String,
-    enforce_id: bool,
-    validation: PropValidation,
-}
-
-impl NativeNodeSchemaBuilder {
-    pub fn new(name: &str) -> Self {
-        Self {
-            type_name: name.to_string(),
-            enforce_id: false,
-            validation: PropValidation::Loose,
-        }
-    }
-
-    pub fn strict(mut self, props: Vec<&str>) -> Self {
-        self.validation = PropValidation::Strict(
-            props.into_iter().map(|s| s.to_string()).collect()
-        );
-        self
-    }
-
-    pub fn enforce_id(mut self) -> Self {
-        self.enforce_id = true;
-        self
-    }
-
-    pub fn build(self) -> NativeNodeSchema {
-        NativeNodeSchema {
-            type_name: self.type_name,
-            enforce_id: self.enforce_id,
-            validation: self.validation,
-        }
-    }
-}
-
-#[derive(Clone)]
-pub struct NativeFnSchema {
-    pub(crate) name: String,
-    pub(crate) params: Vec<Type>,
-    pub(crate) return_type: Type,
-    pub(crate) body: Arc<dyn Fn(Vec<Value>) -> error::Result<Value> + Send + Sync>,
-}
-
-impl fmt::Debug for NativeFnSchema {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("NativeFnSchema")
-            .field("name", &self.name)
-            .field("params", &self.params)
-            .field("return_type", &self.return_type)
-            .field("body", &"<native function>")
-            .finish()
-    }
 }

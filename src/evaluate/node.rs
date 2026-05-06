@@ -1,5 +1,5 @@
 use crate::{
-    ast::{Value, Type},
+    ast::{Value, Type, PropValidation},
     ast::source::*,
     ast::resolved::ResolvedNode,
     error::{Result, NbclError},

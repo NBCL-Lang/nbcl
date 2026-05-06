@@ -2,6 +2,7 @@ use crate::parser::Rule;
 use pest::iterators::Pair;
 use std::path::PathBuf;
 
+/// Start..end data that is useful for error reporting
 #[derive(Debug, Clone, PartialEq)]
 pub struct Span {
     pub start: usize,
@@ -12,6 +13,7 @@ pub struct Span {
 }
 
 impl Span {
+    /// Create span from a [`pest::iterators::Pair`].
     pub fn from_pair(pair: &Pair<Rule>) -> Self {
         let pest_span = pair.as_span();
         let (line, col) = pest_span.start_pos().line_col();
@@ -25,6 +27,7 @@ impl Span {
     }
 }
 
+/// Custom error format used throughout the crate
 #[derive(Debug)]
 pub enum NbclError {
     Parse(Box<pest::error::Error<Rule>>),

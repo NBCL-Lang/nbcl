@@ -1,18 +1,21 @@
 use std::path::{PathBuf, Path};
 use crate::error::{Result, NbclError};
 
+/// Simple module resolver.
 #[derive(Debug, Clone)]
 pub struct FileModuleResolver {
     file_path: PathBuf
 }
 
 impl FileModuleResolver {
+    /// Create a new FileModuleResolver
     pub fn new(fpath: PathBuf) -> Self {
         Self {
             file_path: fpath,
         }
     }
 
+    /// Resolve a module based on relative string (e.g. test/node.nbl)
     pub fn find_target(&self, path_str: &str) -> Result<PathBuf> {
         // Determine the base directory
         // If file_path is "main.nbl", parent() might be empty, so we default to "."

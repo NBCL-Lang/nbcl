@@ -1,10 +1,11 @@
 use std::collections::HashMap;
-use crate::ast::source::{ComponentDef, FnDef, NativeNodeSchema, NativeFnSchema};
-use crate::ast::{Value, Type};
+use crate::ast::source::{ComponentDef, FnDef};
+use crate::ast::{Value, Type, NativeNodeSchema, NativeFnSchema};
 use crate::error::Result;
 use std::fmt;
 use std::sync::Arc;
 
+/// Registry containing important data about source.
 #[derive(Default, Clone)]
 pub struct Registry {
     /// Built-in nodes defined in Rust
@@ -52,5 +53,13 @@ impl Registry {
             body: Arc::new(f),
         };
         self.native_functions.insert(name.to_string(), schema);
+    }
+
+    pub fn register_component(&mut self, def: ComponentDef) {
+        self.components.insert(def.name.clone(), def);
+    }
+
+    pub fn register_function(&mut self, def: FnDef) {
+        self.functions.insert(def.name.clone(), def);
     }
 }

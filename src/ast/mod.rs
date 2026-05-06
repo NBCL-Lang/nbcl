@@ -1,17 +1,27 @@
 pub mod source;
 pub mod resolved;
 use std::fmt;
+use std::sync::Arc;
+use crate::error;
 
-// TODO: Maybe add `Any` value
+/// Possible data types in Nbcl (used interanally to hold value)
 #[derive(Debug, Clone, PartialEq)]
 pub enum Value {
+    /// Integers (1)
     Int(i64),
+    /// Floating numbers (1.5)
     Float(f64),
+    /// Boolean (true/false)
     Bool(bool),
+    /// String ("Hello, World")
     Str(String),
+    /// List [1, 2, 3]
     List(Vec<Value>),
+    /// Map { key: value  }
     Map(Vec<(String, Value)>),
+    /// Regular Nodes
     Nodes(Vec<resolved::ResolvedNode>),
+    /// Null (no data)
     Null,
 }
 
@@ -39,6 +49,7 @@ impl fmt::Display for Value {
 }
 
 impl Value {
+    /// Check whether the value is truthy
     pub fn is_truthy(&self) -> bool {
         match self {
             Value::Bool(b) => *b,
@@ -47,6 +58,8 @@ impl Value {
         }
     }
 
+    /// Convert the Value into its Type name.
+    /// Example: Value::Int(_) -> "Int"
     pub fn type_name(&self) -> &'static str {
         match self {
             Value::Int(_) => "Int",
@@ -61,6 +74,7 @@ impl Value {
     }
 }
 
+/// Possible data types in Nbcl (used for type hints)
 #[derive(Debug, Clone, PartialEq)]
 pub enum Type {
     Int,
@@ -70,6 +84,8 @@ pub enum Type {
     List,
     Map,
     Nodes,
+    /// Additional constant that
+    /// symbolizes all data types.
     Any,
     Null,
 }
@@ -107,5 +123,45 @@ impl Type {
             (Type::Null, Value::Null) => true,
             _ => false,
         }
+    }
+}
+
+/// Defines a host-provided node
+#[derive(Debug, Clone)]
+pub enum PropValidation {
+    /// Allow any properties
+    Loose,
+    /// Only allow specific keys
+    Strict(Vec<String>),
+}
+
+// == schemas ==
+
+/// Internal structure used for registering custom nodes.
+#[derive(Debug, Clone)]
+pub struct NativeNodeSchema {
+    pub(crate) type_name: String,
+    pub(crate) enforce_id: bool,
+    pub(crate) validation: PropValidation,
+}
+
+
+/// Internal structure used for registering custom functions.
+#[derive(Clone)]
+pub struct NativeFnSchema {
+    pub(crate) name: String,
+    pub(crate) params: Vec<Type>,
+    pub(crate) return_type: Type,
+    pub(crate) body: Arc<dyn Fn(Vec<Value>) -> error::Result<Value> + Send + Sync>,
+}
+
+impl fmt::Debug for NativeFnSchema {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("NativeFnSchema")
+            .field("name", &self.name)
+            .field("params", &self.params)
+            .field("return_type", &self.return_type)
+            .field("body", &"<native function>")
+            .finish()
     }
 }

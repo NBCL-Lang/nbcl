@@ -1,4 +1,4 @@
-use nbcl::ast::{Value, Type, source::NativeNodeSchemaBuilder};
+use nbcl::ast::{Value, Type, PropValidation};
 use std::sync::{Arc, Mutex};
 
 #[test]
@@ -29,7 +29,8 @@ fn test_complex_logic_and_scoping() {
     let mut engine = nbcl::NbclEngine::new();
     engine.register_node(
         "Result",
-        NativeNodeSchemaBuilder::new("Result").build()
+        false,
+        PropValidation::Loose
     );
 
     let code = r#"
