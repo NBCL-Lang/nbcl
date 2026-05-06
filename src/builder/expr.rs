@@ -78,7 +78,7 @@ pub fn build_stmt(pair: Pair<Rule>) -> Result<Stmt> {
 
         Rule::expr_stmt => Ok(Stmt::Expr(build_expr(inner.into_inner().next().unwrap())?)),
         _ => Err(NbclError::Ast {
-            message: format!("Unkown Statement: {:?}", inner.as_rule()),
+            message: format!("Unknown Statement: {:?}", inner.as_rule()),
             hint: None,
             span: Some(span),
         }),
@@ -158,6 +158,13 @@ pub fn build_expr(pair: Pair<Rule>) -> Result<Expr> {
             let end = build_expr(inner.next().unwrap())?;
 
             Ok(Expr { kind: ExprKind::Range(Box::new(start), Box::new(end), inclusive), span })
+        }
+        Rule::id_expression => build_expr(pair.into_inner().next().unwrap()),
+        Rule::string_lit => {
+            Ok(Expr { 
+                kind: ExprKind::Literal(Literal::Str(unquote(pair.as_str()))), 
+                span 
+            })
         }
         Rule::primary_expr => build_expr(pair.into_inner().next().unwrap()),
         Rule::literal => Ok(Expr { kind: ExprKind::Literal(build_literal(pair)?), span }),

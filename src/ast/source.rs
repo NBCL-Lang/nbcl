@@ -83,7 +83,7 @@ pub enum FnItem {
 #[derive(Debug, Clone)]
 pub struct NodeInvocation {
     pub type_name: String,
-    pub id: Option<String>,
+    pub id: Option<Expr>,
     pub body: Vec<NodeItem>,
     pub span: Span,
 }

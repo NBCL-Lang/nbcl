@@ -16,10 +16,25 @@ impl Evaluator {
             return self.expand_component(&def, inv);
         }
 
+        let resolved_id = if let Some(id_expr) = &inv.id {
+            let val = self.eval_expr(id_expr)?;
+            match val {
+                Value::Str(s) => Some(s),
+                Value::Null => None,
+                _ => return Err(NbclError::Runtime {
+                    message: format!("Expected string for node ID, found {}", val.type_name()),
+                    hint: Some("If you're passing a variable, ensure it contains a string.".into()),
+                    span: Some(id_expr.span.clone()),
+                }),
+            }
+        } else {
+            None
+        };
+
         // Try to find it as a Native Node
         if let Some(schema) = self.registry.native_nodes.get(&inv.type_name).cloned() {
             // Check: Is an ID required by the schema?
-            if schema.enforce_id && inv.id.is_none() {
+            if schema.enforce_id && resolved_id.is_none() {
                 return Err(NbclError::Runtime {
                     message: format!("Node '{}' requires an #id", inv.type_name),
                     hint: Some("Try providing an id like this: Object \"id\" { ... }".to_string()),
@@ -70,7 +85,7 @@ impl Evaluator {
 
             return Ok(vec![ResolvedNode {
                 type_name: inv.type_name,
-                id: inv.id,
+                id: resolved_id,
                 props,
                 children,
             }]);
@@ -94,12 +109,33 @@ impl Evaluator {
         def: &ComponentDef,
         inv: NodeInvocation,
     ) -> Result<Vec<ResolvedNode>> {
+        let resolved_id_val = if let Some(id_expr) = &inv.id {
+            let val = self.eval_expr(id_expr)?;
+            match val {
+                Value::Str(_) => val,
+                Value::Null => Value::Null,
+                _ => return Err(NbclError::Runtime {
+                    message: "Node ID must resolve to a string".into(),
+                    hint: Some(format!("Got a {} instead.", val.type_name())),
+                    span: Some(id_expr.span.clone()),
+                }),
+            }
+        } else {
+            Value::Null
+        };
+
         let mut component_scope = HashMap::new();
 
         // Resolve caller props once to avoid re-evaluating in different branches
         let mut caller_props = HashMap::new();
         let mut caller_children = Vec::new();
         self.resolve_node_items(inv.body, &mut caller_props, &mut caller_children)?;
+
+        // Generate component.* namspace
+        let mut meta_map = Vec::new();
+        meta_map.push(("id".to_string(), resolved_id_val));
+        meta_map.push(("children".to_string(), Value::Nodes(caller_children)));
+        component_scope.insert("component".to_string(), Value::Map(meta_map));
 
         match &def.interface {
             ComponentInterface::Loose(name) => {
@@ -207,7 +243,13 @@ impl Evaluator {
                 NodeItem::Child(child_inv) => {
                     children.extend(self.resolve_node(child_inv)?);
                 }
-                NodeItem::Stmt(stmt) => self.execute_stmt(stmt)?,
+                NodeItem::Stmt(stmt) => {
+                    let result = self.execute_stmt(stmt)?;
+
+                    if let Value::Nodes(returned_nodes) = result {
+                        children.extend(returned_nodes);
+                    }
+                },
 
                 NodeItem::If(node_if) => {
                     let mut target_body = None;

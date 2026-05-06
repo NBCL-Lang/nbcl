@@ -271,7 +271,12 @@ impl Evaluator {
 
                 for item in &func_def.body {
                     match item {
-                        FnItem::Stmt(s) => self.execute_stmt(s.clone())?,
+                        FnItem::Stmt(s) => {
+                            let val = self.execute_stmt(s.clone())?;
+                            if let Value::Nodes(new_nodes) = val {
+                                nodes.extend(new_nodes);
+                            }
+                        }
                         FnItem::Node(n) => {
                             let resolved = self.resolve_node(n.clone())?;
                             nodes.extend(resolved);

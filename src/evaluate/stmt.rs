@@ -7,18 +7,23 @@ use crate::{
 use std::collections::HashMap;
 
 impl Evaluator {
-    pub(crate) fn execute_stmt(&mut self, stmt: Stmt) -> Result<()> {
-        if let FlowControl::Return(_) = self.flow {
-            return Ok(());
+    pub(crate) fn execute_stmt(&mut self, stmt: Stmt) -> Result<Value> {
+        if let FlowControl::Return(val) = &self.flow {
+            return Ok(val.clone());
         }
 
-        match stmt {
+        let result = match stmt {
+            Stmt::Expr(expr) => {
+                // Standalone expressions are evaluated and discarded
+                self.eval_expr(&expr)?
+            }
             Stmt::Return(maybe_expr) => {
                 let val = match maybe_expr {
                     Some(e) => self.eval_expr(&e)?,
                     None => Value::Null,
                 };
-                self.flow = FlowControl::Return(val);
+                self.flow = FlowControl::Return(val.clone());
+                val
             }
             // TODO: Use typehint in global and local
             Stmt::Global(name, _type_hint, expr) => {
@@ -35,12 +40,16 @@ impl Evaluator {
                     map.insert(name, val);
                     self.scopes.push(map);
                 }
+
+                Value::Null
             }
             Stmt::Local(name, _type_hint, expr) => {
                 let val = self.eval_expr(&expr)?;
                 if let Some(current_scope) = self.scopes.last_mut() {
                     current_scope.insert(name, val);
                 }
+
+                Value::Null
             }
             Stmt::Assign(name, expr, span) => {
                 let new_val = self.eval_expr(&expr)?;
@@ -66,10 +75,8 @@ impl Evaluator {
                         span: Some(span),
                     });
                 }
-            }
-            Stmt::Expr(expr) => {
-                // Standalone expressions are evaluated and discarded
-                self.eval_expr(&expr)?;
+
+                Value::Null
             }
             Stmt::For(patterns, iter_expr, body) => {
                 let iter_val = self.eval_expr(&iter_expr)?;
@@ -101,6 +108,8 @@ impl Evaluator {
                         }
                     }
                 }
+                
+                Value::Null
             }
 
             Stmt::While(condition_expr, body) => {
@@ -122,9 +131,11 @@ impl Evaluator {
                         break;
                     }
                 }
+
+                Value::Null
             }
-        }
-        Ok(())
+        };
+        Ok(result)
     }
 
     /// Executes the statements in a block and evaluates the terminator if present.

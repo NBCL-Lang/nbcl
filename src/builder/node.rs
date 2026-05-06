@@ -1,4 +1,4 @@
-use super::{expr, unquote};
+use super::expr;
 use crate::ast::source::*;
 use crate::error::{Result, Span};
 use crate::parser::Rule;
@@ -9,20 +9,36 @@ pub fn build_node_invocation(pair: Pair<Rule>) -> Result<NodeInvocation> {
     let mut inner = pair.into_inner();
 
     let type_name = inner.next().unwrap().as_str().to_string();
+    
     let mut id = None;
-    let mut next = inner.next().unwrap();
+    let mut body_pair = None;
 
-    if next.as_rule() == Rule::string_lit {
-        id = Some(unquote(next.as_str()));
-        next = inner.next().unwrap();
+    if let Some(next) = inner.next() {
+        match next.as_rule() {
+            Rule::node_block => {
+                body_pair = Some(next);
+            }
+            _ => {
+                id = Some(expr::build_expr(next)?);
+                // The next one MUST be the block
+                body_pair = inner.next();
+            }
+        }
     }
 
     let mut items = Vec::new();
-    for item_pair in next.into_inner() {
-        items.push(build_node_item(item_pair)?);
+    if let Some(block) = body_pair {
+        for item_pair in block.into_inner() {
+            items.push(build_node_item(item_pair)?);
+        }
     }
 
-    Ok(NodeInvocation { type_name, id, body: items, span })
+    Ok(NodeInvocation { 
+        type_name, 
+        id, 
+        body: items, 
+        span 
+    })
 }
 
 pub fn build_node_item(pair: Pair<Rule>) -> Result<NodeItem> {

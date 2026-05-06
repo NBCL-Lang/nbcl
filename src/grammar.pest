@@ -308,8 +308,12 @@ param_item = {
 
 node_invocation = {
     pascal_ident
-  ~ string_lit?            // optional ID: Window "main" { … }
+  ~ (id_expression)?            // optional ID: Window "main" { … }
   ~ node_block
+}
+
+id_expression = {
+    !node_block ~ (string_lit | postfix_expr | snake_ident)
 }
 
 node_block = { "{" ~ node_item* ~ "}" }
