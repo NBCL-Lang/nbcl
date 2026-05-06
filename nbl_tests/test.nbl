@@ -31,4 +31,5 @@ fn show() {
 }
 
 LooseStyledButton {
+    show()
 }

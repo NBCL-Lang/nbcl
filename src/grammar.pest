@@ -196,6 +196,7 @@ node_stmt = {
   | for_stmt
   | while_stmt
   | if_expr
+  | expr_stmt
 }
 
 // Assign, local, and global statements
@@ -314,11 +315,11 @@ node_invocation = {
 node_block = { "{" ~ node_item* ~ "}" }
 
 node_item = {
-    node_stmt
-  | node_prop          // key = value
+    node_prop          // key = value
+  | node_stmt          // local, for, while, etc.
   | node_invocation    // child node
   | node_inline        // TypeName { key: val, key: val }  (no nested nodes)
-  | node_for           // for i in range { … }  → emits child nodes
+  | node_for           // for i in range { … }
   | node_if            // if cond { … } else { … }
 }
 
