@@ -11,6 +11,7 @@ pub mod registry;
 pub mod evaluate;
 pub mod builtin;
 pub mod module_resolver;
+pub mod utils;
 mod engine;
 
 pub use engine::*;

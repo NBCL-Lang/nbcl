@@ -31,33 +31,43 @@ impl Span {
 #[derive(Debug)]
 pub enum NbclError {
     Parse(Box<pest::error::Error<Rule>>),
-    Ast { message: String, span: Option<Span> },
+    Ast { 
+        message: String, 
+        hint: Option<String>,
+        span: Option<Span>,
+    },
     IO {
         message: String,
+        hint: Option<String>,
         path: PathBuf,
     },
-    Runtime { message: String, span: Option<Span> },
+    Runtime { 
+        message: String, 
+        hint: Option<String>,
+        span: Option<Span>,
+    },
 }
 
 impl std::fmt::Display for NbclError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             NbclError::Parse(e) => write!(f, "Parsing failed:\n{}", e),
-            NbclError::Ast { message, span } => {
-                if let Some(s) = span {
-                    write!(f, "Error at {}:{}: {}", s.line, s.col, message)
-                } else {
-                    write!(f, "Error: {}", message)
-                }
+            
+            NbclError::Ast { message, hint, span } => {
+                format_diagnostic(f, "Syntax Error", message, hint, span)
             }
-            NbclError::IO { message, path } => 
-                write!(f, "IO error: {} at {}", message, path.display()),
-            NbclError::Runtime { message, span } => {
-                if let Some(s) = span {
-                    write!(f, "Error at {}:{}: {}", s.line, s.col, message)
-                } else {
-                    write!(f, "Error: {}", message)
+            
+            NbclError::Runtime { message, hint, span } => {
+                format_diagnostic(f, "Runtime Error", message, hint, span)
+            }
+
+            NbclError::IO { message, hint, path } => {
+                writeln!(f, "[IO Error] {}", message)?;
+                writeln!(f, "  Path: {}", path.display())?;
+                if let Some(h) = hint {
+                    write!(f, "  Hint: {}", h)?;
                 }
+                Ok(())
             }
         }
     }
@@ -65,3 +75,23 @@ impl std::fmt::Display for NbclError {
 
 impl std::error::Error for NbclError {}
 pub type Result<T> = std::result::Result<T, NbclError>;
+
+// Helper to keep Ast and Runtime formatting identical and clean
+fn format_diagnostic(
+    f: &mut std::fmt::Formatter<'_>,
+    label: &str,
+    message: &str,
+    hint: &Option<String>,
+    span: &Option<Span>,
+) -> std::fmt::Result {
+    if let Some(s) = span {
+        writeln!(f, "[{}] at {}:{}: {}", label, s.line, s.col, message)?;
+    } else {
+        writeln!(f, "[{}] {}", label, message)?;
+    }
+
+    if let Some(h) = hint {
+        write!(f, "  Hint: {}", h)?;
+    }
+    Ok(())
+}

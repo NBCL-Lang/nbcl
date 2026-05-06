@@ -79,7 +79,11 @@ pub fn build_stmt(pair: Pair<Rule>) -> Result<Stmt> {
         }
 
         Rule::expr_stmt => Ok(Stmt::Expr(build_expr(inner.into_inner().next().unwrap())?)),
-        _ => Err(NbclError::Ast { message: format!("Todo: {:?}", inner.as_rule()), span: Some(span) }),
+        _ => Err(NbclError::Ast { 
+            message: format!("Todo: {:?}", inner.as_rule()), 
+            hint: None,
+            span: Some(span) 
+        }),
     }
 }
 
@@ -165,7 +169,11 @@ pub fn build_expr(pair: Pair<Rule>) -> Result<Expr> {
         Rule::primary_expr => build_expr(pair.into_inner().next().unwrap()),
         Rule::literal => Ok(Expr { kind: ExprKind::Literal(build_literal(pair)?), span }),
         Rule::snake_ident => Ok(Expr { kind: ExprKind::Variable(pair.as_str().to_string()), span }),
-        _ => Err(NbclError::Ast { message: format!("Unknown expr: {:?}", pair.as_rule()), span: Some(span) }),
+        _ => Err(NbclError::Ast { 
+            message: format!("Unknown expr: {:?}", pair.as_rule()), 
+            hint: None,
+            span: Some(span) 
+        }),
     }
 }
 
@@ -180,6 +188,7 @@ fn build_binop(pair: Pair<Rule>) -> Result<Expr> {
         
         let rhs_pair = inner.next().ok_or_else(|| NbclError::Ast {
             message: "Expected operand after operator".to_string(),
+            hint: Some("An operator like '+' must be followed by a value, variable, or '('.".to_string()),
             span: Some(span.clone()),
         })?;
         

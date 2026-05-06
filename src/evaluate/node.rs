@@ -22,6 +22,7 @@ impl Evaluator {
             if schema.enforce_id && inv.id.is_none() {
                 return Err(NbclError::Runtime {
                     message: format!("Node '{}' requires an #id", inv.type_name),
+                    hint: Some("Try providing an id like this: Object \"id\" { ... }".to_string()),
                     span: Some(inv.span),
                 });
             }
@@ -44,13 +45,18 @@ impl Evaluator {
                                     "Type mismatch for '{}' on '{}': expected {:?}, found {:?}", 
                                     key, inv.type_name, expected_type, value.type_name()
                                 ),
+                                hint: None,
                                 span: Some(inv.span.clone()), 
                             });
                         }
                     } else {
                         // Key not found in the allowed map
+                        let suggestion = crate::utils::find_best_match(key, allowed_map.keys());
+                        let hint = suggestion.map(|s| format!("Did you mean \"{}\"?", s));
+
                         return Err(NbclError::Runtime {
                             message: format!("Property '{}' is not allowed on node '{}'", key, inv.type_name),
+                            hint,
                             span: Some(inv.span.clone()),
                         });
                     }
@@ -65,8 +71,15 @@ impl Evaluator {
             }]);
         }
 
+        let all_node_names = self.registry.native_nodes.keys()
+            .chain(self.registry.components.keys());
+
+        let suggestion = crate::utils::find_best_match(&inv.type_name, all_node_names);
+        let hint = suggestion.map(|s| format!("Did you mean \"{}\"?", s));
+
         Err(NbclError::Runtime {
             message: format!("Unknown node or component: {}", inv.type_name),
+            hint,
             span: Some(inv.span),
         })
     }
@@ -102,6 +115,7 @@ impl Evaluator {
                                         return Err(NbclError::Runtime {
                                             message: format!("Component '{}' expected {} for prop '{}', got {}", 
                                                 def.name, hint, param.name, v.type_name()),
+                                            hint: None,
                                             span: Some(inv.span.clone()),
                                         });
                                     }
@@ -111,8 +125,15 @@ impl Evaluator {
                         }
                         None => {
                             if !param.is_optional {
+                                let suggestion = crate::utils::find_best_match(&param.name, caller_props.keys());
+                                        
+                                let hint = suggestion.map(|s| 
+                                    format!("You provided \"{}\", which is not a parameter. Did you mean \"{}\"?", s, param.name)
+                                );
+
                                 return Err(NbclError::Runtime {
                                     message: format!("Missing required prop '{}' for component '{}'", param.name, def.name),
+                                    hint,
                                     span: Some(inv.span.clone()),
                                 });
                             }
@@ -122,13 +143,16 @@ impl Evaluator {
                 }
                 
                 if !caller_props.is_empty() {
-                    let extra_keys: Vec<String> = caller_props.into_keys().collect();
+                    let (extra_key, _) = caller_props.into_iter().next().unwrap();
+
+                    let param_names = params.iter().map(|p| &p.name);
+                    let suggestion = crate::utils::find_best_match(&extra_key, param_names);
+
+                    let hint = suggestion.map(|s| format!("Did you mean \"{}\"?", s));
+                    
                     return Err(NbclError::Runtime {
-                        message: format!(
-                            "Unexpected properties for component '{}': {}. Only defined parameters are allowed in strict mode.", 
-                            def.name, 
-                            extra_keys.join(", ")
-                        ),
+                        message: format!("Unexpected property '{}' for component '{}'.", extra_key, def.name),
+                        hint,
                         span: Some(inv.span.clone()),
                     });
                 }
@@ -214,6 +238,7 @@ impl Evaluator {
                     } else {
                         return Err(NbclError::Runtime {
                             message: "Can only iterate over a List in a for-node".into(),
+                            hint: None,
                             span: Some(node_for.span),
                         });
                     }

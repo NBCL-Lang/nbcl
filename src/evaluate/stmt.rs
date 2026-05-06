@@ -55,8 +55,14 @@ impl Evaluator {
                 }
 
                 if !found {
+                    let candidates = self.scopes.iter().flat_map(|s| s.keys());
+                    let suggestion = crate::utils::find_best_match(&name, candidates);
+
+                    let hint = suggestion.map(|s| format!("Did you mean \"{}\"?", s));
+
                     return Err(NbclError::Runtime {
                         message: format!("Variable '{}' doesn't exist.", name),
+                        hint,
                         span: Some(span),
                     });
                 }

@@ -15,6 +15,7 @@ impl Evaluator {
                     None => {
                         return Err(NbclError::Runtime {
                             message: "Module resolver is not registered.".into(),
+                            hint: Some("Looks like the developer messed with the module resolver... You'd have to stick with a singular crate for now.".to_string()),
                             span: Some(imp.span),
                         })
                     }
@@ -35,6 +36,7 @@ impl Evaluator {
 
                 let file_pair = tokens.next().ok_or_else(|| NbclError::Ast {
                     message: "Empty file".into(),
+                    hint: None,
                     span: None,
                 })?;
 

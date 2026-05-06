@@ -14,9 +14,19 @@ impl Evaluator {
             
             ExprKind::Variable(name) => {
                 self.lookup_var(name)
-                    .ok_or_else(|| NbclError::Runtime {
-                        message: format!("Undefined variable: {}", name),
-                        span: Some(expr.span.clone()),
+                    .ok_or_else(|| {
+                        let candidates = self.scopes.iter()
+                            .flat_map(|s| s.keys())
+                            .chain(self.registry.globals.keys());
+                        
+                        let suggestion = crate::utils::find_best_match(name, candidates);
+                        let hint = suggestion.map(|s| format!("Did you mean \"{}\"?", s));
+
+                        NbclError::Runtime {
+                            message: format!("Undefined variable: {}", name),
+                            hint,
+                            span: Some(expr.span.clone()),
+                        }
                     })
             }
 
@@ -61,6 +71,18 @@ impl Evaluator {
                             } else {
                                 Err(NbclError::Runtime {
                                     message: format!("Map has no field: {}", field),
+                                    hint: {
+                                        let candidates = pairs.iter().map(|(k, _)| k);
+                                        if let Some(suggestion) = crate::utils::find_best_match(field, candidates) {
+                                            Some(format!("Did you mean \"{}\"?", suggestion))
+                                        } else {
+                                            Some(format!(
+                                                "If this field is optional, try using the safe access operator: \"?.\"{}{}",
+                                                if field.is_empty() { "" } else { "" }, 
+                                                field
+                                            ))
+                                        }
+                                    },
                                     span: Some(expr.span.clone()),
                                 })
                             }
@@ -72,6 +94,7 @@ impl Evaluator {
                 } else {
                     Err(NbclError::Runtime {
                         message: format!("Cannot access field '{}' on non-map type: {:?}", field, val),
+                        hint: None,
                         span: Some(expr.span.clone()),
                     })
                 }
@@ -85,18 +108,30 @@ impl Evaluator {
                     (Value::List(list), Value::Int(i)) => {
                         list.get(i as usize).cloned().ok_or_else(|| NbclError::Runtime {
                             message: format!("Index {} out of bounds", i),
+                            hint: None,
                             span: Some(expr.span.clone()),
                         })
                     }
                     (Value::Map(map), Value::Str(s)) => {
-                        map.iter().find(|(k, _)| k == &s).map(|(_, v)| v.clone())
-                            .ok_or_else(|| NbclError::Runtime {
-                                message: format!("Key '{}' not found", s),
-                                span: Some(expr.span.clone()),
+                        map.iter()
+                            .find(|(k, _)| k == &s)
+                            .map(|(_, v)| v.clone())
+                            .ok_or_else(|| {
+                                let candidates = map.iter().map(|(k, _)| k);
+                                let suggestion = crate::utils::find_best_match(&s, candidates);
+                                
+                                let hint = suggestion.map(|best| format!("Did you mean \"{}\"?", best));
+
+                                NbclError::Runtime {
+                                    message: format!("Key '{}' not found in map", s),
+                                    hint,
+                                    span: Some(expr.span.clone()),
+                                }
                             })
                     }
                     _ => Err(NbclError::Runtime {
                         message: "Invalid index operation".into(),
+                        hint: None,
                         span: Some(expr.span.clone()),
                     }),
                 }
@@ -111,12 +146,14 @@ impl Evaluator {
                         } else {
                             return Err(NbclError::Runtime {
                                 message: "Complex paths in calls are not supported yet".into(),
+                                hint: Some("Try assigning the object to a local variable first, e.g. 'local f = obj.func; f()'".to_string()),
                                 span: Some(callee.span.clone()),
                             });
                         }
                     }
                     _ => return Err(NbclError::Runtime {
                         message: "Only variables can be called as functions currently".into(),
+                        hint: None,
                         span: Some(callee.span.clone()),
                     }),
                 };
@@ -130,18 +167,36 @@ impl Evaluator {
                 if let Some(native_schema) = self.registry.native_functions.get(func_name) {
                     
                     if args.len() != native_schema.params.len() {
+                        let expected_params: Vec<String> = native_schema.params.iter()
+                            .map(|p| format!("{:?}", p))
+                            .collect();
+
                         return Err(NbclError::Runtime {
-                            message: format!("Native function '{}' expected {} args, got {}", 
-                                func_name, native_schema.params.len(), args.len()),
+                            message: format!(
+                                "Native function '{}' expected {} args, got {}", 
+                                func_name, native_schema.params.len(), args.len()
+                            ),
+                            hint: Some(format!(
+                                "Usage: {}({})", 
+                                func_name, 
+                                expected_params.join(", ")
+                            )),
                             span: Some(expr.span.clone()),
                         });
                     }
 
                     for (i, (arg, expected)) in args.iter().zip(&native_schema.params).enumerate() {
                         if !expected.matches_value(arg) {
+                            let hint = match (arg, expected) {
+                                (Value::Str(s), _) if s.parse::<i64>().is_ok() => 
+                                    Some("This value is a string, but the function needs a number. Try removing the quotes.".to_string()),
+                                _ => Some(format!("Check the {} argument. It must be a {:?}.", crate::utils::ordinal(i + 1), expected)),
+                            };
+
                             return Err(NbclError::Runtime {
                                 message: format!("Native function '{}' arg {} expected {:?}, got {}", 
                                     func_name, i, expected, arg.type_name()),
+                                hint,
                                 span: Some(expr.span.clone()),
                             });
                         }
@@ -152,15 +207,30 @@ impl Evaluator {
 
                 let func_def = self.registry.functions.get(func_name)
                     .cloned()
-                    .ok_or_else(|| NbclError::Runtime {
-                        message: format!("Undefined function: {}", func_name),
-                        span: Some(callee.span.clone()),
+                    .ok_or_else(|| {
+                        // Collect all possible function names for the suggestion
+                        let all_funcs = self.registry.native_functions.keys()
+                            .chain(self.registry.functions.keys());
+                        
+                        let suggestion = crate::utils::find_best_match(func_name, all_funcs);
+                        let hint = suggestion.map(|s| format!("Did you mean \"{}\"?", s));
+
+                        NbclError::Runtime {
+                            message: format!("Undefined function: {}", func_name),
+                            hint,
+                            span: Some(callee.span.clone()),
+                        }
                     })?;
 
                 // Validate argument count
                 if args.len() != func_def.params.len() {
+                    let param_names: Vec<String> = func_def.params.iter()
+                        .map(|p| p.name.clone())
+                        .collect();
+
                     return Err(NbclError::Runtime {
                         message: format!("Expected {} arguments, got {}", func_def.params.len(), args.len()),
+                        hint: Some(format!("Signature: {}({})", func_name, param_names.join(", "))),
                         span: Some(expr.span.clone()),
                     });
                 }
@@ -176,12 +246,14 @@ impl Evaluator {
                                     "Type mismatch for parameter '{}' in function '{}'. Expected {}, got {}",
                                     param.name, func_name, expected_type, actual_type
                                 ),
+                                hint: Some(format!(
+                                    "The parameter '{}' expects {}, but you passed {}. Double-check the order of your arguments.",
+                                    param.name, expected_type, actual_type
+                                )),
                                 span: Some(expr.span.clone()),
                             });
                         }
                     }
-                    
-                    call_scope.insert(param.name.clone(), value);
                 }
 
                 self.scopes.push(call_scope);
@@ -247,6 +319,7 @@ impl Evaluator {
                     }
                     _ => Err(NbclError::Runtime {
                         message: "Range boundaries must be integers".into(),
+                        hint: None,
                         span: Some(expr.span.clone()),
                     }),
                 }
@@ -298,6 +371,7 @@ impl Evaluator {
                 if b == 0 {
                     return Err(NbclError::Runtime {
                         message: "Division by zero".to_string(),
+                        hint: Some("Try replacing the zero with another number, silly!".to_string()),
                         span: Some(span.clone()),
                     });
                 }
@@ -307,6 +381,7 @@ impl Evaluator {
                 if b == 0 {
                     return Err(NbclError::Runtime {
                         message: "Modulo by zero".to_string(),
+                        hint: Some("Try replacing the zero with another number".to_string()),
                         span: Some(span.clone()),
                     });
                 }
@@ -317,6 +392,7 @@ impl Evaluator {
             (Value::Str(a), "==", Value::Str(b)) => Ok(Value::Bool(a == b)),
             (l, o, r) => Err(NbclError::Runtime {
                 message: format!("Operation '{}' not supported between {:?} and {:?}", o, l, r),
+                hint: None,
                 span: Some(span.clone()),
             }),
         }
@@ -328,6 +404,7 @@ impl Evaluator {
             Value::Float(f) => Ok(Value::Float(-f)),
             _ => Err(NbclError::Runtime {
                 message: "Unary '-' can only be applied to numbers".into(),
+                hint: None,
                 span: Some(span.clone()),
             }),
         }

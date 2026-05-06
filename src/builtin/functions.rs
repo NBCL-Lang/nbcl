@@ -47,6 +47,7 @@ pub(crate) fn register_builtin_functions(registry: &mut Registry) {
                 Value::Map(m) => m.len() as i64,
                 _ => return Err(NbclError::Runtime {
                     message: format!("len() not supported for type {}", args[0].type_name()),
+                    hint: None,
                     span: None,
                 }),
             };
@@ -65,6 +66,7 @@ pub(crate) fn register_builtin_functions(registry: &mut Registry) {
             if !condition {
                 return Err(NbclError::Runtime {
                     message: format!("Assertion Failed: {}", msg),
+                    hint: None,
                     span: None,
                 });
             }

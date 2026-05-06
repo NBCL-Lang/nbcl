@@ -40,14 +40,28 @@ impl NbclEngine {
     /// Parse the a file into a source AST
     pub fn parse(&self, file_path: PathBuf) -> Result<File> {
         let source = fs::read_to_string(&file_path).map_err(|e| {
-            let msg = match e.kind() {
-                ErrorKind::NotFound => format!("Module not found: '{}'", file_path.display()),
-                ErrorKind::PermissionDenied => format!("Permission denied reading module: '{}'", file_path.display()),
-                _ => format!("Failed to read module '{}': {}", file_path.display(), e),
+            let (msg, hint) = match e.kind() {
+                ErrorKind::NotFound => {
+                    let msg = format!("Module not found: '{}'", file_path.display());
+                    let hint = "Ensure that the module exists and try adjusting the path.".to_string();
+
+                    (msg, Some(hint))
+                },
+                ErrorKind::PermissionDenied => {
+                    let msg = format!("Permission denied reading module: '{}'", file_path.display());
+                    let hint = "Set proper file permissions".to_string();
+
+                    (msg, Some(hint))
+                },
+                _ => {
+                    let msg = format!("Failed to read module '{}': {}", file_path.display(), e);
+                    (msg, None)
+                },
             };
 
             NbclError::IO {
                 message: msg,
+                hint,
                 path: file_path.clone(),
             }
         })?;
@@ -62,6 +76,7 @@ impl NbclEngine {
 
         let file_pair = pairs.next().ok_or_else(|| NbclError::Ast {
             message: "Empty file".into(),
+            hint: None,
             span: None,
         })?;
 

@@ -28,18 +28,30 @@ impl FileModuleResolver {
         let full_path = current_dir.join(path_str);
 
         full_path.canonicalize().map_err(|e| {
-            let message = match e.kind() {
+            let (message, hint) = match e.kind() {
                 std::io::ErrorKind::NotFound => {
-                    format!("Module not found: '{}' (searched in '{}')", path_str, current_dir.display())
+                    let msg =  format!(
+                        "Module not found: '{}' (searched in '{}')", 
+                        path_str, 
+                        current_dir.display()
+                    );
+                    let hint = "Ensure that the module exists and try adjusting the path".to_string();
+
+                    (msg, Some(hint))
+
                 }
                 std::io::ErrorKind::PermissionDenied => {
-                    format!("Permission denied accessing module: '{}'", path_str)
+                    let msg = format!("Permission denied accessing module: '{}'", path_str);
+                    let hint = "Set proper file permissions and try again.".to_string();
+
+                    (msg, Some(hint))
                 }
-                _ => format!("Failed to resolve module path '{}': {}", path_str, e),
+                _ => (format!("Failed to resolve module path '{}': {}", path_str, e), None),
             };
 
             NbclError::IO {
                 message,
+                hint,
                 path: full_path,
             }
         })
