@@ -126,11 +126,18 @@ unary_expr = {
 postfix_expr = {
     primary_expr
   ~ (
-      "." ~ snake_ident          // field access:  foo.bar
+      accessor ~ snake_ident     // field access:  foo.bar or foo?.bar
     | "[" ~ expr ~ "]"           // index:         foo[0]
     | call_args                  // call:          foo(a, b)
     )*
 }
+
+accessor = { 
+    safe_dot | dot 
+}
+
+dot      = { "." }
+safe_dot = { "?." }
 
 call_args = { "(" ~ (expr ~ ("," ~ expr)*)? ~ ")" }
 

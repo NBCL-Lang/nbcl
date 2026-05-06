@@ -31,13 +31,27 @@ impl Evaluator {
             
             self.resolve_node_items(inv.body, &mut props, &mut children)?;
 
-            // Check: Are these properties allowed?
-            if let PropValidation::Strict(allowed_keys) = &schema.validation {
-                for key in props.keys() {
-                    if !allowed_keys.contains(key) {
+            // Check: Are these properties allowed and are their type correct?
+            if let PropValidation::Strict(allowed_map) = &schema.validation {
+                for (key, value) in props.iter() {
+                    // Existence Check
+                    if let Some(expected_type) = allowed_map.get(key) {
+                        
+                        // Type Check
+                        if expected_type.matches_value(value) {
+                            return Err(NbclError::Runtime {
+                                message: format!(
+                                    "Type mismatch for '{}' on '{}': expected {:?}, found {:?}", 
+                                    key, inv.type_name, expected_type, value.type_name()
+                                ),
+                                span: Some(inv.span.clone()), 
+                            });
+                        }
+                    } else {
+                        // Key not found in the allowed map
                         return Err(NbclError::Runtime {
                             message: format!("Property '{}' is not allowed on node '{}'", key, inv.type_name),
-                            span: Some(inv.span.clone()), // Ideally, pinpoint the Prop span
+                            span: Some(inv.span.clone()),
                         });
                     }
                 }

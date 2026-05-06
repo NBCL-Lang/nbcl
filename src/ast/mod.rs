@@ -3,6 +3,7 @@ pub mod resolved;
 use std::fmt;
 use std::sync::Arc;
 use crate::error;
+use std::collections::HashMap;
 use serde::{Serialize, Deserialize};
 
 /// Possible data types in Nbcl (used interanally to hold value)
@@ -137,19 +138,25 @@ pub enum PropValidation {
     /// Allow any properties
     Loose,
     /// Only allow specific keys
-    Strict(Vec<String>),
+    Strict(HashMap<String, Type>),
 }
 
 // == schemas ==
 
-/// Internal structure used for registering custom nodes.
+/// Public structure used for registering custom nodes.
 #[derive(Debug, Clone)]
 pub struct NativeNodeSchema {
-    pub(crate) type_name: String,
-    pub(crate) enforce_id: bool,
-    pub(crate) validation: PropValidation,
+    /// Name of the Node
+    pub type_name: String,
+    /// Whether to enforce ID or not
+    pub enforce_id: bool,
+    /// Whether the property validation should be loose or strict
+    pub validation: PropValidation,
+    /// Children count in <(min, max)>.
+    /// Use None for default functionlaity 
+    /// (allows any number of children).
+    pub child_count: Option<(u32, u32)>,
 }
-
 
 /// Internal structure used for registering custom functions.
 #[derive(Clone)]

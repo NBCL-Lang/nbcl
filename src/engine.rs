@@ -1,5 +1,5 @@
 use crate::{
-    ast::{Value, Type, PropValidation},
+    ast::{Value, Type, NativeNodeSchema},
     ast::source::File,
     ast::resolved::ResolvedTree,
     error::{NbclError, Result},
@@ -77,13 +77,8 @@ impl NbclEngine {
     // === Registration API's === 
 
     /// Registers a custom node into the engine.
-    pub fn register_node(
-        &mut self, 
-        name: &str, 
-        enforce_id: bool,
-        prop_validation: PropValidation,
-    ) {
-        self.registry.add_node(name, enforce_id, prop_validation);
+    pub fn register_node(&mut self, schema: NativeNodeSchema) {
+        self.registry.add_node(schema);
     }
 
     /// Registers a native function into the engine.

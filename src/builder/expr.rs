@@ -114,22 +114,28 @@ pub fn build_expr(pair: Pair<Rule>) -> Result<Expr> {
         Rule::postfix_expr => {
             let mut inner = pair.into_inner();
             let mut res = build_expr(inner.next().unwrap())?;
+
+            let mut it = inner.peekable();
             
-            for suffix in inner {
+            while let Some(suffix) = it.next() {
                 res = match suffix.as_rule() {
-                    Rule::snake_ident => Expr {
-                        kind: ExprKind::Field(Box::new(res), suffix.as_str().to_string()),
-                        span: span.clone()
+                    Rule::accessor => {
+                        let is_safe = suffix.as_str() == "?.";
+                        let ident = it.next().unwrap().as_str().to_string();
+                        
+                        Expr {
+                            kind: ExprKind::Field(Box::new(res), ident, is_safe),
+                            span: span.clone()
+                        }
                     },
                     Rule::expr => Expr {
                         kind: ExprKind::Index(Box::new(res), Box::new(build_expr(suffix)?)),
                         span: span.clone()
                     },
                     Rule::call_args => {
-                        let mut args = Vec::new();
-                        for arg_pair in suffix.into_inner() {
-                            args.push(build_expr(arg_pair)?);
-                        }
+                        let args = suffix.into_inner()
+                            .map(|arg_pair| build_expr(arg_pair))
+                            .collect::<Result<Vec<_>>>()?;
                         
                         Expr {
                             kind: ExprKind::Call(Box::new(res), args),

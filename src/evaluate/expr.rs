@@ -44,19 +44,34 @@ impl Evaluator {
                 }
             }
 
-            ExprKind::Field(source, field) => {
+            ExprKind::Field(source, field, is_safe) => {
                 let val = self.eval_expr(source)?;
+                
                 if let Value::Map(pairs) = val {
-                    pairs.iter()
+                    let found = pairs.iter()
                         .find(|(k, _)| k == field)
-                        .map(|(_, v)| v.clone())
-                        .ok_or_else(|| NbclError::Runtime {
-                            message: format!("Map has no field: {}", field),
-                            span: Some(expr.span.clone()),
-                        })
+                        .map(|(_, v)| v.clone());
+
+                    match found {
+                        Some(v) => Ok(v),
+                        None => {
+                            if *is_safe {
+                                // If it's a ?. access, missing keys are just null
+                                Ok(Value::Null) 
+                            } else {
+                                Err(NbclError::Runtime {
+                                    message: format!("Map has no field: {}", field),
+                                    span: Some(expr.span.clone()),
+                                })
+                            }
+                        }
+                    }
+                } else if *is_safe && matches!(val, Value::Null) {
+                    // Handle chaining: if 'val' is null and we are using ?., keep returning null
+                    Ok(Value::Null)
                 } else {
                     Err(NbclError::Runtime {
-                        message: "Cannot access field on non-map type".into(),
+                        message: format!("Cannot access field '{}' on non-map type: {:?}", field, val),
                         span: Some(expr.span.clone()),
                     })
                 }
@@ -90,7 +105,7 @@ impl Evaluator {
             ExprKind::Call(callee, args_exprs) => {
                 let func_name = match &callee.kind {
                     ExprKind::Variable(name) => name,
-                    ExprKind::Field(source, field) => {
+                    ExprKind::Field(source, field, _) => {
                         if let ExprKind::Variable(ref alias) = source.kind {
                             &format!("{}.{}", alias, field) 
                         } else {

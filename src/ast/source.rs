@@ -146,7 +146,8 @@ pub enum ExprKind {
     Unary(String, Box<Expr>),
     Literal(Literal),
     Variable(String),
-    Field(Box<Expr>, String),
+    // bool true = safe (?.)
+    Field(Box<Expr>, String, bool),
     Index(Box<Expr>, Box<Expr>),
     Call(Box<Expr>, Vec<Expr>),
     Lambda(Vec<(String, Option<String>)>, Box<LambdaBody>),

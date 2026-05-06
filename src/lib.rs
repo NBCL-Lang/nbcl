@@ -1,4 +1,4 @@
-//! NBCL - Node Based Configuration Language
+//! # NBCL - Node Based Configuration Language
 //!
 //! TODO
 //!
