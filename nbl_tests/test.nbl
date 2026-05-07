@@ -12,6 +12,8 @@ global var = if true {
 }
 print(var)
 
+for {}
+
 component StyledButton (bg_color?) {
     Object "id" {
         # Simple default value pattern

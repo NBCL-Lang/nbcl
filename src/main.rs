@@ -24,6 +24,6 @@ fn main() {
                 Err(e) => eprintln!("{}", e), 
             }
         }
-        Err(e) => eprintln!("{}", e),
+        Err(e) => eprintln!("{}, spans {:#?}", e, e.span()),
     }
 }

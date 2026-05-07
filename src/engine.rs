@@ -66,12 +66,11 @@ impl NbclEngine {
 
     /// Parse a source string into AST
     pub fn parse_str(&self, source: &str) -> Result<File> {
-        let mut pairs =
-            NbclParser::parse(Rule::file, source).map_err(|e| NbclError::Parse(Box::new(e)))?;
+        let mut pairs = NbclParser::parse(Rule::file, source)?;
 
         let file_pair = pairs.next().ok_or_else(|| NbclError::Ast {
             message: "empty file".into(),
-            hint: None,
+            hint: Some("Make sure your file contains at least one statement or expression.".into()),
             span: None,
         })?;
 
