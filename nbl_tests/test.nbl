@@ -12,9 +12,6 @@ global var = if true {
 }
 print(var)
 
-local add = |a, b| a + b
-print(add(2, 3)) # 5
-
 component StyledButton (bg_color?) {
     Object "id" {
         # Simple default value pattern
