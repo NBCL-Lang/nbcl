@@ -169,6 +169,8 @@ pub fn build_expr(pair: Pair<Rule>) -> Result<Expr> {
         Rule::primary_expr => build_expr(pair.into_inner().next().unwrap()),
         Rule::literal => Ok(Expr { kind: ExprKind::Literal(build_literal(pair)?), span }),
         Rule::if_expr => Ok(Expr { kind: ExprKind::If(Box::new(build_if(pair)?)), span }),
+        Rule::match_expr => Ok(Expr { kind: build_match(pair)?, span }),
+        Rule::lambda_expr => Ok(Expr { kind: build_lambda(pair)?, span } ),
         Rule::snake_ident => Ok(Expr { kind: ExprKind::Variable(pair.as_str().to_string()), span }),
         _ => Err(NbclError::Ast {
             message: format!("unknown expr: {:?}", pair.as_rule()),
@@ -236,7 +238,7 @@ fn build_literal(pair: Pair<Rule>) -> Result<Literal> {
     }
 }
 
-pub fn build_if(pair: Pair<Rule>) -> Result<IfExpr> {
+fn build_if(pair: Pair<Rule>) -> Result<IfExpr> {
     let mut inner = pair.into_inner();
 
     // Handle main 'if'
@@ -292,6 +294,86 @@ fn build_branch(pair: Pair<Rule>) -> Result<(Vec<Stmt>, Option<Expr>)> {
     }
 
     Ok((stmts, final_expr))
+}
+
+fn build_match(pair: Pair<Rule>) -> Result<ExprKind> {
+    let mut inner = pair.into_inner();
+
+    // expression
+    let condition = build_expr(inner.next().unwrap())?;
+
+    // arms
+    let mut arms = Vec::new();
+    for arm_pair in inner {
+        arms.push(build_match_arm(arm_pair)?);
+    }
+
+    Ok(ExprKind::Match(Box::new(condition), arms))
+}
+
+fn build_match_arm(pair: Pair<Rule>) -> Result<MatchArm> {
+    let mut inner = pair.into_inner();
+
+    let pattern_pair = inner.next().unwrap();
+    let pattern = pattern_pair.as_str().to_string();
+
+    let body_pair = inner.next().unwrap();
+    let body = match body_pair.as_rule() {
+        Rule::block_body => {
+            let block = build_block(body_pair)?;
+            LambdaBody::Block(block.stmts, block.terminator)
+        }
+        _ => {
+            let expr = build_expr(body_pair)?;
+            LambdaBody::Expr(expr)
+        }
+    };
+
+    Ok(MatchArm { pattern, body })
+}
+
+pub fn build_lambda(pair: Pair<Rule>) -> Result<ExprKind> {
+    let mut inner = pair.clone().into_inner();
+    let mut params = Vec::new();
+    
+    while let Some(next) = inner.peek() {
+        if next.as_rule() == Rule::lambda_param {
+            let mut param_inner = inner.next().unwrap().into_inner();
+            let name = param_inner.next().unwrap().as_str().to_string();
+            let type_hint = param_inner.next().map(|t| t.as_str().to_string());
+            params.push((name, type_hint));
+        } else {
+            // Found the lambda_body
+            break;
+        }
+    }
+
+    // Parse lambda body
+    let body_pair = inner.next().ok_or_else(|| NbclError::Ast {
+        message: "Lambda must have a body".into(),
+        hint: None,
+        span: Some(Span::from_pair(&pair)),
+    })?;
+
+    let body = match body_pair.as_rule() {
+        Rule::lambda_body => {
+            let actual_body = body_pair.into_inner().next().unwrap();
+            match actual_body.as_rule() {
+                Rule::block_body => {
+                    let block = build_block(actual_body)?;
+                    LambdaBody::Block(block.stmts, block.terminator)
+                }
+                _ => LambdaBody::Expr(build_expr(actual_body)?),
+            }
+        }
+        Rule::block_body => {
+            let block = build_block(body_pair)?;
+            LambdaBody::Block(block.stmts, block.terminator)
+        }
+        _ => LambdaBody::Expr(build_expr(body_pair)?),
+    };
+
+    Ok(ExprKind::Lambda(params, Box::new(body)))
 }
 
 pub fn build_block(pair: Pair<Rule>) -> Result<Block> {

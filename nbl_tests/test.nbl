@@ -6,11 +6,14 @@
 
 local var = 1
 global var = if true {
-    return 10
+    10
 } else {
     5
 }
 print(var)
+
+local add = |a, b| a + b
+print(add(2, 3)) # 5
 
 component StyledButton (bg_color?) {
     Object "id" {

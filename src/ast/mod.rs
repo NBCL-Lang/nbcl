@@ -23,6 +23,8 @@ pub enum Value {
     Map(Vec<(String, Value)>),
     /// Regular Nodes
     Nodes(Vec<resolved::ResolvedNode>),
+    /// Functions
+    FunctionHandle(String),
     /// Null (no data)
     Null,
 }

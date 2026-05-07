@@ -346,7 +346,57 @@ impl Evaluator {
                 }
             }
 
-            ExprKind::Match(_, _) => todo!(),
+            ExprKind::Match(subject_expr, arms) => {
+                let value = self.eval_expr(subject_expr)?;
+
+                let mut matched_branch = None;
+
+                for arm in arms {
+                    // "matching" logic
+                    let is_match = match arm.pattern.as_str() {
+                        "_" => true, // Wildcard matches everything
+                        p => {
+                            match &value {
+                                Value::Int(i) if p == i.to_string() => true,
+                                Value::Bool(b) if p == b.to_string() => true,
+                                Value::Str(s) if p == s => true,
+                                Value::Null if p == "null" => true,
+                                _ => false,
+                            }
+                        }
+                    };
+
+                    if is_match {
+                        matched_branch = Some(&arm.body);
+                        break;
+                    }
+                }
+
+                // Execute the branch body
+                if let Some(body) = matched_branch {
+                    match body {
+                        LambdaBody::Block(stmts, final_expr) => {
+                            self.scopes.push(Scope::new(ScopeKind::Block));
+                            
+                            for stmt in stmts {
+                                self.execute_stmt(stmt.clone())?;
+                            }
+
+                            let result = if let Some(e) = final_expr {
+                                self.eval_expr(e)?
+                            } else {
+                                Value::Null
+                            };
+
+                            self.scopes.pop();
+                            Ok(result)
+                        }
+                        LambdaBody::Expr(e) => self.eval_expr(e),
+                    }
+                } else {
+                    Ok(Value::Null)
+                }
+            }
 
             ExprKind::Range(start_expr, end_expr, inclusive) => {
                 let start = self.eval_expr(start_expr)?;
