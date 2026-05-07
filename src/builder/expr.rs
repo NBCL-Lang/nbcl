@@ -73,12 +73,12 @@ pub fn build_stmt(pair: Pair<Rule>) -> Result<Stmt> {
         Rule::return_stmt => {
             let mut ii = inner.into_inner();
             let expr = if let Some(e_pair) = ii.next() { Some(build_expr(e_pair)?) } else { None };
-            Ok(Stmt::Return(expr))
+            Ok(Stmt::Return(expr, span))
         }
 
         Rule::expr_stmt => Ok(Stmt::Expr(build_expr(inner.into_inner().next().unwrap())?)),
         _ => Err(NbclError::Ast {
-            message: format!("Unknown Statement: {:?}", inner.as_rule()),
+            message: format!("unknown Statement: {:?}", inner.as_rule()),
             hint: None,
             span: Some(span),
         }),
@@ -171,7 +171,7 @@ pub fn build_expr(pair: Pair<Rule>) -> Result<Expr> {
         Rule::if_expr => Ok(Expr { kind: ExprKind::If(Box::new(build_if(pair)?)), span }),
         Rule::snake_ident => Ok(Expr { kind: ExprKind::Variable(pair.as_str().to_string()), span }),
         _ => Err(NbclError::Ast {
-            message: format!("Unknown expr: {:?}", pair.as_rule()),
+            message: format!("unknown expr: {:?}", pair.as_rule()),
             hint: None,
             span: Some(span),
         }),
@@ -188,7 +188,7 @@ fn build_binop(pair: Pair<Rule>) -> Result<Expr> {
         let op_str = op_pair.as_str().to_string();
 
         let rhs_pair = inner.next().ok_or_else(|| NbclError::Ast {
-            message: "Expected operand after operator".to_string(),
+            message: "expected operand after operator".to_string(),
             hint: Some(
                 "An operator like '+' must be followed by a value, variable, or '('.".to_string(),
             ),

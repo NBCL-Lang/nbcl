@@ -6,7 +6,7 @@
 
 local var = 1
 global var = if true {
-    10
+    return 10
 } else {
     5
 }

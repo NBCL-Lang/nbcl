@@ -15,7 +15,7 @@ impl Evaluator {
                     Some(r) => r.find_target(&path_str),
                     None => {
                         return Err(NbclError::Runtime {
-                            message: "Module resolver is not registered.".into(),
+                            message: "module resolver is not registered".into(),
                             hint: Some("Looks like the developer messed with the module resolver... You'd have to stick with a singular crate for now.".to_string()),
                             span: Some(imp.span),
                         })
@@ -31,7 +31,7 @@ impl Evaluator {
                 let source = fs::read_to_string(&target_path).map_err(|e| {
                     let (msg, hint) = match e.kind() {
                         ErrorKind::NotFound => {
-                            let msg = format!("Module not found: '{}'", target_path.display());
+                            let msg = format!("module not found: '{}'", target_path.display());
                             let hint =
                                 "Ensure that the module exists and try adjusting the path.".to_string();
 
@@ -39,13 +39,13 @@ impl Evaluator {
                         }
                         ErrorKind::PermissionDenied => {
                             let msg =
-                                format!("Permission denied reading module: '{}'", target_path.display());
+                                format!("permission denied reading module: '{}'", target_path.display());
                             let hint = "Set proper file permissions".to_string();
 
                             (msg, Some(hint))
                         }
                         _ => {
-                            let msg = format!("Failed to read module '{}': {}", target_path.display(), e);
+                            let msg = format!("failed to read module '{}': {}", target_path.display(), e);
                             (msg, None)
                         }
                     };
@@ -57,7 +57,7 @@ impl Evaluator {
                     .map_err(|e| NbclError::Parse(Box::new(e)))?;
 
                 let file_pair = tokens.next().ok_or_else(|| NbclError::Ast {
-                    message: "Empty file".into(),
+                    message: "empty file".into(),
                     hint: None,
                     span: None,
                 })?;

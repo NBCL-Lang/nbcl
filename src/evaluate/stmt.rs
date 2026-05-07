@@ -1,10 +1,9 @@
-use super::{Evaluator, FlowControl};
+use super::{Evaluator, Scope, ScopeKind, FlowControl};
 use crate::{
     ast::Value,
     ast::source::*,
     error::{NbclError, Result},
 };
-use std::collections::HashMap;
 
 impl Evaluator {
     pub(crate) fn execute_stmt(&mut self, stmt: Stmt) -> Result<Value> {
@@ -17,7 +16,23 @@ impl Evaluator {
                 // Standalone expressions are evaluated and discarded
                 self.eval_expr(&expr)?
             }
-            Stmt::Return(maybe_expr) => {
+            Stmt::Return(maybe_expr, span) => {
+                // Ensure that we cant return at:
+                // TopLevel or a Block child of TopLevel
+                let is_at_root = match self.scopes.as_slice() {
+                    [root] if root.kind == ScopeKind::TopLevel => true,
+                    [root, current] if root.kind == ScopeKind::TopLevel && current.kind == ScopeKind::Block => true,
+                    _ => false,
+                };
+
+                if is_at_root {
+                    return Err(NbclError::Runtime {
+                        message: "cannot return from the top level".to_string(),
+                        hint: Some("Move this logic into a function or component if you need early returns.".to_string()),
+                        span: Some(span),
+                    });
+                }
+
                 let val = match maybe_expr {
                     Some(e) => self.eval_expr(&e)?,
                     None => Value::Null,
@@ -32,12 +47,12 @@ impl Evaluator {
                 // A 'global' always goes into the very first scope (index 0),
                 // regardless of how many components or blocks deep we are.
                 if let Some(global_scope) = self.scopes.first_mut() {
-                    global_scope.insert(name, val);
+                    global_scope.variables.insert(name, val);
                 } else {
                     // Fallback: if somehow scopes is empty (shouldn't happen),
                     // create a new one.
-                    let mut map = HashMap::new();
-                    map.insert(name, val);
+                    let mut map = Scope::new(ScopeKind::TopLevel);
+                    map.variables.insert(name, val);
                     self.scopes.push(map);
                 }
 
@@ -46,7 +61,7 @@ impl Evaluator {
             Stmt::Local(name, _type_hint, expr) => {
                 let val = self.eval_expr(&expr)?;
                 if let Some(current_scope) = self.scopes.last_mut() {
-                    current_scope.insert(name, val);
+                    current_scope.variables.insert(name, val);
                 }
 
                 Value::Null
@@ -56,21 +71,21 @@ impl Evaluator {
                 let mut found = false;
 
                 for scope in self.scopes.iter_mut().rev() {
-                    if scope.contains_key(&name) {
-                        scope.insert(name.clone(), new_val);
+                    if scope.variables.contains_key(&name) {
+                        scope.variables.insert(name.clone(), new_val);
                         found = true;
                         break;
                     }
                 }
 
                 if !found {
-                    let candidates = self.scopes.iter().flat_map(|s| s.keys());
+                    let candidates = self.scopes.iter().flat_map(|s| s.variables.keys());
                     let suggestion = crate::utils::find_best_match(&name, candidates);
 
                     let hint = suggestion.map(|s| format!("Did you mean \"{}\"?", s));
 
                     return Err(NbclError::Runtime {
-                        message: format!("Variable '{}' doesn't exist.", name),
+                        message: format!("variable '{}' doesn't exist", name),
                         hint,
                         span: Some(span),
                     });
@@ -86,14 +101,14 @@ impl Evaluator {
                             break;
                         }
 
-                        let mut loop_scope = HashMap::new();
+                        let mut loop_scope = Scope::new(ScopeKind::Block);
 
                         // Handle pattern matching (len 1 or len 2)
                         if patterns.len() == 1 {
-                            loop_scope.insert(patterns[0].clone(), item);
+                            loop_scope.variables.insert(patterns[0].clone(), item);
                         } else if patterns.len() == 2 {
-                            loop_scope.insert(patterns[0].clone(), Value::Int(i as i64));
-                            loop_scope.insert(patterns[1].clone(), item);
+                            loop_scope.variables.insert(patterns[0].clone(), Value::Int(i as i64));
+                            loop_scope.variables.insert(patterns[1].clone(), item);
                         }
 
                         self.scopes.push(loop_scope);
@@ -120,7 +135,7 @@ impl Evaluator {
                         break;
                     }
 
-                    self.scopes.push(HashMap::new());
+                    self.scopes.push(Scope::new(ScopeKind::Block));
 
                     // Execute the block logic
                     self.execute_block_internal(&body)?;

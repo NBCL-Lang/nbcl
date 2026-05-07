@@ -1,4 +1,4 @@
-use super::Evaluator;
+use super::{Evaluator, Scope, ScopeKind};
 use crate::{
     ast::resolved::ResolvedNode,
     ast::source::*,
@@ -22,7 +22,7 @@ impl Evaluator {
                 Value::Str(s) => Some(s),
                 Value::Null => None,
                 _ => return Err(NbclError::Runtime {
-                    message: format!("Expected string for node ID, found {}", val.type_name()),
+                    message: format!("expected string for node ID, found {}", val.type_name()),
                     hint: Some("If you're passing a variable, ensure it contains a string.".into()),
                     span: Some(id_expr.span.clone()),
                 }),
@@ -36,8 +36,8 @@ impl Evaluator {
             // Check: Is an ID required by the schema?
             if schema.enforce_id && resolved_id.is_none() {
                 return Err(NbclError::Runtime {
-                    message: format!("Node '{}' requires an #id", inv.type_name),
-                    hint: Some("Try providing an id like this: Object \"id\" { ... }".to_string()),
+                    message: format!("node '{}' requires an #id", inv.type_name),
+                    hint: Some("Try providing an id like this: 'Object \"id\" { ... }'.".to_string()),
                     span: Some(inv.span),
                 });
             }
@@ -56,7 +56,7 @@ impl Evaluator {
                         if expected_type.matches_value(value) {
                             return Err(NbclError::Runtime {
                                 message: format!(
-                                    "Type mismatch for '{}' on '{}': expected {:?}, found {:?}",
+                                    "type mismatch for '{}' on '{}': expected {:?}, found {:?}",
                                     key,
                                     inv.type_name,
                                     expected_type,
@@ -73,7 +73,7 @@ impl Evaluator {
 
                         return Err(NbclError::Runtime {
                             message: format!(
-                                "Property '{}' is not allowed on node '{}'",
+                                "property '{}' is not allowed on node '{}'",
                                 key, inv.type_name
                             ),
                             hint,
@@ -98,7 +98,7 @@ impl Evaluator {
         let hint = suggestion.map(|s| format!("Did you mean \"{}\"?", s));
 
         Err(NbclError::Runtime {
-            message: format!("Unknown node or component: {}", inv.type_name),
+            message: format!("unknown node or component: {}", inv.type_name),
             hint,
             span: Some(inv.span),
         })
@@ -115,7 +115,7 @@ impl Evaluator {
                 Value::Str(_) => val,
                 Value::Null => Value::Null,
                 _ => return Err(NbclError::Runtime {
-                    message: "Node ID must resolve to a string".into(),
+                    message: "node ID must resolve to a string".into(),
                     hint: Some(format!("Got a {} instead.", val.type_name())),
                     span: Some(id_expr.span.clone()),
                 }),
@@ -124,7 +124,7 @@ impl Evaluator {
             Value::Null
         };
 
-        let mut component_scope = HashMap::new();
+        let mut component_scope = Scope::new(ScopeKind::Component);
 
         // Resolve caller props once to avoid re-evaluating in different branches
         let mut caller_props = HashMap::new();
@@ -135,7 +135,7 @@ impl Evaluator {
         let mut meta_map = Vec::new();
         meta_map.push(("id".to_string(), resolved_id_val));
         meta_map.push(("children".to_string(), Value::Nodes(caller_children)));
-        component_scope.insert("component".to_string(), Value::Map(meta_map));
+        component_scope.variables.insert("component".to_string(), Value::Map(meta_map));
 
         match &def.interface {
             ComponentInterface::Loose(name) => {
@@ -144,7 +144,7 @@ impl Evaluator {
                 for (k, v) in caller_props {
                     prop_list.push((k, v));
                 }
-                component_scope.insert(name.clone(), Value::Map(prop_list));
+                component_scope.variables.insert(name.clone(), Value::Map(prop_list));
             }
 
             ComponentInterface::Strict(params) => {
@@ -159,7 +159,7 @@ impl Evaluator {
                                     if !expected_type.matches_value(&v) {
                                         return Err(NbclError::Runtime {
                                             message: format!(
-                                                "Component '{}' expected {} for prop '{}', got {}",
+                                                "component '{}' expected {} for prop '{}', got {}",
                                                 def.name,
                                                 hint,
                                                 param.name,
@@ -171,7 +171,7 @@ impl Evaluator {
                                     }
                                 }
                             }
-                            component_scope.insert(param.name.clone(), v);
+                            component_scope.variables.insert(param.name.clone(), v);
                         }
                         None => {
                             if !param.is_optional {
@@ -184,14 +184,14 @@ impl Evaluator {
 
                                 return Err(NbclError::Runtime {
                                     message: format!(
-                                        "Missing required prop '{}' for component '{}'",
+                                        "missing required prop '{}' for component '{}'",
                                         param.name, def.name
                                     ),
                                     hint,
                                     span: Some(inv.span.clone()),
                                 });
                             }
-                            component_scope.insert(param.name.clone(), Value::Null);
+                            component_scope.variables.insert(param.name.clone(), Value::Null);
                         }
                     }
                 }
@@ -206,7 +206,7 @@ impl Evaluator {
 
                     return Err(NbclError::Runtime {
                         message: format!(
-                            "Unexpected property '{}' for component '{}'.",
+                            "unexpected property '{}' for component '{}'.",
                             extra_key, def.name
                         ),
                         hint,

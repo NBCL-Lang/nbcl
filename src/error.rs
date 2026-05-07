@@ -28,6 +28,10 @@ impl Span {
 }
 
 /// Custom error format used throughout the crate
+///
+/// Error style to preserve: 
+/// - message: must not end with fullstop or punctuation, and must be all lowercase
+/// - hint: Must end with fullstop or punctuation, and must start with a capital letter.
 #[derive(Debug)]
 pub enum NbclError {
     Parse(Box<pest::error::Error<Rule>>),

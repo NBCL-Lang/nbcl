@@ -110,7 +110,7 @@ pub enum Stmt {
     Global(String, Option<String>, Expr),
     For(Vec<String>, Expr, Block),
     While(Expr, Block),
-    Return(Option<Expr>),
+    Return(Option<Expr>, Span),
     Expr(Expr),
 }
 

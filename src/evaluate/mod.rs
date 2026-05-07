@@ -10,18 +10,44 @@ use crate::{
 use std::collections::{HashMap, HashSet};
 use std::path::PathBuf;
 
+// Todo: Maybe add break and continue
 pub enum FlowControl {
     None,
     Return(Value),
 }
 
+/// Kinds of scopes
+#[derive(PartialEq)]
+pub enum ScopeKind {
+    TopLevel,
+    Block,    // if, for, while
+    Function, // fn, lambda
+    Component // Object
+}
+
+/// Internal structure used for scope handling
+#[derive(PartialEq)]
+pub(crate) struct Scope {
+    pub variables: HashMap<String, Value>,
+    pub kind: ScopeKind,
+}
+
 /// An internal structure that evaluates the source AST
 pub(crate) struct Evaluator {
     registry: Registry,
-    scopes: Vec<HashMap<String, Value>>,
+    scopes: Vec<Scope>,
     loaded_files: HashSet<PathBuf>,
     mod_resolver: Option<FileModuleResolver>,
     flow: FlowControl,
+}
+
+impl Scope {
+    pub fn new(kind: ScopeKind) -> Self {
+        Self {
+            variables: HashMap::new(),
+            kind,
+        }
+    }
 }
 
 impl Evaluator {
@@ -29,7 +55,7 @@ impl Evaluator {
     pub fn new(registry: Registry, mod_resolver: Option<FileModuleResolver>) -> Self {
         Self {
             registry,
-            scopes: vec![HashMap::new()],
+            scopes: vec![Scope::new(ScopeKind::TopLevel)],
             loaded_files: HashSet::new(),
             mod_resolver,
             flow: FlowControl::None,

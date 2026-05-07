@@ -49,7 +49,7 @@ pub(crate) fn register_builtin_functions(registry: &mut Registry) {
         };
         if !condition {
             return Err(NbclError::Runtime {
-                message: format!("Assertion Failed: {}", msg),
+                message: format!("assertion Failed: {}", msg),
                 hint: None,
                 span: None,
             });

@@ -1,10 +1,9 @@
-use super::{Evaluator, FlowControl};
+use super::{Evaluator, Scope, ScopeKind, FlowControl};
 use crate::{
     ast::Value,
     ast::source::*,
     error::{NbclError, Result, Span},
 };
-use std::collections::HashMap;
 
 // Extend for expr support.
 impl Evaluator {
@@ -14,13 +13,13 @@ impl Evaluator {
 
             ExprKind::Variable(name) => self.lookup_var(name).ok_or_else(|| {
                 let candidates =
-                    self.scopes.iter().flat_map(|s| s.keys()).chain(self.registry.globals.keys());
+                    self.scopes.iter().flat_map(|s| s.variables.keys()).chain(self.registry.globals.keys());
 
                 let suggestion = crate::utils::find_best_match(name, candidates);
                 let hint = suggestion.map(|s| format!("Did you mean \"{}\"?", s));
 
                 NbclError::Runtime {
-                    message: format!("Undefined variable: {}", name),
+                    message: format!("undefined variable: {}", name),
                     hint,
                     span: Some(expr.span.clone()),
                 }
@@ -64,7 +63,7 @@ impl Evaluator {
                                 Ok(Value::Null)
                             } else {
                                 Err(NbclError::Runtime {
-                                    message: format!("Map has no field: {}", field),
+                                    message: format!("map has no field: {}", field),
                                     hint: {
                                         let candidates = pairs.iter().map(|(k, _)| k);
                                         if let Some(suggestion) =
@@ -90,7 +89,7 @@ impl Evaluator {
                 } else {
                     Err(NbclError::Runtime {
                         message: format!(
-                            "Cannot access field '{}' on non-map type: {:?}",
+                            "cannot access field '{}' on non-map type: {:?}",
                             field, val
                         ),
                         hint: None,
@@ -106,7 +105,7 @@ impl Evaluator {
                 match (target_val, key_val) {
                     (Value::List(list), Value::Int(i)) => {
                         list.get(i as usize).cloned().ok_or_else(|| NbclError::Runtime {
-                            message: format!("Index {} out of bounds", i),
+                            message: format!("index {} out of bounds", i),
                             hint: None,
                             span: Some(expr.span.clone()),
                         })
@@ -119,14 +118,14 @@ impl Evaluator {
                             let hint = suggestion.map(|best| format!("Did you mean \"{}\"?", best));
 
                             NbclError::Runtime {
-                                message: format!("Key '{}' not found in map", s),
+                                message: format!("key '{}' not found in map", s),
                                 hint,
                                 span: Some(expr.span.clone()),
                             }
                         })
                     }
                     _ => Err(NbclError::Runtime {
-                        message: "Invalid index operation".into(),
+                        message: "invalid index operation".into(),
                         hint: None,
                         span: Some(expr.span.clone()),
                     }),
@@ -141,7 +140,7 @@ impl Evaluator {
                             &format!("{}.{}", alias, field)
                         } else {
                             return Err(NbclError::Runtime {
-                                message: "Complex paths in calls are not supported yet".into(),
+                                message: "complex paths in calls are not supported yet".into(),
                                 hint: Some("Try assigning the object to a local variable first, e.g. 'local f = obj.func; f()'".to_string()),
                                 span: Some(callee.span.clone()),
                             });
@@ -149,7 +148,7 @@ impl Evaluator {
                     }
                     _ => {
                         return Err(NbclError::Runtime {
-                            message: "Only variables can be called as functions currently".into(),
+                            message: "only variables can be called as functions currently".into(),
                             hint: None,
                             span: Some(callee.span.clone()),
                         });
@@ -169,7 +168,7 @@ impl Evaluator {
 
                         return Err(NbclError::Runtime {
                             message: format!(
-                                "Native function '{}' expected {} args, got {}",
+                                "native function '{}' expected {} args, got {}",
                                 func_name,
                                 native_schema.params.len(),
                                 args.len()
@@ -193,7 +192,7 @@ impl Evaluator {
 
                             return Err(NbclError::Runtime {
                                 message: format!(
-                                    "Native function '{}' arg {} expected {:?}, got {}",
+                                    "native function '{}' arg {} expected {:?}, got {}",
                                     func_name,
                                     i,
                                     expected,
@@ -221,7 +220,7 @@ impl Evaluator {
                         let hint = suggestion.map(|s| format!("Did you mean \"{}\"?", s));
 
                         NbclError::Runtime {
-                            message: format!("Undefined function: {}", func_name),
+                            message: format!("undefined function: {}", func_name),
                             hint,
                             span: Some(callee.span.clone()),
                         }
@@ -234,7 +233,7 @@ impl Evaluator {
 
                     return Err(NbclError::Runtime {
                         message: format!(
-                            "Expected {} arguments, got {}",
+                            "expected {} arguments, got {}",
                             func_def.params.len(),
                             args.len()
                         ),
@@ -243,7 +242,7 @@ impl Evaluator {
                     });
                 }
 
-                let mut call_scope = HashMap::new();
+                let mut call_scope = Scope::new(ScopeKind::Function);
                 for (param, value) in func_def.params.iter().zip(args) {
                     if let Some(expected_type) = &param.type_hint {
                         let actual_type = value.type_name();
@@ -251,7 +250,7 @@ impl Evaluator {
                         if expected_type != actual_type && expected_type != "Any" {
                             return Err(NbclError::Runtime {
                                 message: format!(
-                                    "Type mismatch for parameter '{}' in function '{}'. Expected {}, got {}",
+                                    "type mismatch for parameter '{}' in function '{}'. Expected {}, got {}",
                                     param.name, func_name, expected_type, actual_type
                                 ),
                                 hint: Some(format!(
@@ -262,7 +261,7 @@ impl Evaluator {
                             });
                         }
 
-                        call_scope.insert(param.name.clone(), value);
+                        call_scope.variables.insert(param.name.clone(), value);
                     }
                 }
 
@@ -328,7 +327,7 @@ impl Evaluator {
 
                 // Execute the chosen branch
                 if let Some((stmts, final_expr)) = target_branch {
-                    self.scopes.push(HashMap::new());
+                    self.scopes.push(Scope::new(ScopeKind::Block));
                     
                     for stmt in stmts {
                         self.execute_stmt(stmt.clone())?;
@@ -363,7 +362,7 @@ impl Evaluator {
                         Ok(Value::List(values))
                     }
                     _ => Err(NbclError::Runtime {
-                        message: "Range boundaries must be integers".into(),
+                        message: "range boundaries must be integers".into(),
                         hint: None,
                         span: Some(expr.span.clone()),
                     }),
@@ -375,7 +374,7 @@ impl Evaluator {
     fn lookup_var(&self, name: &str) -> Option<Value> {
         // Search local scope stack (reversed for shadowing)
         for scope in self.scopes.iter().rev() {
-            if let Some(val) = scope.get(name) {
+            if let Some(val) = scope.variables.get(name) {
                 return Some(val.clone());
             }
         }
@@ -415,7 +414,7 @@ impl Evaluator {
             (Value::Int(a), "/", Value::Int(b)) => {
                 if b == 0 {
                     return Err(NbclError::Runtime {
-                        message: "Division by zero".to_string(),
+                        message: "division by zero".to_string(),
                         hint: Some(
                             "Try replacing the zero with another number, silly!".to_string(),
                         ),
@@ -427,8 +426,8 @@ impl Evaluator {
             (Value::Int(a), "%", Value::Int(b)) => {
                 if b == 0 {
                     return Err(NbclError::Runtime {
-                        message: "Modulo by zero".to_string(),
-                        hint: Some("Try replacing the zero with another number".to_string()),
+                        message: "modulo by zero".to_string(),
+                        hint: Some("Try replacing the zero with another number.".to_string()),
                         span: Some(span.clone()),
                     });
                 }
@@ -438,7 +437,7 @@ impl Evaluator {
             (Value::Int(a), "==", Value::Int(b)) => Ok(Value::Bool(a == b)),
             (Value::Str(a), "==", Value::Str(b)) => Ok(Value::Bool(a == b)),
             (l, o, r) => Err(NbclError::Runtime {
-                message: format!("Operation '{}' not supported between {:?} and {:?}", o, l, r),
+                message: format!("operation '{}' not supported between {:?} and {:?}", o, l, r),
                 hint: Some("Try converting both sides to the same type using to_string() or to_int().".to_string()),
                 span: Some(span.clone()),
             }),
@@ -450,7 +449,7 @@ impl Evaluator {
             Value::Int(i) => Ok(Value::Int(-i)),
             Value::Float(f) => Ok(Value::Float(-f)),
             _ => Err(NbclError::Runtime {
-                message: "Unary '-' can only be applied to numbers".into(),
+                message: "unary '-' can only be applied to numbers".into(),
                 hint: None,
                 span: Some(span.clone()),
             }),

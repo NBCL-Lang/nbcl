@@ -70,7 +70,7 @@ impl NbclEngine {
             NbclParser::parse(Rule::file, source).map_err(|e| NbclError::Parse(Box::new(e)))?;
 
         let file_pair = pairs.next().ok_or_else(|| NbclError::Ast {
-            message: "Empty file".into(),
+            message: "empty file".into(),
             hint: None,
             span: None,
         })?;
