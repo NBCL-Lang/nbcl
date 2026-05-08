@@ -1,12 +1,24 @@
-local test = (null || 10) + 10/2
-print(test)
+# Single line comment
+#-
+    Multi 
+    line 
+    comment
+-#
 
-fn test(pram1) {
+import "other.nbl" as other
+
+local example = 4 + 6 * 2
+print(example)
+
+local list = [1, 2, 3]
+local map = { key: value, key2: value }
+
+fn fn_example(pram1: String) {
     print(pram1)
 }
 
-test("test1")
+fn_example("Hello, World!")
 
-Object "tooling" {
+Object "example_node" {
     value = 10
 }

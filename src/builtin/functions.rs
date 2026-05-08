@@ -6,7 +6,12 @@ use crate::registry::Registry;
 pub(crate) fn register_builtin_functions(registry: &mut Registry) {
     // print(Any) -> Null
     registry.add_native_fn("print", vec![Type::Any], Type::Null, |args| {
+        #[cfg(feature = "wasm")]
+        crate::wasm::wasm_print(format!("{}", args[0]));
+        
+        #[cfg(not(feature = "wasm"))]
         println!("{}", args[0]);
+
         Ok(Value::Null)
     });
 

@@ -8,3 +8,13 @@ edition = "2024"
 pest = "2.8.6"
 pest_derive = "2.8.6"
 serde = { version = "1.0.228", features = ["derive"] }
+serde_json = { version = "1.0.149", optional = true }
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+wasm-bindgen = { version = "0.2.121", optional = true }
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[features]
+wasm = ["wasm-bindgen", "serde_json"]

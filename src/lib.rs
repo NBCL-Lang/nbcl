@@ -8,12 +8,13 @@
 pub mod ast;
 pub mod builder;
 pub mod builtin;
-mod engine;
 pub mod error;
 pub mod evaluate;
 pub mod module_resolver;
 pub mod parser;
 pub mod registry;
 pub mod utils;
+pub mod wasm;
 
+mod engine;
 pub use engine::*;

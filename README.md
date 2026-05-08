@@ -10,6 +10,6 @@
 <br/>
 
 `nbcl` is a lightweight, declarative configuration DSL mainly designed for 
-defining UI components and cloud infrastructure. The syntax is designed to be simple,
+defining UI components and general purpose embedding. The syntax is designed to be simple,
 and thus follows an HCL-inspired Blocky syntax but with the added benifits of
 modularity, scripting capabilities, and simplicity.

@@ -10,9 +10,8 @@ global var = if true {
 } else {
     5
 }
-print(var)
 
-for {}
+print(var)
 
 component StyledButton (bg_color?) {
     Object "id" {
@@ -22,7 +21,7 @@ component StyledButton (bg_color?) {
 }
 
 component LooseStyledButton (any: test) {
-    # ?. makes it null if it even if doesn't exist
+    # '?.' makes it null if it doesn't exist
     local bg_color = test?.bg_color
 
     Object component.id {
