@@ -260,9 +260,9 @@ impl Evaluator {
                                 span: Some(expr.span.clone()),
                             });
                         }
-
-                        call_scope.variables.insert(param.name.clone(), value);
                     }
+
+                    call_scope.variables.insert(param.name.clone(), value);
                 }
 
                 self.scopes.push(call_scope);
@@ -484,8 +484,18 @@ impl Evaluator {
                 Ok(Value::Int(a % b))
             }
             (Value::Str(a), "+", Value::Str(b)) => Ok(Value::Str(format!("{}{}", a, b))),
+
+            // Integer Comparisons
             (Value::Int(a), "==", Value::Int(b)) => Ok(Value::Bool(a == b)),
+            (Value::Int(a), "!=", Value::Int(b)) => Ok(Value::Bool(a != b)),
+            (Value::Int(a), "<",  Value::Int(b)) => Ok(Value::Bool(a < b)),
+            (Value::Int(a), "<=", Value::Int(b)) => Ok(Value::Bool(a <= b)),
+            (Value::Int(a), ">",  Value::Int(b)) => Ok(Value::Bool(a > b)),
+            (Value::Int(a), ">=", Value::Int(b)) => Ok(Value::Bool(a >= b)),
+
+            // String Comparisons
             (Value::Str(a), "==", Value::Str(b)) => Ok(Value::Bool(a == b)),
+            (Value::Str(a), "!=", Value::Str(b)) => Ok(Value::Bool(a != b)),
             (l, o, r) => Err(NbclError::Runtime {
                 message: format!("operation '{}' not supported between {:?} and {:?}", o, l, r),
                 hint: Some("Try converting both sides to the same type using to_string() or to_int().".to_string()),
