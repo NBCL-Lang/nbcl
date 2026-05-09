@@ -3,14 +3,26 @@ use pest::iterators::Pair;
 use std::path::PathBuf;
 
 #[cfg(feature = "pretty-errors")]
-use ariadne::{Color, Config, Label, Report, ReportKind, Source};
-#[cfg(feature = "pretty-errors")]
-use std::cell::RefCell;
+pub mod pretty_error {
+    pub use ariadne::{Color, Config, Label, Report, ReportKind, Source};
+    use std::cell::RefCell;
 
-// Temporary solution to source problem
-#[cfg(feature = "pretty-errors")]
-thread_local! {
-    pub static TEMP_SOURCE: RefCell<String> = RefCell::new(String::new());
+    #[cfg(feature = "pretty-errors")]
+    thread_local! {
+        static TEMP_SOURCE: RefCell<Option<String>> = RefCell::new(None);
+    }
+
+    pub fn set_source(source: &str) {
+        TEMP_SOURCE.with(|s| *s.borrow_mut() = Some(source.to_string()));
+    }
+
+    pub fn get_source() -> Option<String> {
+        TEMP_SOURCE.with(|s| s.borrow().clone())
+    }
+
+    pub fn clear_source() {
+        TEMP_SOURCE.with(|s| *s.borrow_mut() = None);
+    }
 }
 
 /// Start..end data that is useful for error reporting
@@ -304,9 +316,11 @@ impl std::fmt::Display for NbclError {
 
     #[cfg(feature = "pretty-errors")]
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        use pretty_error::*;
+
         let use_color = cfg!(not(feature = "wasm"));
         let config = Config::default().with_color(use_color);
-        let source = TEMP_SOURCE.with(|buf| buf.borrow().clone());
+        let source = pretty_error::get_source().unwrap_or(String::new());
 
         match self {
             NbclError::Parse { message, hint, span } => {
@@ -366,15 +380,16 @@ fn format_diagnostic(
 #[cfg(feature = "pretty-errors")]
 fn write_report(
     f: &mut std::fmt::Formatter<'_>,
-    config: Config,
+    config: ariadne::Config,
     kind_label: &str,
     code: &str,
     message: &str,
     hint: &Option<String>,
     span: &Option<Span>,
-    color: Color,
+    color: ariadne::Color,
     source: &str,
 ) -> std::fmt::Result {
+    use pretty_error::*;
     let mut buf = Vec::new();
 
     if let Some(span) = span {
