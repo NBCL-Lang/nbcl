@@ -18,3 +18,15 @@ pub mod wasm;
 
 mod engine;
 pub use engine::*;
+
+/// Print a message that automatically goes to right buffer.
+///
+/// - If wasm: Goes to wasm buffer
+/// - If not wasm: Goes to system buffer
+pub fn print<S: AsRef<str> + std::fmt::Display>(name: S) {
+    #[cfg(feature = "wasm")]
+    crate::wasm::wasm_print(format!("{}", name));
+    
+    #[cfg(not(feature = "wasm"))]
+    println!("{}", name);
+}

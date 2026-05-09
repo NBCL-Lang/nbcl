@@ -7,6 +7,7 @@ mod wasm {
         static PRINT_BUFFER: RefCell<Vec<String>> = RefCell::new(Vec::new());
     }
 
+    /// Print something to wasm buffer
     pub fn wasm_print(msg: String) {
         PRINT_BUFFER.with(|buf| buf.borrow_mut().push(msg));
     }
