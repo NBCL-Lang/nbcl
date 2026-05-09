@@ -21,7 +21,7 @@ fn main() {
 
             match engine.evaluate(ast) {
                 Ok(evaled) => println!("{:#?}", evaled),
-                Err(e) => eprintln!("{}", e), 
+                Err(e) => println!("{}", e),
             }
         }
         Err(e) => eprintln!("{}, spans {:#?}", e, e.span()),

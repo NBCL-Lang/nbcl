@@ -2,6 +2,17 @@ use crate::parser::Rule;
 use pest::iterators::Pair;
 use std::path::PathBuf;
 
+#[cfg(feature = "pretty-errors")]
+use ariadne::{Color, Config, Label, Report, ReportKind, Source};
+#[cfg(feature = "pretty-errors")]
+use std::cell::RefCell;
+
+// Temporary solution to source problem
+#[cfg(feature = "pretty-errors")]
+thread_local! {
+    pub static TEMP_SOURCE: RefCell<String> = RefCell::new(String::new());
+}
+
 /// Start..end data that is useful for error reporting
 #[derive(Debug, Clone, PartialEq)]
 pub struct Span {
@@ -265,6 +276,7 @@ impl From<pest::error::Error<Rule>> for NbclError {
 }
 
 impl std::fmt::Display for NbclError {
+    #[cfg(not(feature = "pretty-errors"))]
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             NbclError::Parse { message, hint, span } => {
@@ -289,12 +301,49 @@ impl std::fmt::Display for NbclError {
             }
         }
     }
+
+    #[cfg(feature = "pretty-errors")]
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let use_color = cfg!(not(feature = "wasm"));
+        let config = Config::default().with_color(use_color);
+        let source = TEMP_SOURCE.with(|buf| buf.borrow().clone());
+
+        match self {
+            NbclError::Parse { message, hint, span } => {
+                write_report(f, config, "Parse Error", "E001", message, hint, span, Color::Red, &source)
+            }
+            NbclError::Ast { message, hint, span } => {
+                write_report(f, config, "Syntax Error", "E002", message, hint, span, Color::Yellow, &source)
+            }
+            NbclError::Runtime { message, hint, span } => {
+                write_report(f, config, "Runtime Error", "E003", message, hint, span, Color::Magenta, &source)
+            }
+            NbclError::IO { message, hint, path } => {
+                use ariadne::Source;
+                let mut report = Report::build(ReportKind::Error, 0..0)
+                    .with_config(config)
+                    .with_code("E004")
+                    .with_message(format!("IO Error: {}", message))
+                    .with_note(format!("Path: {}", path.display()));
+                if let Some(h) = hint {
+                    report = report.with_help(h);
+                }
+                let mut buf = Vec::new();
+                report
+                    .finish()
+                    .write(Source::from(""), &mut buf)
+                    .map_err(|_| std::fmt::Error)?;
+                write!(f, "{}", String::from_utf8_lossy(&buf))
+            }
+        }
+    }
 }
 
 impl std::error::Error for NbclError {}
 pub type Result<T> = std::result::Result<T, NbclError>;
 
 // Helper to keep Ast and Runtime formatting identical and clean
+#[cfg(not(feature = "pretty-errors"))]
 fn format_diagnostic(
     f: &mut std::fmt::Formatter<'_>,
     label: &str,
@@ -312,4 +361,53 @@ fn format_diagnostic(
         write!(f, "  Hint: {}", h)?;
     }
     Ok(())
+}
+
+#[cfg(feature = "pretty-errors")]
+fn write_report(
+    f: &mut std::fmt::Formatter<'_>,
+    config: Config,
+    kind_label: &str,
+    code: &str,
+    message: &str,
+    hint: &Option<String>,
+    span: &Option<Span>,
+    color: Color,
+    source: &str,
+) -> std::fmt::Result {
+    let mut buf = Vec::new();
+
+    if let Some(span) = span {
+        let mut report = Report::build(ReportKind::Error, span.start..span.end)
+            .with_config(config)
+            .with_code(code)
+            .with_message(format!("{}: {}", kind_label, message))
+            .with_label(
+                Label::new(span.start..span.end)
+                    .with_message(message)
+                    .with_color(color),
+            );
+        if let Some(h) = hint {
+            report = report.with_help(h);
+        }
+        report
+            .finish()
+            .write(Source::from(source), &mut buf)
+            .map_err(|_| std::fmt::Error)?;
+    } else {
+        // No span available, plain report
+        let mut report = Report::build(ReportKind::Error, 0..0)
+            .with_config(config)
+            .with_code(code)
+            .with_message(format!("{}: {}", kind_label, message));
+        if let Some(h) = hint {
+            report = report.with_help(h);
+        }
+        report
+            .finish()
+            .write(Source::from(""), &mut buf)
+            .map_err(|_| std::fmt::Error)?;
+    }
+
+    write!(f, "{}", String::from_utf8_lossy(&buf))
 }

@@ -66,6 +66,9 @@ impl NbclEngine {
 
     /// Parse a source string into AST
     pub fn parse_str(&self, source: &str) -> Result<File> {
+        #[cfg(feature = "pretty-errors")]
+        crate::error::TEMP_SOURCE.with(|buf| *buf.borrow_mut() = source.to_string());
+
         let mut pairs = NbclParser::parse(Rule::file, source)?;
 
         let file_pair = pairs.next().ok_or_else(|| NbclError::Ast {
