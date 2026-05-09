@@ -131,11 +131,76 @@ impl Evaluator {
         let mut caller_children = Vec::new();
         self.resolve_node_items(inv.body, &mut caller_props, &mut caller_children)?;
 
+        // Enforce properties
+        for item in &def.body {
+            match item {
+                NodeItem::Prop(key, expr) => {
+                    let constraint_val = self.eval_expr(expr)?;
+
+                    match key.as_str() {
+                        "id_required" => {
+                            if let Value::Bool(true) = constraint_val {
+                                if resolved_id_val == Value::Null {
+                                    return Err(NbclError::Runtime {
+                                        message: format!("Component '{}' requires an ID.", def.name),
+                                        hint: Some(format!("Usage: {} \"my_id\" {{ ... }}", def.name)),
+                                        span: Some(inv.span.clone()),
+                                    });
+                                }
+                            }
+                        }
+
+                        "child_count" => {
+                            let actual_count = caller_children.len() as i64;
+                            match constraint_val {
+                                // Case: child_count = 3 (Exact)
+                                Value::Int(expected) => {
+                                    if actual_count != expected {
+                                        let maybe_pronoun = if expected == 1 {
+                                            "child"
+                                        } else {
+                                            "children"
+                                        };
+
+                                        return Err(NbclError::Runtime {
+                                            message: format!("Component '{}' requires exactly {} {}, but got {}.", def.name, expected, maybe_pronoun, actual_count),
+                                            hint: None,
+                                            span: Some(inv.span.clone()),
+                                        });
+                                    }
+                                }
+                                // Case: child_count = [1, 3] (Range)
+                                Value::List(range) if range.len() == 2 => {
+                                    if let (Value::Int(min), Value::Int(max)) = (&range[0], &range[1]) {
+                                        if actual_count < *min || actual_count > *max {
+                                            return Err(NbclError::Runtime {
+                                                message: format!("Component '{}' requires between {} and {} children, but got {}.", def.name, min, max, actual_count),
+                                                hint: None,
+                                                span: Some(inv.span.clone()),
+                                            });
+                                        }
+                                    }
+                                }
+                                _ => return Err(NbclError::Runtime {
+                                    message: "Property 'child_count' must be an Integer or a List of 2 Integers.".into(),
+                                    hint: None,
+                                    span: Some(expr.span.clone()),
+                                }),
+                            }
+                        }
+
+                        _ => {}
+                    }
+                } 
+                _ => {}
+            }
+        }
+
         // Generate component.* namspace
         let mut meta_map = Vec::new();
         meta_map.push(("id".to_string(), resolved_id_val));
         meta_map.push(("children".to_string(), Value::Nodes(caller_children)));
-        component_scope.variables.insert("component".to_string(), Value::Map(meta_map));
+        component_scope.variables.insert("self".to_string(), Value::Map(meta_map));
 
         match &def.interface {
             ComponentInterface::Loose(name) => {

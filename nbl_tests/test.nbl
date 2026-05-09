@@ -23,12 +23,14 @@ component StyledButton (bg_color?) {
 component LooseStyledButton (any: test) {
     # '?.' makes it null if it doesn't exist
     local bg_color = test?.bg_color
+    id_required = true
+    child_count = 1
 
-    Object component.id {
+    Object self.id {
         # Simple default value pattern
         background = bg_color || "#ffffff"
 
-        component.children
+        self.children
     }
 }
 
@@ -38,6 +40,4 @@ fn show() {
     }
 }
 
-LooseStyledButton "test" {
-    show()
-}
+LooseStyledButton "id" {}
