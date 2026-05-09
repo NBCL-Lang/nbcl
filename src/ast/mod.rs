@@ -1,13 +1,14 @@
 pub mod resolved;
 pub mod source;
 use crate::error;
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize, Serialize, Serializer};
+use serde::ser::{SerializeMap, SerializeSeq};
 use std::collections::HashMap;
 use std::fmt;
 use std::sync::Arc;
 
 /// Possible data types in Nbcl (used interanally to hold value)
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Deserialize)]
 pub enum Value {
     /// Integers (1)
     Int(i64),
@@ -25,6 +26,34 @@ pub enum Value {
     Nodes(Vec<resolved::ResolvedNode>),
     /// Null (no data)
     Null,
+}
+
+
+impl Serialize for Value {
+    fn serialize<S: Serializer>(&self, s: S) -> Result<S::Ok, S::Error> {
+        match self {
+            Value::Int(v)   => s.serialize_i64(*v),
+            Value::Float(v) => s.serialize_f64(*v),
+            Value::Bool(v)  => s.serialize_bool(*v),
+            Value::Str(v)   => s.serialize_str(v),
+            Value::Null     => s.serialize_none(),
+            Value::List(v) => {
+                let mut seq = s.serialize_seq(Some(v.len()))?;
+                for item in v { seq.serialize_element(item)?; }
+                seq.end()
+            }
+            Value::Map(v) => {
+                let mut map = s.serialize_map(Some(v.len()))?;
+                for (k, val) in v { map.serialize_entry(k, val)?; }
+                map.end()
+            }
+            Value::Nodes(v) => {
+                let mut seq = s.serialize_seq(Some(v.len()))?;
+                for item in v { seq.serialize_element(item)?; }
+                seq.end()
+            }
+        }
+    }
 }
 
 impl fmt::Display for Value {
