@@ -39,10 +39,13 @@ pub(crate) fn build_file(pair: Pair<Rule>) -> Result<File> {
                         let mut inner = child.clone().into_inner();
 
                         let library_pair = inner.next().unwrap();
-                        let library = unquote(library_pair.as_str());
+                        let library = library_pair.as_str().to_string();
+
+                        let item_pair = inner.nth(1).unwrap();
+                        let item = item_pair.as_str().to_string();
 
                         TopLevelItem::Import(ImportDef {
-                            def: ImportDefType::Library(library),
+                            def: ImportDefType::Library(library, item),
                             span: Span::from_pair(&child),
                         })
                     }

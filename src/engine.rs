@@ -8,6 +8,7 @@ use crate::{
     module_resolver::FileModuleResolver,
     parser::{NbclParser, Rule},
     registry::Registry,
+    library::Library,
 };
 use pest::Parser;
 use std::fs;
@@ -26,6 +27,7 @@ impl NbclEngine {
     pub fn new() -> Self {
         let mut registry = Registry::default();
         crate::builtin::functions::register_builtin_functions(&mut registry);
+        crate::builtin::libraries::register_builtin_functions(&mut registry);
         crate::builtin::nodes::register_builtin_nodes(&mut registry);
 
         // default module resolver follows relative path
@@ -99,6 +101,11 @@ impl NbclEngine {
         F: Fn(Vec<Value>) -> Result<Value> + Send + Sync + 'static,
     {
         self.registry.add_native_fn(name, params, return_type, f)
+    }
+
+    /// Register a library into the engine.
+    pub fn register_library(&mut self, library: Library) {
+        self.registry.add_library(library)
     }
 
     /// Add a global variable available to all scripts.

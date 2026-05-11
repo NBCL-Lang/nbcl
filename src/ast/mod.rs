@@ -102,6 +102,13 @@ impl Value {
             Value::Null => "Null",
         }
     }
+
+    pub fn as_int(&self) -> Option<i64> {
+        match self {
+            Value::Int(i) => Some(*i),
+            _ => None,
+        }
+    }
 }
 
 /// Possible data types in Nbcl (used for type hints)

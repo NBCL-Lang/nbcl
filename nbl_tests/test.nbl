@@ -4,9 +4,11 @@
     multi line comment
 -#
 
+import std.math
+
 local var = 1
 global var = if true {
-    10
+    math.abs(0 - 10)
 } else {
     5
 }
@@ -40,4 +42,6 @@ fn show() {
     }
 }
 
-LooseStyledButton "id" {}
+LooseStyledButton "id" {
+    Object {}
+}

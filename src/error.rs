@@ -179,6 +179,7 @@ fn rule_to_human(rule: Rule) -> &'static str {
         Rule::inline_prop      => "an inline property (key: value)",
 
         // === Imports ===
+        Rule::as_kw            => "'as' keyword",
         Rule::import_stmt      => "an import statement",
         Rule::import_lib_stmt  => "a library import statement",
 

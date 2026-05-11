@@ -244,7 +244,7 @@ impl Evaluator {
                                     crate::utils::find_best_match(&param.name, caller_props.keys());
 
                                 let hint = suggestion.map(|s|
-                                    format!("You provided \"{}\", which is not a parameter. Did you mean \"{}\"?", s, param.name)
+                                    format!("You provided \"{}\", which is not a parameter. Did you mean \"{}\"?", param.name, s)
                                 );
 
                                 return Err(NbclError::Runtime {

@@ -13,6 +13,7 @@ pub mod evaluate;
 pub mod module_resolver;
 pub mod parser;
 pub mod registry;
+pub mod library;
 pub mod utils;
 pub mod wasm;
 

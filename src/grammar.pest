@@ -29,8 +29,9 @@ top_level_item = {
 
 // === Import ===
 
-import_stmt     = { "import" ~ !ASCII_ALPHANUMERIC ~ string_lit ~ "as" ~ snake_ident }
-import_lib_stmt = { "import" ~ !ASCII_ALPHANUMERIC ~ snake_ident }
+as_kw           = { "as" }
+import_stmt     = { "import" ~ !ASCII_ALPHANUMERIC ~ string_lit ~ as_kw ~ snake_ident }
+import_lib_stmt = { "import" ~ snake_ident ~ dot ~ snake_ident }
 
 // === Identifiers ===
 //

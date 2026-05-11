@@ -30,7 +30,7 @@ pub struct ImportDef {
 #[derive(Debug, Clone)]
 pub enum ImportDefType {
     Module(String, String),
-    Library(String),
+    Library(String, String),
 }
 
 /// Component definitions

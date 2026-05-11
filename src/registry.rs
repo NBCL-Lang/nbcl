@@ -1,5 +1,6 @@
 use crate::ast::source::{ComponentDef, FnDef};
 use crate::ast::{NativeFnSchema, NativeNodeSchema, Type, Value};
+use crate::library::Library;
 use crate::error::Result;
 use std::collections::HashMap;
 use std::fmt;
@@ -22,6 +23,9 @@ pub struct Registry {
 
     /// Pre-evaluated global variables
     pub(crate) globals: HashMap<String, Value>,
+
+    /// All registered libraries
+    pub(crate) libraries: Vec<Library>,
 }
 
 impl fmt::Debug for Registry {
@@ -56,5 +60,19 @@ impl Registry {
 
     pub fn register_function(&mut self, def: FnDef) {
         self.functions.insert(def.name.clone(), def);
+    }
+
+    pub fn add_library(&mut self, library: Library) {
+        let position = self.libraries.iter()
+            .position(|existing| existing.name == library.name);
+
+        match position {
+            Some(index) => {
+                self.libraries[index] = library;
+            }
+            None => {
+                self.libraries.push(library);
+            }
+        }
     }
 }
