@@ -114,6 +114,13 @@ impl Value {
             _ => None,
         }
     }
+
+    pub fn as_float(&self) -> Option<f64> {
+        match self {
+            Value::Float(f) => Some(*f),
+            _ => None,
+        }
+    }
 }
 
 /// Possible data types in Nbcl (used for type hints)
