@@ -13,6 +13,7 @@ global var = if true {
     5
 }
 
+print(math.pi)
 print(var)
 
 component StyledButton (bg_color?) {

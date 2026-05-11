@@ -21,7 +21,7 @@ pub struct Registry {
     /// User-defined functions from the .nbl file
     pub(crate) functions: HashMap<String, FnDef>,
 
-    /// Pre-evaluated global variables
+    /// Pre-evaluated global variables (regular name)
     pub(crate) globals: HashMap<String, Value>,
 
     /// All registered libraries

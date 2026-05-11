@@ -1,5 +1,6 @@
 use super::Evaluator;
 use crate::ast::source::*;
+use crate::evaluate::Value;
 use crate::error::{NbclError, Result};
 use crate::parser::NbclParser;
 use crate::parser::Rule;
@@ -149,9 +150,14 @@ impl Evaluator {
                     self.registry.native_functions.insert(new_name, schema);
                 }
 
+                let mut global_var = Vec::new();
+
                 for (name, var) in item.globals.clone() {
-                    let new_name = format!("{}.{}", &lib_item, name);
-                    self.registry.globals.insert(new_name, var);
+                    global_var.push((name, var))
+                }
+
+                if !global_var.is_empty() {
+                    self.registry.globals.insert(lib_item, Value::Map(global_var));
                 }
 
                 Ok(())
