@@ -15,6 +15,34 @@ pub(crate) fn register_builtin_functions(registry: &mut Registry) {
         Ok(Value::Str(args[0].to_string()))
     });
 
+    // as_int(Any) -> Int
+    registry.add_native_fn("as_int", vec![Type::Any], Type::Int, |args| {
+        match args[0].as_int() {
+            Some(i) => Ok(Value::Int(i)),
+            None => {
+                return Err(NbclError::Runtime {
+                    message: format!("as_float() not supported for type {}", args[0].type_name()),
+                    hint: None,
+                    span: None,
+                })
+            }
+        }
+    });
+
+    // as_float(Any) -> Float
+    registry.add_native_fn("as_float", vec![Type::Any], Type::Float, |args| {
+        match args[0].as_float() {
+            Some(f) => Ok(Value::Float(f)),
+            None => {
+                return Err(NbclError::Runtime {
+                    message: format!("as_float() not supported for type {}", args[0].type_name()),
+                    hint: None,
+                    span: None,
+                })
+            }
+        }
+    });
+
     // type_of(Any) -> Str
     registry.add_native_fn("type_of", vec![Type::Any], Type::Str, |args| {
         Ok(Value::Str(args[0].type_name().to_string()))
