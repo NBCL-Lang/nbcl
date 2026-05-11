@@ -74,7 +74,7 @@ impl Evaluator {
 
         for item in &file.items {
             match item {
-                TopLevelItem::Import(imp) => self.handle_import(imp.clone())?,
+                TopLevelItem::Import(imp) => self.handle_import(imp.clone(), &mut root_nodes)?,
                 TopLevelItem::ComponentDef(def) => self.registry.register_component(def.clone()),
                 TopLevelItem::FnDef(def) => self.registry.register_function(def.clone()),
                 TopLevelItem::Stmt(Stmt::Global(name, _, expr)) => {

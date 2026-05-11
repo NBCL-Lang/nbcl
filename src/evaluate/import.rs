@@ -2,6 +2,7 @@ use super::Evaluator;
 use crate::ast::source::*;
 use crate::evaluate::Value;
 use crate::error::{NbclError, Result};
+use crate::ast::resolved::ResolvedNode;
 use crate::parser::NbclParser;
 use crate::parser::Rule;
 use pest::Parser;
@@ -9,7 +10,11 @@ use std::fs;
 use std::io::ErrorKind;
 
 impl Evaluator {
-    pub(crate) fn handle_import(&mut self, imp: ImportDef) -> Result<()> {
+    pub(crate) fn handle_import(
+        &mut self, 
+        imp: ImportDef, 
+        root_nodes: &mut Vec<ResolvedNode>
+    ) -> Result<()> {
         match imp.def {
             ImportDefType::Module(path_str, alias) => {
                 let target_path = match &self.mod_resolver {
@@ -66,9 +71,11 @@ impl Evaluator {
                 })?;
 
                 let ast = crate::builder::build_file(file_pair)?;
+                let mut global_var = Vec::new();
 
-                for item in ast.items {
+                for item in ast.items.clone() {
                     match item {
+                        TopLevelItem::Import(imp) => self.handle_import(imp.clone(), root_nodes)?,
                         TopLevelItem::FnDef(mut f) => {
                             f.name = format!("{}.{}", alias, f.name);
                             self.registry.register_function(f);
@@ -77,7 +84,29 @@ impl Evaluator {
                             c.name = format!("{}.{}", alias, c.name);
                             self.registry.register_component(c);
                         }
-                        _ => {} // Skip top-level statements/imports in the target file for now
+                        TopLevelItem::Stmt(Stmt::Global(name, _, expr)) => {
+                            // We evaluate globals now so they are available in Loop 2
+                            let val = self.eval_expr(&expr)?;
+                            global_var.push((name.clone(), val));
+                        }
+                        _ => {}
+                    }
+                }
+
+                if !global_var.is_empty() {
+                    self.registry.globals.insert(alias, Value::Map(global_var));
+                }
+
+                for item in ast.items {
+                    match item {
+                        TopLevelItem::Node(invocation) => {
+                            let nodes = self.resolve_node(invocation)?;
+                            root_nodes.extend(nodes);
+                        }
+                        TopLevelItem::Stmt(stmt) => {
+                            self.execute_stmt(stmt)?;
+                        }
+                        _ => {} // Rest are already handled
                     }
                 }
 
