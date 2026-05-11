@@ -494,6 +494,10 @@ impl Evaluator {
             // String Comparisons
             (Value::Str(a), "==", Value::Str(b)) => Ok(Value::Bool(a == b)),
             (Value::Str(a), "!=", Value::Str(b)) => Ok(Value::Bool(a != b)),
+            (Value::Str(a), "<", Value::Str(b)) => Ok(Value::Bool(a < b)),
+            (Value::Str(a), ">", Value::Str(b)) => Ok(Value::Bool(a > b)),
+            (Value::Str(a), "<=", Value::Str(b)) => Ok(Value::Bool(a <= b)),
+            (Value::Str(a), ">=", Value::Str(b)) => Ok(Value::Bool(a >= b)),
             (l, o, r) => Err(NbclError::Runtime {
                 message: format!("operation '{}' not supported between {:?} and {:?}", o, l, r),
                 hint: Some(
