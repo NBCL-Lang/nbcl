@@ -151,33 +151,63 @@ impl Evaluator {
             }
             Stmt::For(patterns, iter_expr, body) => {
                 let iter_val = self.eval_expr(&iter_expr)?;
-                if let Value::List(items) = iter_val {
-                    for (i, item) in items.into_iter().enumerate() {
-                        if let FlowControl::Return(_) = self.flow {
-                            break;
-                        }
+                match iter_val {
+                    Value::Range(start, end) => {
+                        for i in start..end {
+                            if let FlowControl::Return(_) = self.flow {
+                                break;
+                            }
 
-                        let mut loop_scope = Scope::new(ScopeKind::Block);
+                            let mut loop_scope = Scope::new(ScopeKind::Block);
+                            let val_i = Value::Int(i);
 
-                        // Handle pattern matching (len 1 or len 2)
-                        if patterns.len() == 1 {
-                            loop_scope.variables.insert(patterns[0].clone(), item);
-                        } else if patterns.len() == 2 {
-                            loop_scope.variables.insert(patterns[0].clone(), Value::Int(i as i64));
-                            loop_scope.variables.insert(patterns[1].clone(), item);
-                        }
+                            if patterns.len() == 1 {
+                                loop_scope.variables.insert(patterns[0].clone(), val_i);
+                            } else if patterns.len() == 2 {
+                                loop_scope.variables.insert(patterns[0].clone(), val_i.clone());
+                                loop_scope.variables.insert(patterns[1].clone(), val_i);
+                            }
 
-                        self.scopes.push(loop_scope);
+                            self.scopes.push(loop_scope);
+                            self.execute_block_internal(&body)?;
+                            self.scopes.pop();
 
-                        // Execute the block logic
-                        self.execute_block_internal(&body)?;
-
-                        self.scopes.pop();
-
-                        if let FlowControl::Return(_) = self.flow {
-                            break;
+                            if let FlowControl::Return(_) = self.flow {
+                                break;
+                            }
                         }
                     }
+                    Value::List(items) => {
+                        for (i, item) in items.into_iter().enumerate() {
+                            if let FlowControl::Return(_) = self.flow {
+                                break;
+                            }
+
+                            let mut loop_scope = Scope::new(ScopeKind::Block);
+
+                            // Handle pattern matching (len 1 or len 2)
+                            if patterns.len() == 1 {
+                                loop_scope.variables.insert(patterns[0].clone(), item);
+                            } else if patterns.len() == 2 {
+                                loop_scope.variables.insert(patterns[0].clone(), Value::Int(i as i64));
+                                loop_scope.variables.insert(patterns[1].clone(), item);
+                            }
+
+                            self.scopes.push(loop_scope);
+
+                            // Execute the block logic
+                            self.execute_block_internal(&body)?;
+
+                            self.scopes.pop();
+
+                            if let FlowControl::Return(_) = self.flow {
+                                break;
+                            }
+                        }
+                    }
+
+                    // unreachable
+                    _ => {}
                 }
 
                 Value::Null

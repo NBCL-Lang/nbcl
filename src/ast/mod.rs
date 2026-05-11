@@ -20,6 +20,8 @@ pub enum Value {
     Str(String),
     /// List [1, 2, 3]
     List(Vec<Value>),
+    /// Range 1..2
+    Range(i64, i64),
     /// Map { key: value  }
     Map(Vec<(String, Value)>),
     /// Regular Nodes
@@ -36,6 +38,7 @@ impl Serialize for Value {
             Value::Bool(v) => s.serialize_bool(*v),
             Value::Str(v) => s.serialize_str(v),
             Value::Null => s.serialize_none(),
+            Value::Range(start, end) => (start, end).serialize(s),
             Value::List(v) => {
                 let mut seq = s.serialize_seq(Some(v.len()))?;
                 for item in v {
@@ -73,6 +76,7 @@ impl fmt::Display for Value {
                 let parts: Vec<String> = items.iter().map(|v| v.to_string()).collect();
                 write!(f, "[{}]", parts.join(", "))
             }
+            Value::Range(start, end) => write!(f, "{}..{}", start, end),
             Value::Map(entries) => {
                 let parts: Vec<String> =
                     entries.iter().map(|(k, v)| format!("{} = {}", k, v)).collect();
@@ -97,14 +101,15 @@ impl Value {
     /// Example: Value::Int(_) -> "Int"
     pub fn type_name(&self) -> &'static str {
         match self {
-            Value::Int(_) => "Int",
+            Value::Int(_) =>   "Int",
             Value::Float(_) => "Float",
-            Value::Bool(_) => "Bool",
-            Value::Str(_) => "String",
-            Value::List(_) => "List",
-            Value::Map(_) => "Map",
+            Value::Bool(_) =>  "Bool",
+            Value::Str(_) =>   "String",
+            Value::List(_) =>  "List",
+            Value::Range(_, _) => "Range",
+            Value::Map(_) =>   "Map",
             Value::Nodes(_) => "Nodes",
-            Value::Null => "Null",
+            Value::Null =>     "Null",
         }
     }
 

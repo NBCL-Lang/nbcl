@@ -402,12 +402,14 @@ impl Evaluator {
 
                 match (start, end) {
                     (Value::Int(s), Value::Int(e)) => {
-                        let values = if *inclusive {
-                            (s..=e).map(Value::Int).collect()
+                        let range = if *inclusive {
+                            // s..=e (+1 for =e)
+                            Value::Range(s, e+1)
                         } else {
-                            (s..e).map(Value::Int).collect()
+                            // s..e
+                            Value::Range(s, e)
                         };
-                        Ok(Value::List(values))
+                        Ok(range)
                     }
                     _ => Err(NbclError::Runtime {
                         message: "range boundaries must be integers".into(),
