@@ -70,31 +70,83 @@ impl Evaluator {
 
                 Value::Null
             }
-            Stmt::Assign(name, expr, span) => {
-                let new_val = self.eval_expr(&expr)?;
-                let mut found = false;
+            Stmt::Assign(lhs, rhs_expr, span) => {
+                let new_val = self.eval_expr(&rhs_expr)?;
 
-                for scope in self.scopes.iter_mut().rev() {
-                    if scope.variables.contains_key(&name) {
-                        scope.variables.insert(name.clone(), new_val);
-                        found = true;
-                        break;
+                match lhs.kind {
+                    ExprKind::Variable(name) => {
+                        let mut found = false;
+                        for scope in self.scopes.iter_mut().rev() {
+                            if scope.variables.contains_key(&name) {
+                                scope.variables.insert(name.clone(), new_val);
+                                found = true;
+                                break;
+                            }
+                        }
+                        if !found {
+                            let candidates = self.scopes.iter().flat_map(|s| s.variables.keys());
+                            let suggestion = crate::utils::find_best_match(&name, candidates);
+
+                            let hint = suggestion.map(|s| format!("Did you mean \"{}\"?", s));
+
+                            return Err(NbclError::Runtime {
+                                message: format!("variable '{}' doesn't exist", name),
+                                hint,
+                                span: Some(span),
+
+                            });
+                        }
                     }
-                }
 
-                if !found {
-                    let candidates = self.scopes.iter().flat_map(|s| s.variables.keys());
-                    let suggestion = crate::utils::find_best_match(&name, candidates);
+                    ExprKind::Field(base, field_name, _is_safe) => {
+                        let mut target_map = self.eval_expr(&base)?;
+                        if let Value::Map(ref mut entries) = target_map {
+                            if let Some(pos) = entries.iter().position(|(k, _)| k == &field_name) {
+                                entries[pos].1 = new_val;
+                            } else {
+                                entries.push((field_name, new_val));
+                            }
+                            self.reassign_to_lhs(*base, target_map)?;
+                        } else {
+                            return Err(NbclError::Runtime {
+                                message: "cannot set field on non-map".into(),
+                                span: Some(span),
+                                hint: None,
+                            });
+                        }
+                    }
 
-                    let hint = suggestion.map(|s| format!("Did you mean \"{}\"?", s));
-
-                    return Err(NbclError::Runtime {
-                        message: format!("variable '{}' doesn't exist", name),
-                        hint,
+                    ExprKind::Index(base, index_expr) => {
+                        let mut target_coll = self.eval_expr(&base)?;
+                        let index_val = self.eval_expr(&index_expr)?;
+                        
+                        match (&mut target_coll, index_val) {
+                            (Value::List(items), Value::Int(i)) => {
+                                let idx = i as usize;
+                                if idx < items.len() {
+                                    items[idx] = new_val;
+                                    self.reassign_to_lhs(*base, target_coll)?;
+                                } else {
+                                    return Err(NbclError::Runtime {
+                                        message: format!("index {} out of bounds", i),
+                                        span: Some(span),
+                                        hint: None,
+                                    });
+                                }
+                            }
+                            _ => return Err(NbclError::Runtime {
+                                message: "invalid index operation".into(),
+                                span: Some(span),
+                                hint: None,
+                            }),
+                        }
+                    }
+                    _ => return Err(NbclError::Runtime {
+                        message: "invalid assignment target".into(),
                         span: Some(span),
-                    });
+                        hint: None,
+                    }),
                 }
-
                 Value::Null
             }
             Stmt::For(patterns, iter_expr, body) => {
@@ -174,5 +226,47 @@ impl Evaluator {
         }
 
         Ok(Value::Null)
+    }
+
+    fn reassign_to_lhs(&mut self, lhs: Expr, value: Value) -> Result<()> {
+        match lhs.kind {
+            ExprKind::Variable(name) => {
+                for scope in self.scopes.iter_mut().rev() {
+                    if scope.variables.contains_key(&name) {
+                        scope.variables.insert(name, value);
+                        return Ok(());
+                    }
+                }
+                Err(NbclError::Runtime { 
+                    message: "Variable lost during assignment".into(), 
+                    hint: None,
+                    span: None,
+                })
+            }
+            ExprKind::Field(base, field, _) => {
+                let mut parent = self.eval_expr(&base)?;
+                if let Value::Map(ref mut entries) = parent {
+                    if let Some(pos) = entries.iter().position(|(k, _)| k == &field) {
+                        entries[pos].1 = value;
+                    } else {
+                        entries.push((field, value));
+                    }
+                    self.reassign_to_lhs(*base, parent)
+                } else { Ok(()) }
+            }
+            ExprKind::Index(base, index_expr) => {
+                let mut parent = self.eval_expr(&base)?;
+                let idx_val = self.eval_expr(&index_expr)?;
+                if let (Value::List(items), Value::Int(i)) = (&mut parent, idx_val) {
+                    let idx = i as usize;
+                    if idx < items.len() {
+                        items[idx] = value;
+                        self.reassign_to_lhs(*base, parent)?;
+                    }
+                }
+                Ok(())
+            }
+            _ => Ok(()),
+        }
     }
 }

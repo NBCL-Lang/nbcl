@@ -105,7 +105,7 @@ pub struct Block {
 /// Statements supported in the language
 #[derive(Debug, Clone)]
 pub enum Stmt {
-    Assign(String, Expr, Span),
+    Assign(Expr, Expr, Span),
     Local(String, Option<String>, Expr),
     Global(String, Option<String>, Expr),
     For(Vec<String>, Expr, Block),

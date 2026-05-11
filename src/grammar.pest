@@ -204,7 +204,14 @@ node_stmt = {
 }
 
 // Assign, local, and global statements
-assign_stmt = { "set" ~ snake_ident ~ "=" ~ expr }
+assignable_lhs = {
+    primary_expr
+    ~ (
+        accessor ~ snake_ident     // field access
+      | "[" ~ expr ~ "]"           // indexing
+    )*
+}
+assign_stmt = { "set" ~ assignable_lhs ~ "=" ~ expr }
 local_stmt  = { "local" ~ snake_ident ~ (":" ~ type_hint)? ~ "=" ~ expr }
 global_stmt = { "global" ~ snake_ident ~ (":" ~ type_hint)? ~ "=" ~ expr }
 

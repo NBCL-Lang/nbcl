@@ -5,13 +5,13 @@
     comment
 -#
 
-import "other.nbl" as other
-
 local example = 4 + 6 * 2
 print(example)
 
 local list = [1, 2, 3]
-local map = { key: value, key2: value }
+
+set list[1] = 4
+print(list)
 
 fn fn_example(pram1: String) {
     print(pram1)

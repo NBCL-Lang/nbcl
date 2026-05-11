@@ -37,7 +37,7 @@ pub fn build_stmt(pair: Pair<Rule>) -> Result<Stmt> {
 
             // name
             let mut ii = inner.clone().into_inner();
-            let name = ii.next().unwrap().as_str().to_string();
+            let name = build_expr(ii.next().unwrap())?;
 
             // expr
             let next = ii.next().unwrap();
@@ -123,6 +123,32 @@ pub fn build_expr(pair: Pair<Rule>) -> Result<Expr> {
                 let operand = build_expr(operand_pair)?;
                 Ok(Expr { kind: ExprKind::Unary(op, Box::new(operand)), span })
             }
+        }
+        Rule::assignable_lhs => {
+            let mut inner = pair.into_inner();
+            let mut res = build_expr(inner.next().unwrap())?;
+
+            let mut it = inner.peekable();
+
+            while let Some(suffix) = it.next() {
+                res = match suffix.as_rule() {
+                    Rule::accessor => {
+                        let is_safe = suffix.as_str() == "?.";
+                        let ident = it.next().unwrap().as_str().to_string();
+
+                        Expr {
+                            kind: ExprKind::Field(Box::new(res), ident, is_safe),
+                            span: span.clone(),
+                        }
+                    }
+                    Rule::expr => Expr {
+                        kind: ExprKind::Index(Box::new(res), Box::new(build_expr(suffix)?)),
+                        span: span.clone(),
+                    },
+                    _ => res,
+                };
+            }
+            Ok(res)  
         }
         Rule::postfix_expr => {
             let mut inner = pair.into_inner();
