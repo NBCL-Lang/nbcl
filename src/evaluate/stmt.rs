@@ -6,7 +6,7 @@ use crate::{
 };
 
 impl Evaluator {
-    pub(crate) fn execute_stmt(&mut self, stmt: Stmt) -> Result<Value> {
+    pub(crate) fn execute_stmt(&mut self, stmt: &Stmt) -> Result<Value> {
         if let FlowControl::Return(val) = &self.flow {
             return Ok(val.clone());
         }
@@ -33,7 +33,7 @@ impl Evaluator {
                     return Err(NbclError::Runtime {
                         message: "cannot return from the top level".to_string(),
                         hint: Some("Move this logic into a function or component if you need early returns.".to_string()),
-                        span: Some(span),
+                        span: Some(span.clone()),
                     });
                 }
 
@@ -51,12 +51,12 @@ impl Evaluator {
                 // A 'global' always goes into the very first scope (index 0),
                 // regardless of how many components or blocks deep we are.
                 if let Some(global_scope) = self.scopes.first_mut() {
-                    global_scope.variables.insert(name, val);
+                    global_scope.variables.insert(name.to_string(), val);
                 } else {
                     // Fallback: if somehow scopes is empty (shouldn't happen),
                     // create a new one.
                     let mut map = Scope::new(ScopeKind::TopLevel);
-                    map.variables.insert(name, val);
+                    map.variables.insert(name.to_string(), val);
                     self.scopes.push(map);
                 }
 
@@ -65,7 +65,7 @@ impl Evaluator {
             Stmt::Local(name, _type_hint, expr) => {
                 let val = self.eval_expr(&expr)?;
                 if let Some(current_scope) = self.scopes.last_mut() {
-                    current_scope.variables.insert(name, val);
+                    current_scope.variables.insert(name.to_string(), val);
                 }
 
                 Value::Null
@@ -73,11 +73,11 @@ impl Evaluator {
             Stmt::Assign(lhs, rhs_expr, span) => {
                 let new_val = self.eval_expr(&rhs_expr)?;
 
-                match lhs.kind {
+                match &lhs.kind {
                     ExprKind::Variable(name) => {
                         let mut found = false;
                         for scope in self.scopes.iter_mut().rev() {
-                            if scope.variables.contains_key(&name) {
+                            if scope.variables.contains_key(name) {
                                 scope.variables.insert(name.clone(), new_val);
                                 found = true;
                                 break;
@@ -92,7 +92,7 @@ impl Evaluator {
                             return Err(NbclError::Runtime {
                                 message: format!("variable '{}' doesn't exist", name),
                                 hint,
-                                span: Some(span),
+                                span: Some(span.clone()),
 
                             });
                         }
@@ -101,16 +101,16 @@ impl Evaluator {
                     ExprKind::Field(base, field_name, _is_safe) => {
                         let mut target_map = self.eval_expr(&base)?;
                         if let Value::Map(ref mut entries) = target_map {
-                            if let Some(pos) = entries.iter().position(|(k, _)| k == &field_name) {
+                            if let Some(pos) = entries.iter().position(|(k, _)| k == field_name) {
                                 entries[pos].1 = new_val;
                             } else {
-                                entries.push((field_name, new_val));
+                                entries.push((field_name.clone(), new_val));
                             }
-                            self.reassign_to_lhs(*base, target_map)?;
+                            self.reassign_to_lhs(*base.clone(), target_map)?;
                         } else {
                             return Err(NbclError::Runtime {
                                 message: "cannot set field on non-map".into(),
-                                span: Some(span),
+                                span: Some(span.clone()),
                                 hint: None,
                             });
                         }
@@ -125,25 +125,25 @@ impl Evaluator {
                                 let idx = i as usize;
                                 if idx < items.len() {
                                     items[idx] = new_val;
-                                    self.reassign_to_lhs(*base, target_coll)?;
+                                    self.reassign_to_lhs(*base.clone(), target_coll)?;
                                 } else {
                                     return Err(NbclError::Runtime {
                                         message: format!("index {} out of bounds", i),
-                                        span: Some(span),
+                                        span: Some(span.clone()),
                                         hint: None,
                                     });
                                 }
                             }
                             _ => return Err(NbclError::Runtime {
                                 message: "invalid index operation".into(),
-                                span: Some(span),
+                                span: Some(span.clone()),
                                 hint: None,
                             }),
                         }
                     }
                     _ => return Err(NbclError::Runtime {
                         message: "invalid assignment target".into(),
-                        span: Some(span),
+                        span: Some(span.clone()),
                         hint: None,
                     }),
                 }
@@ -213,7 +213,7 @@ impl Evaluator {
     fn execute_block_internal(&mut self, block: &Block) -> Result<Value> {
         // Run all statements
         for s in &block.stmts {
-            self.execute_stmt(s.clone())?;
+            self.execute_stmt(s)?;
             if let FlowControl::Return(_) = self.flow {
                 return Ok(Value::Null);
             }

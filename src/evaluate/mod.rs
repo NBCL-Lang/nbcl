@@ -93,7 +93,7 @@ impl Evaluator {
                     root_nodes.extend(nodes);
                 }
                 TopLevelItem::Stmt(stmt) => {
-                    self.execute_stmt(stmt)?;
+                    self.execute_stmt(&stmt)?;
                 }
                 _ => {} // Rest are already handled
             }

@@ -40,7 +40,7 @@ impl Evaluator {
                 }
 
                 let right = self.eval_expr(rhs)?;
-                self.apply_binary_op(left, op, right, &expr.span)
+                self.apply_binary_op(&left, &op, &right, &expr.span)
             }
 
             ExprKind::Unary(op, operand) => {
@@ -274,7 +274,7 @@ impl Evaluator {
                 for item in &func_def.body {
                     match item {
                         FnItem::Stmt(s) => {
-                            let val = self.execute_stmt(s.clone())?;
+                            let val = self.execute_stmt(s)?;
                             if let Value::Nodes(new_nodes) = val {
                                 nodes.extend(new_nodes);
                             }
@@ -333,7 +333,7 @@ impl Evaluator {
                     self.scopes.push(Scope::new(ScopeKind::Block));
 
                     for stmt in stmts {
-                        self.execute_stmt(stmt.clone())?;
+                        self.execute_stmt(stmt)?;
                     }
 
                     let result =
@@ -377,7 +377,7 @@ impl Evaluator {
                             self.scopes.push(Scope::new(ScopeKind::Block));
 
                             for stmt in stmts {
-                                self.execute_stmt(stmt.clone())?;
+                                self.execute_stmt(stmt)?;
                             }
 
                             let result = if let Some(e) = final_expr {
@@ -454,13 +454,13 @@ impl Evaluator {
         }
     }
 
-    fn apply_binary_op(&self, left: Value, op: &str, right: Value, span: &Span) -> Result<Value> {
+    fn apply_binary_op(&self, left: &Value, op: &str, right: &Value, span: &Span) -> Result<Value> {
         match (left, op, right) {
             (Value::Int(a), "+", Value::Int(b)) => Ok(Value::Int(a + b)),
             (Value::Int(a), "-", Value::Int(b)) => Ok(Value::Int(a - b)),
             (Value::Int(a), "*", Value::Int(b)) => Ok(Value::Int(a * b)),
             (Value::Int(a), "/", Value::Int(b)) => {
-                if b == 0 {
+                if *b == 0 {
                     return Err(NbclError::Runtime {
                         message: "division by zero".to_string(),
                         hint: Some(
@@ -472,7 +472,7 @@ impl Evaluator {
                 Ok(Value::Int(a / b))
             }
             (Value::Int(a), "%", Value::Int(b)) => {
-                if b == 0 {
+                if *b == 0 {
                     return Err(NbclError::Runtime {
                         message: "modulo by zero".to_string(),
                         hint: Some("Try replacing the zero with another number.".to_string()),

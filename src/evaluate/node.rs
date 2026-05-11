@@ -323,7 +323,7 @@ impl Evaluator {
                     children.extend(self.resolve_node(child_inv)?);
                 }
                 NodeItem::Stmt(stmt) => {
-                    let result = self.execute_stmt(stmt)?;
+                    let result = self.execute_stmt(&stmt)?;
 
                     if let Value::Nodes(returned_nodes) = result {
                         children.extend(returned_nodes);
