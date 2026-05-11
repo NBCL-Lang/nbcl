@@ -121,6 +121,8 @@ fn rule_to_human(rule: Rule) -> &'static str {
         Rule::add_expr         => "an expression",
         Rule::mul_expr         => "an expression",
         Rule::unary_expr       => "an expression",
+        Rule::not_expr         => "an expression",
+        Rule::neg_expr         => "an expression",
         Rule::postfix_expr     => "an expression",
         Rule::primary_expr     => "a value, identifier, or '('",
         Rule::range_expr       => "a range expression (start..end)",

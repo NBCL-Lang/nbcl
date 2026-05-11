@@ -104,13 +104,27 @@ pub fn build_expr(pair: Pair<Rule>) -> Result<Expr> {
         }
         Rule::unary_expr => {
             let mut inner = pair.into_inner();
-            let first = inner.next().unwrap();
+            let first = inner.next().ok_or_else(|| NbclError::Ast {
+                message: "Empty unary expression".to_string(),
+                hint: None,
+                span: Some(span.clone()),
+            })?;
+
             if first.as_rule() == Rule::postfix_expr {
                 build_expr(first)
             } else {
                 let op = first.as_str().to_string();
-                let operand = build_expr(inner.next().unwrap())?;
-                Ok(Expr { kind: ExprKind::Unary(op, Box::new(operand)), span })
+                let operand_pair = inner.next().ok_or_else(|| NbclError::Ast {
+                    message: format!("Expected operand after unary operator '{}'", op),
+                    hint: None,
+                    span: Some(span.clone()),
+                })?;
+                
+                let operand = build_expr(operand_pair)?;
+                Ok(Expr { 
+                    kind: ExprKind::Unary(op, Box::new(operand)), 
+                    span 
+                })
             }
         }
         Rule::postfix_expr => {

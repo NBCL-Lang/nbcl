@@ -120,9 +120,12 @@ mul_op   = { "*" | "/" | "%" }
 cmp_op = { "==" | "!=" | "<=" | ">=" | "<" | ">" }
 
 unary_expr = {
-    ("!" | "-") ~ unary_expr
+    (not_expr | neg_expr) ~ unary_expr
   | postfix_expr
 }
+
+not_expr = { "!" }
+neg_expr = { "-" }
 
 postfix_expr = {
     primary_expr

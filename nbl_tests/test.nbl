@@ -8,7 +8,7 @@ import std.math
 
 local var = 1
 global var = if true {
-    math.abs(0 - 10)
+    -10
 } else {
     5
 }
