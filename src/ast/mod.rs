@@ -1,8 +1,8 @@
 pub mod resolved;
 pub mod source;
 use crate::error;
-use serde::{Deserialize, Serialize, Serializer};
 use serde::ser::{SerializeMap, SerializeSeq};
+use serde::{Deserialize, Serialize, Serializer};
 use std::collections::HashMap;
 use std::fmt;
 use std::sync::Arc;
@@ -28,28 +28,33 @@ pub enum Value {
     Null,
 }
 
-
 impl Serialize for Value {
     fn serialize<S: Serializer>(&self, s: S) -> Result<S::Ok, S::Error> {
         match self {
-            Value::Int(v)   => s.serialize_i64(*v),
+            Value::Int(v) => s.serialize_i64(*v),
             Value::Float(v) => s.serialize_f64(*v),
-            Value::Bool(v)  => s.serialize_bool(*v),
-            Value::Str(v)   => s.serialize_str(v),
-            Value::Null     => s.serialize_none(),
+            Value::Bool(v) => s.serialize_bool(*v),
+            Value::Str(v) => s.serialize_str(v),
+            Value::Null => s.serialize_none(),
             Value::List(v) => {
                 let mut seq = s.serialize_seq(Some(v.len()))?;
-                for item in v { seq.serialize_element(item)?; }
+                for item in v {
+                    seq.serialize_element(item)?;
+                }
                 seq.end()
             }
             Value::Map(v) => {
                 let mut map = s.serialize_map(Some(v.len()))?;
-                for (k, val) in v { map.serialize_entry(k, val)?; }
+                for (k, val) in v {
+                    map.serialize_entry(k, val)?;
+                }
                 map.end()
             }
             Value::Nodes(v) => {
                 let mut seq = s.serialize_seq(Some(v.len()))?;
-                for item in v { seq.serialize_element(item)?; }
+                for item in v {
+                    seq.serialize_element(item)?;
+                }
                 seq.end()
             }
         }

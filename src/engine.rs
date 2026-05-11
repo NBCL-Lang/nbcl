@@ -5,10 +5,10 @@ use crate::{
     builder::build_file,
     error::{NbclError, Result},
     evaluate::Evaluator,
+    library::Library,
     module_resolver::FileModuleResolver,
     parser::{NbclParser, Rule},
     registry::Registry,
-    library::Library,
 };
 use pest::Parser;
 use std::fs;
@@ -42,8 +42,7 @@ impl NbclEngine {
             let (msg, hint) = match e.kind() {
                 ErrorKind::NotFound => {
                     let msg = format!("File not found: '{}'", file_path.display());
-                    let hint =
-                        "Ensure that the file exists and try again".to_string();
+                    let hint = "Ensure that the file exists and try again".to_string();
 
                     (msg, Some(hint))
                 }

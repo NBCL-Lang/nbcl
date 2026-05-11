@@ -21,11 +21,15 @@ impl Evaluator {
             match val {
                 Value::Str(s) => Some(s),
                 Value::Null => None,
-                _ => return Err(NbclError::Runtime {
-                    message: format!("expected string for node ID, found {}", val.type_name()),
-                    hint: Some("If you're passing a variable, ensure it contains a string.".into()),
-                    span: Some(id_expr.span.clone()),
-                }),
+                _ => {
+                    return Err(NbclError::Runtime {
+                        message: format!("expected string for node ID, found {}", val.type_name()),
+                        hint: Some(
+                            "If you're passing a variable, ensure it contains a string.".into(),
+                        ),
+                        span: Some(id_expr.span.clone()),
+                    });
+                }
             }
         } else {
             None
@@ -37,7 +41,9 @@ impl Evaluator {
             if schema.enforce_id && resolved_id.is_none() {
                 return Err(NbclError::Runtime {
                     message: format!("node '{}' requires an #id", inv.type_name),
-                    hint: Some("Try providing an id like this: 'Object \"id\" { ... }'.".to_string()),
+                    hint: Some(
+                        "Try providing an id like this: 'Object \"id\" { ... }'.".to_string(),
+                    ),
                     span: Some(inv.span),
                 });
             }
@@ -114,11 +120,13 @@ impl Evaluator {
             match val {
                 Value::Str(_) => val,
                 Value::Null => Value::Null,
-                _ => return Err(NbclError::Runtime {
-                    message: "node ID must resolve to a string".into(),
-                    hint: Some(format!("Got a {} instead.", val.type_name())),
-                    span: Some(id_expr.span.clone()),
-                }),
+                _ => {
+                    return Err(NbclError::Runtime {
+                        message: "node ID must resolve to a string".into(),
+                        hint: Some(format!("Got a {} instead.", val.type_name())),
+                        span: Some(id_expr.span.clone()),
+                    });
+                }
             }
         } else {
             Value::Null
@@ -142,8 +150,14 @@ impl Evaluator {
                             if let Value::Bool(true) = constraint_val {
                                 if resolved_id_val == Value::Null {
                                     return Err(NbclError::Runtime {
-                                        message: format!("Component '{}' requires an ID.", def.name),
-                                        hint: Some(format!("Usage: {} \"my_id\" {{ ... }}", def.name)),
+                                        message: format!(
+                                            "Component '{}' requires an ID.",
+                                            def.name
+                                        ),
+                                        hint: Some(format!(
+                                            "Usage: {} \"my_id\" {{ ... }}",
+                                            def.name
+                                        )),
                                         span: Some(inv.span.clone()),
                                     });
                                 }
@@ -191,7 +205,7 @@ impl Evaluator {
 
                         _ => {}
                     }
-                } 
+                }
                 _ => {}
             }
         }
@@ -314,7 +328,7 @@ impl Evaluator {
                     if let Value::Nodes(returned_nodes) = result {
                         children.extend(returned_nodes);
                     }
-                },
+                }
             }
         }
         Ok(())

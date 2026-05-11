@@ -9,7 +9,7 @@ pub fn build_node_invocation(pair: Pair<Rule>) -> Result<NodeInvocation> {
     let mut inner = pair.into_inner();
 
     let type_name = inner.next().unwrap().as_str().to_string();
-    
+
     let mut id = None;
     let mut body_pair = None;
 
@@ -33,12 +33,7 @@ pub fn build_node_invocation(pair: Pair<Rule>) -> Result<NodeInvocation> {
         }
     }
 
-    Ok(NodeInvocation { 
-        type_name, 
-        id, 
-        body: items, 
-        span 
-    })
+    Ok(NodeInvocation { type_name, id, body: items, span })
 }
 
 pub fn build_node_item(pair: Pair<Rule>) -> Result<NodeItem> {

@@ -1,4 +1,4 @@
-use crate::ast::{Value, Type, NativeFnSchema};
+use crate::ast::{NativeFnSchema, Type, Value};
 use crate::error::Result;
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -14,10 +14,7 @@ pub struct Library {
 impl Library {
     /// Create a new Library
     pub fn new(name: String, items: Vec<LibraryItem>) -> Self {
-        Self {
-            name,
-            items
-        }
+        Self { name, items }
     }
 
     /// Get the name of the library
@@ -37,9 +34,7 @@ impl Library {
 
     /// Get a library item from name
     pub fn get_item(&self, name: String) -> Option<LibraryItem> {
-        self.items.iter()
-            .find(|&i| i.name == name)
-            .cloned()
+        self.items.iter().find(|&i| i.name == name).cloned()
     }
 
     /// Add a new library item
@@ -70,11 +65,7 @@ pub struct LibraryItem {
 impl LibraryItem {
     /// Internal create new library method
     fn new(name: String) -> Self {
-        Self {
-            name,
-            native_functions: HashMap::new(),
-            globals: HashMap::new(),
-        }
+        Self { name, native_functions: HashMap::new(), globals: HashMap::new() }
     }
 
     /// Start a new item definition

@@ -1,7 +1,7 @@
 use crate::ast::source::{ComponentDef, FnDef};
 use crate::ast::{NativeFnSchema, NativeNodeSchema, Type, Value};
-use crate::library::Library;
 use crate::error::Result;
+use crate::library::Library;
 use std::collections::HashMap;
 use std::fmt;
 use std::sync::Arc;
@@ -63,8 +63,7 @@ impl Registry {
     }
 
     pub fn add_library(&mut self, library: Library) {
-        let position = self.libraries.iter()
-            .position(|existing| existing.name == library.name);
+        let position = self.libraries.iter().position(|existing| existing.name == library.name);
 
         match position {
             Some(index) => {

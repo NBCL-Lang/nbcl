@@ -1,7 +1,7 @@
 #[cfg(feature = "wasm")]
 mod wasm {
-    use wasm_bindgen::prelude::*;
     use std::cell::RefCell;
+    use wasm_bindgen::prelude::*;
 
     thread_local! {
         static PRINT_BUFFER: RefCell<Vec<String>> = RefCell::new(Vec::new());
@@ -18,22 +18,24 @@ mod wasm {
 
         let engine = crate::engine::NbclEngine::new();
         match engine.parse_str(source) {
-            Ok(result) => {
-                match engine.evaluate(result) {
-                    Ok(value) => {
-                        let output = PRINT_BUFFER.with(|buf| buf.borrow().join("\n"));
-                        format!(
-                            "{{\"ok\": true, \"output\": {}, \"result\": {}}}",
-                            serde_json::to_string(&output).unwrap_or_default(),
-                            serde_json::to_string(&value).unwrap_or_default()
-                        )
-                    }
-                    Err(e) => format!("{{\"ok\": false, \"error\": {}}}", 
-                        serde_json::to_string(&e.to_string()).unwrap_or_default()),
+            Ok(result) => match engine.evaluate(result) {
+                Ok(value) => {
+                    let output = PRINT_BUFFER.with(|buf| buf.borrow().join("\n"));
+                    format!(
+                        "{{\"ok\": true, \"output\": {}, \"result\": {}}}",
+                        serde_json::to_string(&output).unwrap_or_default(),
+                        serde_json::to_string(&value).unwrap_or_default()
+                    )
                 }
-            }
-            Err(e) => format!("{{\"ok\": false, \"error\": {}}}", 
-                serde_json::to_string(&e.to_string()).unwrap_or_default()),
+                Err(e) => format!(
+                    "{{\"ok\": false, \"error\": {}}}",
+                    serde_json::to_string(&e.to_string()).unwrap_or_default()
+                ),
+            },
+            Err(e) => format!(
+                "{{\"ok\": false, \"error\": {}}}",
+                serde_json::to_string(&e.to_string()).unwrap_or_default()
+            ),
         }
     }
 }

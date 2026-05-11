@@ -52,16 +52,12 @@ impl Span {
 
 /// Custom error format used throughout the crate
 ///
-/// Error style to preserve: 
+/// Error style to preserve:
 /// - message: must not end with fullstop or punctuation, and must be all lowercase
 /// - hint: Must end with fullstop or punctuation, and must start with a capital letter.
 #[derive(Debug)]
 pub enum NbclError {
-    Parse {
-        message: String,
-        hint: Option<String>,
-        span: Option<Span>,
-    },
+    Parse { message: String, hint: Option<String>, span: Option<Span> },
     Ast { message: String, hint: Option<String>, span: Option<Span> },
     IO { message: String, hint: Option<String>, path: PathBuf },
     Runtime { message: String, hint: Option<String>, span: Option<Span> },
@@ -81,120 +77,120 @@ impl NbclError {
 fn rule_to_human(rule: Rule) -> &'static str {
     match rule {
         // === Operators ===
-        Rule::or_op        => "'||' (or)",
-        Rule::and_op       => "'&&' (and)",
-        Rule::add_op       => "'+' or '-'",
-        Rule::mul_op       => "'*', '/' or '%'",
-        Rule::cmp_op       => "a comparison operator ('==', '!=', '<=', '>=', '<', '>')",
-        Rule::range_op     => "a range operator ('..' or '..=')",
-        Rule::dot          => "'.'",
-        Rule::safe_dot     => "'?.'",
-        Rule::accessor     => "a field accessor ('.' or '?.')",
+        Rule::or_op => "'||' (or)",
+        Rule::and_op => "'&&' (and)",
+        Rule::add_op => "'+' or '-'",
+        Rule::mul_op => "'*', '/' or '%'",
+        Rule::cmp_op => "a comparison operator ('==', '!=', '<=', '>=', '<', '>')",
+        Rule::range_op => "a range operator ('..' or '..=')",
+        Rule::dot => "'.'",
+        Rule::safe_dot => "'?.'",
+        Rule::accessor => "a field accessor ('.' or '?.')",
 
         // === Punctuation / Delimiters ===
-        Rule::call_args    => "function call arguments '(...)'",
+        Rule::call_args => "function call arguments '(...)'",
 
         // === Identifiers ===
-        Rule::snake_ident  => "an identifier (snake_case)",
+        Rule::snake_ident => "an identifier (snake_case)",
         Rule::pascal_ident => "a type or component name (PascalCase)",
-        Rule::prop_key     => "a property key",
-        Rule::keyword      => "a keyword",
+        Rule::prop_key => "a property key",
+        Rule::keyword => "a keyword",
 
         // === Literals ===
-        Rule::literal          => "a literal value",
-        Rule::int_lit          => "an integer literal",
-        Rule::float_lit        => "a float literal",
-        Rule::bool_lit         => "'true' or 'false'",
-        Rule::null_lit         => "'null'",
-        Rule::string_lit       => "a string literal",
+        Rule::literal => "a literal value",
+        Rule::int_lit => "an integer literal",
+        Rule::float_lit => "a float literal",
+        Rule::bool_lit => "'true' or 'false'",
+        Rule::null_lit => "'null'",
+        Rule::string_lit => "a string literal",
         Rule::double_quoted_inner | Rule::single_quoted_inner => "string content",
-        Rule::escape_seq       => "an escape sequence",
-        Rule::list_lit         => "a list literal '[...]'",
-        Rule::map_lit          => "a map literal '{...}'",
-        Rule::map_entry        => "a map entry (key = value)",
+        Rule::escape_seq => "an escape sequence",
+        Rule::list_lit => "a list literal '[...]'",
+        Rule::map_lit => "a map literal '{...}'",
+        Rule::map_entry => "a map entry (key = value)",
 
         // === Expressions ===
-        Rule::expr             => "an expression",
-        Rule::or_expr          => "an expression",
-        Rule::and_expr         => "an expression",
-        Rule::cmp_expr         => "an expression",
-        Rule::add_expr         => "an expression",
-        Rule::mul_expr         => "an expression",
-        Rule::unary_expr       => "an expression",
-        Rule::not_expr         => "an expression",
-        Rule::neg_expr         => "an expression",
-        Rule::postfix_expr     => "an expression",
-        Rule::primary_expr     => "a value, identifier, or '('",
-        Rule::range_expr       => "a range expression (start..end)",
-        Rule::if_expr          => "an 'if' expression",
-        Rule::else_if_branch   => "'else if' branch",
-        Rule::else_branch      => "'else' branch",
-        Rule::match_expr       => "a 'match' expression",
+        Rule::expr => "an expression",
+        Rule::or_expr => "an expression",
+        Rule::and_expr => "an expression",
+        Rule::cmp_expr => "an expression",
+        Rule::add_expr => "an expression",
+        Rule::mul_expr => "an expression",
+        Rule::unary_expr => "an expression",
+        Rule::not_expr => "an expression",
+        Rule::neg_expr => "an expression",
+        Rule::postfix_expr => "an expression",
+        Rule::primary_expr => "a value, identifier, or '('",
+        Rule::range_expr => "a range expression (start..end)",
+        Rule::if_expr => "an 'if' expression",
+        Rule::else_if_branch => "'else if' branch",
+        Rule::else_branch => "'else' branch",
+        Rule::match_expr => "a 'match' expression",
 
         // === Lambda ===
-        Rule::lambda_expr  => "a lambda expression '|params| body'",
+        Rule::lambda_expr => "a lambda expression '|params| body'",
         Rule::lambda_param => "a lambda parameter",
-        Rule::lambda_body  => "a lambda body",
-        Rule::block_body   => "a block '{...}'",
+        Rule::lambda_body => "a lambda body",
+        Rule::block_body => "a block '{...}'",
 
         // === Type Hints ===
-        Rule::type_hint    => "a type hint (String, Int, Float, Bool, List, Map, Any)",
+        Rule::type_hint => "a type hint (String, Int, Float, Bool, List, Map, Any)",
 
         // === Statements ===
-        Rule::stmt         => "a statement",
-        Rule::node_stmt    => "a statement",
-        Rule::assign_stmt  => "a 'set' assignment",
-        Rule::local_stmt   => "a 'local' declaration",
-        Rule::global_stmt  => "a 'global' declaration",
-        Rule::for_stmt     => "a 'for' loop",
-        Rule::for_pattern  => "a loop variable or destructure pattern '(k, v)'",
-        Rule::while_stmt   => "a 'while' loop",
-        Rule::return_stmt  => "a 'return' statement",
-        Rule::expr_stmt    => "an expression statement",
+        Rule::stmt => "a statement",
+        Rule::node_stmt => "a statement",
+        Rule::assign_stmt => "a 'set' assignment",
+        Rule::local_stmt => "a 'local' declaration",
+        Rule::global_stmt => "a 'global' declaration",
+        Rule::for_stmt => "a 'for' loop",
+        Rule::for_pattern => "a loop variable or destructure pattern '(k, v)'",
+        Rule::while_stmt => "a 'while' loop",
+        Rule::return_stmt => "a 'return' statement",
+        Rule::expr_stmt => "an expression statement",
 
         // === Match ===
-        Rule::match_arm     => "a match arm (pattern => body)",
+        Rule::match_arm => "a match arm (pattern => body)",
         Rule::match_pattern => "a match pattern (literal, identifier, or '_')",
 
         // === Functions ===
-        Rule::fn_def          => "a function definition ('fn name(...) { ... }')",
-        Rule::fn_param        => "a function parameter",
-        Rule::fn_return_type  => "a return type annotation ('-> Type')",
-        Rule::fn_body         => "a function body '{...}'",
-        Rule::fn_item         => "a statement or node inside a function",
+        Rule::fn_def => "a function definition ('fn name(...) { ... }')",
+        Rule::fn_param => "a function parameter",
+        Rule::fn_return_type => "a return type annotation ('-> Type')",
+        Rule::fn_body => "a function body '{...}'",
+        Rule::fn_item => "a statement or node inside a function",
 
         // === Components ===
-        Rule::component_def    => "a component definition",
+        Rule::component_def => "a component definition",
         Rule::component_params => "component parameters '(...)'",
-        Rule::any_params       => "an 'any' parameter capture '(any: props)'",
-        Rule::named_params     => "named parameters",
-        Rule::param_item       => "a parameter name",
+        Rule::any_params => "an 'any' parameter capture '(any: props)'",
+        Rule::named_params => "named parameters",
+        Rule::param_item => "a parameter name",
 
         // === Nodes ===
-        Rule::node_invocation  => "a node invocation (e.g. 'Window { ... }')",
-        Rule::id_expression    => "a node ID (string or identifier)",
-        Rule::node_block       => "a node block '{...}'",
-        Rule::node_item        => "a node property, child node, or statement",
-        Rule::node_prop        => "a property assignment (key = value)",
-        Rule::prop_value       => "a property value",
-        Rule::node_inline      => "an inline node (e.g. 'Label { text: \"Hi\" }')",
-        Rule::inline_prop      => "an inline property (key: value)",
+        Rule::node_invocation => "a node invocation (e.g. 'Window { ... }')",
+        Rule::id_expression => "a node ID (string or identifier)",
+        Rule::node_block => "a node block '{...}'",
+        Rule::node_item => "a node property, child node, or statement",
+        Rule::node_prop => "a property assignment (key = value)",
+        Rule::prop_value => "a property value",
+        Rule::node_inline => "an inline node (e.g. 'Label { text: \"Hi\" }')",
+        Rule::inline_prop => "an inline property (key: value)",
 
         // === Imports ===
-        Rule::as_kw            => "'as' keyword",
-        Rule::import_stmt      => "an import statement",
-        Rule::import_lib_stmt  => "a library import statement",
+        Rule::as_kw => "'as' keyword",
+        Rule::import_stmt => "an import statement",
+        Rule::import_lib_stmt => "a library import statement",
 
         // === Top Level ===
-        Rule::file             => "a source file",
-        Rule::top_level_item   => "a top-level definition or statement",
+        Rule::file => "a source file",
+        Rule::top_level_item => "a top-level definition or statement",
 
         // === Whitespace / Meta ===
-        Rule::EOI              => "end of file",
-        Rule::WHITESPACE       => "whitespace",
-        Rule::COMMENT          => "a comment",
-        Rule::line_comment     => "a line comment ('#')",
-        Rule::block_comment    => "a block comment ('#- ... -#')",
+        Rule::EOI => "end of file",
+        Rule::WHITESPACE => "whitespace",
+        Rule::COMMENT => "a comment",
+        Rule::line_comment => "a line comment ('#')",
+        Rule::block_comment => "a block comment ('#- ... -#')",
     }
 }
 
@@ -203,27 +199,26 @@ fn classify_expectation(positives: &[Rule]) -> (&'static str, &'static str) {
     // Returns (what_was_expected_msg, hint)
     let has = |r: Rule| positives.contains(&r);
 
-    let is_binary_op = has(Rule::or_op) || has(Rule::and_op)
-        || has(Rule::add_op) || has(Rule::mul_op) || has(Rule::cmp_op);
+    let is_binary_op = has(Rule::or_op)
+        || has(Rule::and_op)
+        || has(Rule::add_op)
+        || has(Rule::mul_op)
+        || has(Rule::cmp_op);
     let is_postfix = has(Rule::accessor) || has(Rule::call_args);
 
     match (is_binary_op, is_postfix) {
         (true, true) => (
             "an operator or continuation of expression",
-            "You likely have an incomplete expression. An operand is missing a right-hand side, or a statement is not terminated."
+            "You likely have an incomplete expression. An operand is missing a right-hand side, or a statement is not terminated.",
         ),
         (true, false) => (
             "a binary operator",
-            "Expected an operator to continue the expression ('and', 'or', '+', etc)."
+            "Expected an operator to continue the expression ('and', 'or', '+', etc).",
         ),
-        (false, true) => (
-            "a field access or call",
-            "Expected '.' for field access or '(' for a function call."
-        ),
-        _ => (
-            "an unexpected token",
-            "Check your syntax, something here was not expected."
-        ),
+        (false, true) => {
+            ("a field access or call", "Expected '.' for field access or '(' for a function call.")
+        }
+        _ => ("an unexpected token", "Check your syntax, something here was not expected."),
     }
 }
 
@@ -241,7 +236,8 @@ impl From<pest::error::Error<Rule>> for NbclError {
         let (message, hint) = match &err.variant {
             pest::error::ErrorVariant::ParsingError { positives, negatives } => {
                 // Filter EOI and WHITESPACE noise from positives
-                let clean_pos: Vec<Rule> = positives.iter()
+                let clean_pos: Vec<Rule> = positives
+                    .iter()
                     .copied()
                     .filter(|r| !matches!(r, Rule::EOI | Rule::WHITESPACE | Rule::COMMENT))
                     .collect();
@@ -268,12 +264,10 @@ impl From<pest::error::Error<Rule>> for NbclError {
                     (msg, hint.to_string())
                 } else {
                     // Only negatives — something was explicitly rejected
-                    let rejected: Vec<&str> = negatives.iter()
-                        .map(|r| rule_to_human(*r))
-                        .collect();
+                    let rejected: Vec<&str> = negatives.iter().map(|r| rule_to_human(*r)).collect();
                     (
                         format!("{} is not valid here", rejected.join(", ")),
-                        "This construct is not allowed in this position.".to_string()
+                        "This construct is not allowed in this position.".to_string(),
                     )
                 }
             }
@@ -326,15 +320,39 @@ impl std::fmt::Display for NbclError {
         let source = pretty_error::get_source().unwrap_or(String::new());
 
         match self {
-            NbclError::Parse { message, hint, span } => {
-                write_report(f, config, "Parse Error", "E001", message, hint, span, Color::Red, &source)
-            }
-            NbclError::Ast { message, hint, span } => {
-                write_report(f, config, "Syntax Error", "E002", message, hint, span, Color::Yellow, &source)
-            }
-            NbclError::Runtime { message, hint, span } => {
-                write_report(f, config, "Runtime Error", "E003", message, hint, span, Color::Magenta, &source)
-            }
+            NbclError::Parse { message, hint, span } => write_report(
+                f,
+                config,
+                "Parse Error",
+                "E001",
+                message,
+                hint,
+                span,
+                Color::Red,
+                &source,
+            ),
+            NbclError::Ast { message, hint, span } => write_report(
+                f,
+                config,
+                "Syntax Error",
+                "E002",
+                message,
+                hint,
+                span,
+                Color::Yellow,
+                &source,
+            ),
+            NbclError::Runtime { message, hint, span } => write_report(
+                f,
+                config,
+                "Runtime Error",
+                "E003",
+                message,
+                hint,
+                span,
+                Color::Magenta,
+                &source,
+            ),
             NbclError::IO { message, hint, path } => {
                 use ariadne::Source;
                 let mut report = Report::build(ReportKind::Error, 0..0)
@@ -346,10 +364,7 @@ impl std::fmt::Display for NbclError {
                     report = report.with_help(h);
                 }
                 let mut buf = Vec::new();
-                report
-                    .finish()
-                    .write(Source::from(""), &mut buf)
-                    .map_err(|_| std::fmt::Error)?;
+                report.finish().write(Source::from(""), &mut buf).map_err(|_| std::fmt::Error)?;
                 write!(f, "{}", String::from_utf8_lossy(&buf))
             }
         }
@@ -400,18 +415,11 @@ fn write_report(
             .with_config(config)
             .with_code(code)
             .with_message(format!("{}: {}", kind_label, message))
-            .with_label(
-                Label::new(span.start..span.end)
-                    .with_message(message)
-                    .with_color(color),
-            );
+            .with_label(Label::new(span.start..span.end).with_message(message).with_color(color));
         if let Some(h) = hint {
             report = report.with_help(h);
         }
-        report
-            .finish()
-            .write(Source::from(source), &mut buf)
-            .map_err(|_| std::fmt::Error)?;
+        report.finish().write(Source::from(source), &mut buf).map_err(|_| std::fmt::Error)?;
     } else {
         // No span available, plain report
         let mut report = Report::build(ReportKind::Error, 0..0)
@@ -421,10 +429,7 @@ fn write_report(
         if let Some(h) = hint {
             report = report.with_help(h);
         }
-        report
-            .finish()
-            .write(Source::from(""), &mut buf)
-            .map_err(|_| std::fmt::Error)?;
+        report.finish().write(Source::from(""), &mut buf).map_err(|_| std::fmt::Error)?;
     }
 
     write!(f, "{}", String::from_utf8_lossy(&buf))

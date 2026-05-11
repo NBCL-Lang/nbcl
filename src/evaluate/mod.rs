@@ -20,9 +20,9 @@ pub enum FlowControl {
 #[derive(PartialEq)]
 pub enum ScopeKind {
     TopLevel,
-    Block,    // if, for, while
-    Function, // fn, lambda
-    Component // Object
+    Block,     // if, for, while
+    Function,  // fn, lambda
+    Component, // Object
 }
 
 /// Internal structure used for scope handling
@@ -43,10 +43,7 @@ pub(crate) struct Evaluator {
 
 impl Scope {
     pub fn new(kind: ScopeKind) -> Self {
-        Self {
-            variables: HashMap::new(),
-            kind,
-        }
+        Self { variables: HashMap::new(), kind }
     }
 }
 

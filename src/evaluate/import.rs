@@ -3,9 +3,9 @@ use crate::ast::source::*;
 use crate::error::{NbclError, Result};
 use crate::parser::NbclParser;
 use crate::parser::Rule;
-use std::io::ErrorKind;
 use pest::Parser;
 use std::fs;
+use std::io::ErrorKind;
 
 impl Evaluator {
     pub(crate) fn handle_import(&mut self, imp: ImportDef) -> Result<()> {
@@ -32,20 +32,23 @@ impl Evaluator {
                     let (msg, hint) = match e.kind() {
                         ErrorKind::NotFound => {
                             let msg = format!("module not found: '{}'", target_path.display());
-                            let hint =
-                                "Ensure that the module exists and try adjusting the path.".to_string();
+                            let hint = "Ensure that the module exists and try adjusting the path."
+                                .to_string();
 
                             (msg, Some(hint))
                         }
                         ErrorKind::PermissionDenied => {
-                            let msg =
-                                format!("permission denied reading module: '{}'", target_path.display());
+                            let msg = format!(
+                                "permission denied reading module: '{}'",
+                                target_path.display()
+                            );
                             let hint = "Set proper file permissions".to_string();
 
                             (msg, Some(hint))
                         }
                         _ => {
-                            let msg = format!("failed to read module '{}': {}", target_path.display(), e);
+                            let msg =
+                                format!("failed to read module '{}': {}", target_path.display(), e);
                             (msg, None)
                         }
                     };
@@ -81,53 +84,63 @@ impl Evaluator {
                 Ok(())
             }
             ImportDefType::Library(lib_name, lib_item) => {
-                let maybe_library = self.registry.libraries.iter()
-                    .find(|&lib| lib.name == lib_name);
+                let maybe_library =
+                    self.registry.libraries.iter().find(|&lib| lib.name == lib_name);
 
                 let library = match maybe_library {
                     Some(lib) => lib,
                     None => {
-                        let library_names = self.registry.libraries.iter()
+                        let library_names = self
+                            .registry
+                            .libraries
+                            .iter()
                             .map(|lib| lib.name.clone())
                             .collect::<Vec<String>>();
 
-                        let suggestion = 
+                        let suggestion =
                             crate::utils::find_best_match(&lib_name, library_names.iter());
 
-                        let hint = suggestion.map(|s|
-                            format!("Library \"{}\" doesn't exist. Did you mean \"{}\"?", &lib_name, s)
-                        );
+                        let hint = suggestion.map(|s| {
+                            format!(
+                                "Library \"{}\" doesn't exist. Did you mean \"{}\"?",
+                                &lib_name, s
+                            )
+                        });
 
                         return Err(NbclError::Runtime {
                             message: "library not found".into(),
                             hint,
                             span: Some(imp.span),
-                        })
+                        });
                     }
                 };
 
-                let maybe_lib_item = library.items.iter()
-                    .find(|&i| i.name == lib_item);
+                let maybe_lib_item = library.items.iter().find(|&i| i.name == lib_item);
 
                 let item = match maybe_lib_item {
                     Some(i) => i,
                     None => {
-                        let item_names = library.items.iter()
+                        let item_names = library
+                            .items
+                            .iter()
                             .map(|item| item.name.clone())
                             .collect::<Vec<String>>();
 
-                        let suggestion = 
+                        let suggestion =
                             crate::utils::find_best_match(&lib_item, item_names.iter());
 
-                        let hint = suggestion.map(|s|
-                            format!("Library item \"{}\" doesn't exist. Did you mean \"{}\"?", &lib_item, s)
-                        );
+                        let hint = suggestion.map(|s| {
+                            format!(
+                                "Library item \"{}\" doesn't exist. Did you mean \"{}\"?",
+                                &lib_item, s
+                            )
+                        });
 
                         return Err(NbclError::Runtime {
                             message: format!("library item '{}' not found", &lib_item),
                             hint,
                             span: Some(imp.span),
-                        })
+                        });
                     }
                 };
 

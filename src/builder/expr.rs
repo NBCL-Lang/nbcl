@@ -119,12 +119,9 @@ pub fn build_expr(pair: Pair<Rule>) -> Result<Expr> {
                     hint: None,
                     span: Some(span.clone()),
                 })?;
-                
+
                 let operand = build_expr(operand_pair)?;
-                Ok(Expr { 
-                    kind: ExprKind::Unary(op, Box::new(operand)), 
-                    span 
-                })
+                Ok(Expr { kind: ExprKind::Unary(op, Box::new(operand)), span })
             }
         }
         Rule::postfix_expr => {
@@ -175,16 +172,13 @@ pub fn build_expr(pair: Pair<Rule>) -> Result<Expr> {
         }
         Rule::id_expression => build_expr(pair.into_inner().next().unwrap()),
         Rule::string_lit => {
-            Ok(Expr { 
-                kind: ExprKind::Literal(Literal::Str(unquote(pair.as_str()))), 
-                span 
-            })
+            Ok(Expr { kind: ExprKind::Literal(Literal::Str(unquote(pair.as_str()))), span })
         }
         Rule::primary_expr => build_expr(pair.into_inner().next().unwrap()),
         Rule::literal => Ok(Expr { kind: ExprKind::Literal(build_literal(pair)?), span }),
         Rule::if_expr => Ok(Expr { kind: ExprKind::If(Box::new(build_if(pair)?)), span }),
         Rule::match_expr => Ok(Expr { kind: build_match(pair)?, span }),
-        Rule::lambda_expr => Ok(Expr { kind: build_lambda(pair)?, span } ),
+        Rule::lambda_expr => Ok(Expr { kind: build_lambda(pair)?, span }),
         Rule::snake_ident => Ok(Expr { kind: ExprKind::Variable(pair.as_str().to_string()), span }),
         _ => Err(NbclError::Ast {
             message: format!("unknown expr: {:?}", pair.as_rule()),
@@ -240,10 +234,10 @@ fn build_literal(pair: Pair<Rule>) -> Result<Literal> {
             let mut pairs = Vec::new();
             for p in inner.into_inner() {
                 let mut inner_pair = p.into_inner();
-                
+
                 let key = inner_pair.next().unwrap().as_str().to_string();
                 let value = build_expr(inner_pair.next().unwrap())?;
-                
+
                 pairs.push((key, value));
             }
             Ok(Literal::Map(pairs))
@@ -278,12 +272,7 @@ fn build_if(pair: Pair<Rule>) -> Result<IfExpr> {
         }
     }
 
-    Ok(IfExpr {
-        condition,
-        then_branch,
-        else_ifs,
-        else_branch,
-    })
+    Ok(IfExpr { condition, then_branch, else_ifs, else_branch })
 }
 
 fn build_branch(pair: Pair<Rule>) -> Result<(Vec<Stmt>, Option<Expr>)> {
@@ -302,7 +291,7 @@ fn build_branch(pair: Pair<Rule>) -> Result<(Vec<Stmt>, Option<Expr>)> {
         if let Some(last_stmt) = stmts.last() {
             if let Stmt::Expr(expr) = last_stmt {
                 final_expr = Some(expr.clone());
-                stmts.pop(); 
+                stmts.pop();
             }
         }
     }
@@ -349,7 +338,7 @@ fn build_match_arm(pair: Pair<Rule>) -> Result<MatchArm> {
 pub fn build_lambda(pair: Pair<Rule>) -> Result<ExprKind> {
     let mut inner = pair.clone().into_inner();
     let mut params = Vec::new();
-    
+
     while let Some(next) = inner.peek() {
         if next.as_rule() == Rule::lambda_param {
             let mut param_inner = inner.next().unwrap().into_inner();

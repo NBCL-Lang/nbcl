@@ -1,4 +1,4 @@
-use super::{Evaluator, Scope, ScopeKind, FlowControl};
+use super::{Evaluator, FlowControl, Scope, ScopeKind};
 use crate::{
     ast::Value,
     ast::source::*,
@@ -21,7 +21,11 @@ impl Evaluator {
                 // TopLevel or a Block child of TopLevel
                 let is_at_root = match self.scopes.as_slice() {
                     [root] if root.kind == ScopeKind::TopLevel => true,
-                    [root, current] if root.kind == ScopeKind::TopLevel && current.kind == ScopeKind::Block => true,
+                    [root, current]
+                        if root.kind == ScopeKind::TopLevel && current.kind == ScopeKind::Block =>
+                    {
+                        true
+                    }
                     _ => false,
                 };
 
@@ -123,7 +127,7 @@ impl Evaluator {
                         }
                     }
                 }
-                
+
                 Value::Null
             }
 

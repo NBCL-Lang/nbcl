@@ -1,4 +1,4 @@
-use super::{Evaluator, Scope, ScopeKind, FlowControl};
+use super::{Evaluator, FlowControl, Scope, ScopeKind};
 use crate::{
     ast::Value,
     ast::source::*,
@@ -12,8 +12,11 @@ impl Evaluator {
             ExprKind::Literal(lit) => self.eval_literal(lit),
 
             ExprKind::Variable(name) => self.lookup_var(name).ok_or_else(|| {
-                let candidates =
-                    self.scopes.iter().flat_map(|s| s.variables.keys()).chain(self.registry.globals.keys());
+                let candidates = self
+                    .scopes
+                    .iter()
+                    .flat_map(|s| s.variables.keys())
+                    .chain(self.registry.globals.keys());
 
                 let suggestion = crate::utils::find_best_match(name, candidates);
                 let hint = suggestion.map(|s| format!("Did you mean \"{}\"?", s));
@@ -328,16 +331,13 @@ impl Evaluator {
                 // Execute the chosen branch
                 if let Some((stmts, final_expr)) = target_branch {
                     self.scopes.push(Scope::new(ScopeKind::Block));
-                    
+
                     for stmt in stmts {
                         self.execute_stmt(stmt.clone())?;
                     }
 
-                    let result = if let Some(e) = final_expr {
-                        self.eval_expr(e)?
-                    } else {
-                        Value::Null
-                    };
+                    let result =
+                        if let Some(e) = final_expr { self.eval_expr(e)? } else { Value::Null };
 
                     self.scopes.pop();
                     Ok(result)
@@ -355,15 +355,13 @@ impl Evaluator {
                     // "matching" logic
                     let is_match = match arm.pattern.as_str() {
                         "_" => true, // Wildcard matches everything
-                        p => {
-                            match &value {
-                                Value::Int(i) if p == i.to_string() => true,
-                                Value::Bool(b) if p == b.to_string() => true,
-                                Value::Str(s) if p == s => true,
-                                Value::Null if p == "null" => true,
-                                _ => false,
-                            }
-                        }
+                        p => match &value {
+                            Value::Int(i) if p == i.to_string() => true,
+                            Value::Bool(b) if p == b.to_string() => true,
+                            Value::Str(s) if p == s => true,
+                            Value::Null if p == "null" => true,
+                            _ => false,
+                        },
                     };
 
                     if is_match {
@@ -377,7 +375,7 @@ impl Evaluator {
                     match body {
                         LambdaBody::Block(stmts, final_expr) => {
                             self.scopes.push(Scope::new(ScopeKind::Block));
-                            
+
                             for stmt in stmts {
                                 self.execute_stmt(stmt.clone())?;
                             }
@@ -488,9 +486,9 @@ impl Evaluator {
             // Integer Comparisons
             (Value::Int(a), "==", Value::Int(b)) => Ok(Value::Bool(a == b)),
             (Value::Int(a), "!=", Value::Int(b)) => Ok(Value::Bool(a != b)),
-            (Value::Int(a), "<",  Value::Int(b)) => Ok(Value::Bool(a < b)),
+            (Value::Int(a), "<", Value::Int(b)) => Ok(Value::Bool(a < b)),
             (Value::Int(a), "<=", Value::Int(b)) => Ok(Value::Bool(a <= b)),
-            (Value::Int(a), ">",  Value::Int(b)) => Ok(Value::Bool(a > b)),
+            (Value::Int(a), ">", Value::Int(b)) => Ok(Value::Bool(a > b)),
             (Value::Int(a), ">=", Value::Int(b)) => Ok(Value::Bool(a >= b)),
 
             // String Comparisons
@@ -498,7 +496,10 @@ impl Evaluator {
             (Value::Str(a), "!=", Value::Str(b)) => Ok(Value::Bool(a != b)),
             (l, o, r) => Err(NbclError::Runtime {
                 message: format!("operation '{}' not supported between {:?} and {:?}", o, l, r),
-                hint: Some("Try converting both sides to the same type using to_string() or to_int().".to_string()),
+                hint: Some(
+                    "Try converting both sides to the same type using to_string() or to_int()."
+                        .to_string(),
+                ),
                 span: Some(span.clone()),
             }),
         }
