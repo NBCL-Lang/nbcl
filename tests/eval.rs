@@ -1,4 +1,4 @@
-use nbcl::ast::{PropValidation, Type, Value};
+use nbcl::ast::{NativeNodeSchema, PropValidation, Type, Value};
 use std::sync::{Arc, Mutex};
 
 #[test]
@@ -22,7 +22,12 @@ fn test_native_fn_registration() {
 #[test]
 fn test_complex_logic_and_scoping() {
     let mut engine = nbcl::NbclEngine::new();
-    engine.register_node("Result", false, PropValidation::Loose);
+    engine.register_node(NativeNodeSchema {
+        type_name: "Result".into(),
+        enforce_id: false,
+        validation: PropValidation::Loose,
+        child_count: None,
+    });
 
     let code = r#"
         local base_cpu = 2
