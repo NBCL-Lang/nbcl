@@ -4,6 +4,38 @@
 //! defining UI components and cloud infrastructure. The syntax is designed to be simple,
 //! and thus follows an HCL-inspired Blocky syntax but with the added benifits of
 //! modularity, scripting capabilities, and simplicity.
+//!
+//! ## Example
+//!
+//! ```rust
+//! use nbcl::NbclEngine;
+//!
+//! fn main() {
+//!     let code = r#"
+//!         print("Hello, World")
+//!
+//!         Object "language" {
+//!             name = "nbcl"
+//!             website = "nbcl-lang.github.io"
+//!             playground = "nbcl-lang.github.io/playground"
+//!             documnetation = "nbcl-lang.github.io/docs"
+//!         }
+//!     "#;
+//!
+//!     let engine = NbclEngine::new();
+//!     match engine.parse_str(code) {
+//!         Ok(ast) => {
+//!             match engine.evaluate(ast) {
+//!                 Ok(resolved) {
+//!                     println!("Resolved configuration: {:#?}", resolved);
+//!                 }
+//!                 Err(e) => println!("Evaluation error: {}", e);
+//!             }
+//!         }
+//!         Err(e) => println!("Parse Error: {}", e);
+//!     }
+//! }
+//! ```
 
 pub mod ast;
 pub mod builder;
