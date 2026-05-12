@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - Augmented assignments.
 - Maximum recursion depth to avoid stack overflow.
 - Better variable handling with FxHashMap for performance.
+- `run_with_config` (wasm) function to evaluate with a custom config.
 - `no-module-imports` feature to disable module imports.
 - `no-lib-imports` feature to disable library imports.
 

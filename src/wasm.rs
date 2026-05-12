@@ -3,9 +3,15 @@
 mod wasm {
     use std::cell::RefCell;
     use wasm_bindgen::prelude::*;
+    use serde::{Serialize, Deserialize};
 
     thread_local! {
         static PRINT_BUFFER: RefCell<Vec<String>> = RefCell::new(Vec::new());
+    }
+
+    #[derive(Serialize, Deserialize)]
+    pub struct WasmConfig {
+        max_depth: usize
     }
 
     /// Print something to wasm buffer
@@ -15,9 +21,24 @@ mod wasm {
 
     #[wasm_bindgen]
     pub fn run(source: &str) -> String {
-        PRINT_BUFFER.with(|buf| buf.borrow_mut().clear());
+        let config = r#"{
+            "max_depth": 5,
+        }"#;
+        run_with_config(source, config)
+    }
 
-        let engine = crate::engine::NbclEngine::new();
+    #[wasm_bindgen]
+    pub fn run_with_config(source: &str, config: &str) -> String {
+        PRINT_BUFFER.with(|buf| buf.borrow_mut().clear());
+        let Ok(wasm_config) = serde_json::from_str::<WasmConfig>(config) else {
+            return "invalid configuration was passed".to_string()
+        };
+        let mut engine = crate::engine::NbclEngine::new();
+
+        // == Apply Config ==
+        engine.set_max_depth(wasm_config.max_depth);
+
+        // == Evaluate ==
         match engine.parse_str(source) {
             Ok(result) => match engine.evaluate(result) {
                 Ok(value) => {
