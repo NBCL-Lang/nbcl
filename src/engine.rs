@@ -1,3 +1,5 @@
+//! NbclEngine API's
+
 use crate::{
     ast::resolved::ResolvedTree,
     ast::source::File,

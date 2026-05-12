@@ -1,3 +1,5 @@
+//! Module that evaluates Nbcl source AST
+
 mod expr;
 mod import;
 mod node;

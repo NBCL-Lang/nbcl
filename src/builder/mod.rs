@@ -1,3 +1,5 @@
+//! Source AST builder
+
 pub mod component;
 pub mod expr;
 pub mod node;

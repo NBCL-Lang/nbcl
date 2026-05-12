@@ -1,3 +1,4 @@
+//! API's for registering new Library that can be imported and used
 use crate::ast::{NativeFnSchema, Type, Value};
 use crate::error::Result;
 use std::collections::HashMap;

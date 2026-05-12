@@ -1,3 +1,4 @@
+//! API's for WebAssembly (available only with `wasm` feature)
 #[cfg(feature = "wasm")]
 mod wasm {
     use std::cell::RefCell;

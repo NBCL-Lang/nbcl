@@ -1,3 +1,5 @@
+//! Module responsible for all the error handling in Nbcl
+
 use crate::parser::Rule;
 use pest::iterators::Pair;
 use std::path::PathBuf;

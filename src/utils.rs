@@ -1,3 +1,5 @@
+//! Utilities for better error reporting
+
 pub fn levenshtein_distance(a: &str, b: &str) -> usize {
     let b_len = b.chars().count();
     if a.is_empty() {

@@ -1,3 +1,4 @@
+//! Pest based Nbcl parser
 use pest_derive::Parser;
 
 #[derive(Parser)]

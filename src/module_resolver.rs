@@ -1,3 +1,4 @@
+//! Module resolver for handling import statements
 use crate::error::{NbclError, Result};
 use std::path::{Path, PathBuf};
 
