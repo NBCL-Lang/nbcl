@@ -1,8 +1,8 @@
 use super::Evaluator;
-use crate::ast::source::*;
-use crate::evaluate::Value;
-use crate::error::{NbclError, Result};
 use crate::ast::resolved::ResolvedNode;
+use crate::ast::source::*;
+use crate::error::{NbclError, Result};
+use crate::evaluate::Value;
 use crate::parser::NbclParser;
 use crate::parser::Rule;
 use pest::Parser;
@@ -11,9 +11,9 @@ use std::io::ErrorKind;
 
 impl Evaluator {
     pub(crate) fn handle_import(
-        &mut self, 
-        imp: ImportDef, 
-        root_nodes: &mut Vec<ResolvedNode>
+        &mut self,
+        imp: ImportDef,
+        root_nodes: &mut Vec<ResolvedNode>,
     ) -> Result<()> {
         match imp.def {
             ImportDefType::Module(path_str, alias) => {

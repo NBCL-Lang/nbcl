@@ -34,11 +34,7 @@ impl NbclEngine {
         // default module resolver follows relative path
         let mod_resolver = FileModuleResolver::new(PathBuf::from("."));
 
-        Self { 
-            registry,
-            mod_resolver: Some(mod_resolver),
-            max_depth: 5,
-        }
+        Self { registry, mod_resolver: Some(mod_resolver), max_depth: 5 }
     }
 
     /// Parse the a file into a source AST
@@ -88,7 +84,11 @@ impl NbclEngine {
 
     /// Evaluate a source AST
     pub fn evaluate(&self, file: File) -> Result<ResolvedTree> {
-        let mut evaluator = Evaluator::new(self.registry.clone(), self.mod_resolver.clone(), self.max_depth.clone());
+        let mut evaluator = Evaluator::new(
+            self.registry.clone(),
+            self.mod_resolver.clone(),
+            self.max_depth.clone(),
+        );
         evaluator.run(file)
     }
 
@@ -123,7 +123,7 @@ impl NbclEngine {
     }
 
     // === Other Configs ===
-    
+
     /// Set maximum recursion depth
     pub fn set_max_depth(&mut self, max_depth: usize) {
         self.max_depth = max_depth;

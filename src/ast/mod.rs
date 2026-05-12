@@ -101,15 +101,15 @@ impl Value {
     /// Example: Value::Int(_) -> "Int"
     pub fn type_name(&self) -> &'static str {
         match self {
-            Value::Int(_) =>   "Int",
+            Value::Int(_) => "Int",
             Value::Float(_) => "Float",
-            Value::Bool(_) =>  "Bool",
-            Value::Str(_) =>   "String",
-            Value::List(_) =>  "List",
+            Value::Bool(_) => "Bool",
+            Value::Str(_) => "String",
+            Value::List(_) => "List",
             Value::Range(_, _) => "Range",
-            Value::Map(_) =>   "Map",
+            Value::Map(_) => "Map",
             Value::Nodes(_) => "Nodes",
-            Value::Null =>     "Null",
+            Value::Null => "Null",
         }
     }
 

@@ -16,16 +16,14 @@ pub(crate) fn register_builtin_functions(registry: &mut Registry) {
     });
 
     // as_int(Any) -> Int
-    registry.add_native_fn("as_int", vec![Type::Any], Type::Int, |args| {
-        match args[0].as_int() {
-            Some(i) => Ok(Value::Int(i)),
-            None => {
-                return Err(NbclError::Runtime {
-                    message: format!("as_float() not supported for type {}", args[0].type_name()),
-                    hint: None,
-                    span: None,
-                })
-            }
+    registry.add_native_fn("as_int", vec![Type::Any], Type::Int, |args| match args[0].as_int() {
+        Some(i) => Ok(Value::Int(i)),
+        None => {
+            return Err(NbclError::Runtime {
+                message: format!("as_float() not supported for type {}", args[0].type_name()),
+                hint: None,
+                span: None,
+            });
         }
     });
 
@@ -38,7 +36,7 @@ pub(crate) fn register_builtin_functions(registry: &mut Registry) {
                     message: format!("as_float() not supported for type {}", args[0].type_name()),
                     hint: None,
                     span: None,
-                })
+                });
             }
         }
     });

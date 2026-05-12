@@ -141,7 +141,10 @@ impl Evaluator {
                 if self.call_stack_depth > self.max_depth {
                     return Err(NbclError::Runtime {
                         message: format!("maximum recursion depth of {} exceeded", self.max_depth),
-                        hint: Some("Check for infinite recursion in your functions or increase the limit.".into()),
+                        hint: Some(
+                            "Check for infinite recursion in your functions or increase the limit."
+                                .into(),
+                        ),
                         span: Some(callee.span.clone()),
                     });
                 }
@@ -416,7 +419,7 @@ impl Evaluator {
                     (Value::Int(s), Value::Int(e)) => {
                         let range = if *inclusive {
                             // s..=e (+1 for =e)
-                            Value::Range(s, e+1)
+                            Value::Range(s, e + 1)
                         } else {
                             // s..e
                             Value::Range(s, e)

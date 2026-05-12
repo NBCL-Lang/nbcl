@@ -53,7 +53,7 @@ impl Scope {
 impl Evaluator {
     /// Create a new [`Evaluator`]
     pub fn new(
-        registry: Registry, 
+        registry: Registry,
         mod_resolver: Option<FileModuleResolver>,
         max_depth: usize,
     ) -> Self {

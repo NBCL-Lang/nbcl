@@ -43,17 +43,23 @@ pub fn build_stmt(pair: Pair<Rule>) -> Result<Stmt> {
             let pair = ii.next().unwrap();
             let inner = pair.into_inner().next().unwrap();
             let assign_op = match inner.as_rule() {
-                Rule::equal      => AssignOp::Equal,
+                Rule::equal => AssignOp::Equal,
                 Rule::plus_equal => AssignOp::PlusEqual,
-                Rule::min_equal  => AssignOp::MinEqual,
+                Rule::min_equal => AssignOp::MinEqual,
                 Rule::mult_equal => AssignOp::MultEqual,
-                Rule::div_equal  => AssignOp::DivEqual,
+                Rule::div_equal => AssignOp::DivEqual,
                 _ => {
                     return Err(NbclError::Parse {
-                        message: format!("Unkown assign operator ('{}') encountered.", inner.as_str().to_string()),
-                        hint: Some("Replace the assign operator with one of these: '=', '+=', '-='.".into()),
+                        message: format!(
+                            "Unkown assign operator ('{}') encountered.",
+                            inner.as_str().to_string()
+                        ),
+                        hint: Some(
+                            "Replace the assign operator with one of these: '=', '+=', '-='."
+                                .into(),
+                        ),
                         span: Some(span.clone()),
-                    })
+                    });
                 }
             };
 
@@ -166,7 +172,7 @@ pub fn build_expr(pair: Pair<Rule>) -> Result<Expr> {
                     _ => res,
                 };
             }
-            Ok(res)  
+            Ok(res)
         }
         Rule::postfix_expr => {
             let mut inner = pair.into_inner();

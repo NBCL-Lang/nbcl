@@ -3,9 +3,9 @@ use crate::ast::{NativeFnSchema, NativeNodeSchema, Type, Value};
 use crate::error::Result;
 use crate::library::Library;
 use std::collections::HashMap;
-use std::sync::Arc;
-use std::rc::Rc;
 use std::fmt;
+use std::rc::Rc;
+use std::sync::Arc;
 
 /// Registry containing important data about source.
 #[derive(Default, Clone)]

@@ -78,7 +78,12 @@ impl Evaluator {
                         let mut found = false;
                         for scope in self.scopes.iter_mut().rev() {
                             if let Some(val_ref) = scope.variables.get_mut(name) {
-                                let updated = Self::apply_assign_op(val_ref.clone(), &assign_op, new_val, Some(span))?;
+                                let updated = Self::apply_assign_op(
+                                    val_ref.clone(),
+                                    &assign_op,
+                                    new_val,
+                                    Some(span),
+                                )?;
                                 *val_ref = updated;
                                 found = true;
                                 break;
@@ -94,7 +99,6 @@ impl Evaluator {
                                 message: format!("variable '{}' doesn't exist", name),
                                 hint,
                                 span: Some(span.clone()),
-
                             });
                         }
                     }
@@ -104,13 +108,21 @@ impl Evaluator {
                         if let Value::Map(ref mut entries) = target_map {
                             if let Some(pos) = entries.iter().position(|(k, _)| k == field_name) {
                                 let old_val = entries[pos].1.clone();
-                                entries[pos].1 = Self::apply_assign_op(old_val, &assign_op, new_val, Some(&span))?;
+                                entries[pos].1 = Self::apply_assign_op(
+                                    old_val,
+                                    &assign_op,
+                                    new_val,
+                                    Some(&span),
+                                )?;
                             } else {
                                 if assign_op == &AssignOp::Equal {
                                     entries.push((field_name.clone(), new_val));
                                 } else {
                                     return Err(NbclError::Runtime {
-                                        message: format!("cannot update field '{}' that doesn't exist", field_name),
+                                        message: format!(
+                                            "cannot update field '{}' that doesn't exist",
+                                            field_name
+                                        ),
                                         span: Some(span.clone()),
                                         hint: None,
                                     });
@@ -129,13 +141,18 @@ impl Evaluator {
                     ExprKind::Index(base, index_expr) => {
                         let mut target_coll = self.eval_expr(&base)?;
                         let index_val = self.eval_expr(&index_expr)?;
-                        
+
                         match (&mut target_coll, index_val) {
                             (Value::List(items), Value::Int(i)) => {
                                 let idx = i as usize;
                                 if idx < items.len() {
                                     let old_val = items[idx].clone();
-                                    items[idx] = Self::apply_assign_op(old_val, &assign_op, new_val, Some(&span))?;
+                                    items[idx] = Self::apply_assign_op(
+                                        old_val,
+                                        &assign_op,
+                                        new_val,
+                                        Some(&span),
+                                    )?;
                                     self.reassign_to_lhs(&base, target_coll)?;
                                 } else {
                                     return Err(NbclError::Runtime {
@@ -145,18 +162,22 @@ impl Evaluator {
                                     });
                                 }
                             }
-                            _ => return Err(NbclError::Runtime {
-                                message: "invalid index operation".into(),
-                                span: Some(span.clone()),
-                                hint: None,
-                            }),
+                            _ => {
+                                return Err(NbclError::Runtime {
+                                    message: "invalid index operation".into(),
+                                    span: Some(span.clone()),
+                                    hint: None,
+                                });
+                            }
                         }
                     }
-                    _ => return Err(NbclError::Runtime {
-                        message: "invalid assignment target".into(),
-                        span: Some(span.clone()),
-                        hint: None,
-                    }),
+                    _ => {
+                        return Err(NbclError::Runtime {
+                            message: "invalid assignment target".into(),
+                            span: Some(span.clone()),
+                            hint: None,
+                        });
+                    }
                 }
                 Value::Null
             }
@@ -182,14 +203,20 @@ impl Evaluator {
                             }
 
                             if patterns.len() == 1 {
-                                if let Some(val) = self.scopes[scope_idx].variables.get_mut(&patterns[0]) {
+                                if let Some(val) =
+                                    self.scopes[scope_idx].variables.get_mut(&patterns[0])
+                                {
                                     *val = Value::Int(i);
                                 }
                             } else if patterns.len() == 2 {
-                                if let Some(val1) = self.scopes[scope_idx].variables.get_mut(&patterns[0]) {
+                                if let Some(val1) =
+                                    self.scopes[scope_idx].variables.get_mut(&patterns[0])
+                                {
                                     *val1 = Value::Int(i);
                                 }
-                                if let Some(val2) = self.scopes[scope_idx].variables.get_mut(&patterns[1]) {
+                                if let Some(val2) =
+                                    self.scopes[scope_idx].variables.get_mut(&patterns[1])
+                                {
                                     *val2 = Value::Int(i);
                                 }
                             }
@@ -217,7 +244,9 @@ impl Evaluator {
                             if patterns.len() == 1 {
                                 self.scopes[scope_idx].variables.insert(patterns[0].clone(), item);
                             } else if patterns.len() == 2 {
-                                self.scopes[scope_idx].variables.insert(patterns[0].clone(), Value::Int(i as i64));
+                                self.scopes[scope_idx]
+                                    .variables
+                                    .insert(patterns[0].clone(), Value::Int(i as i64));
                                 self.scopes[scope_idx].variables.insert(patterns[1].clone(), item);
                             }
 
@@ -293,8 +322,8 @@ impl Evaluator {
                         return Ok(());
                     }
                 }
-                Err(NbclError::Runtime { 
-                    message: "Variable lost during assignment".into(), 
+                Err(NbclError::Runtime {
+                    message: "Variable lost during assignment".into(),
                     hint: None,
                     span: None,
                 })
@@ -308,7 +337,9 @@ impl Evaluator {
                         entries.push((field.clone(), value));
                     }
                     self.reassign_to_lhs(&base, parent)
-                } else { Ok(()) }
+                } else {
+                    Ok(())
+                }
             }
             ExprKind::Index(base, index_expr) => {
                 let mut parent = self.eval_expr(&base)?;
@@ -326,7 +357,12 @@ impl Evaluator {
         }
     }
 
-    fn apply_assign_op(current: Value, op: &AssignOp, rhs: Value, span: Option<&Span>) -> Result<Value> {
+    fn apply_assign_op(
+        current: Value,
+        op: &AssignOp,
+        rhs: Value,
+        span: Option<&Span>,
+    ) -> Result<Value> {
         match op {
             AssignOp::Equal => Ok(rhs),
             AssignOp::PlusEqual => match (current, rhs) {
@@ -359,7 +395,7 @@ impl Evaluator {
                     span: span.cloned(),
                     hint: Some("Multiplication is only supported for numeric types.".into()),
                 }),
-            }
+            },
             AssignOp::DivEqual => match (current, rhs) {
                 (Value::Int(a), Value::Int(b)) => Ok(Value::Int(a / b)),
                 (Value::Float(a), Value::Float(b)) => Ok(Value::Float(a / b)),
@@ -368,7 +404,7 @@ impl Evaluator {
                     span: span.cloned(),
                     hint: Some("Division is only supported for numeric types.".into()),
                 }),
-            }
+            },
         }
     }
 }

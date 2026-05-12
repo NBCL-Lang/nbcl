@@ -1,7 +1,7 @@
 use crate::ast::{Type, Value};
 use crate::library::{Library, LibraryItem};
-use std::time::{Instant, SystemTime, UNIX_EPOCH};
 use crate::registry::Registry;
+use std::time::{Instant, SystemTime, UNIX_EPOCH};
 
 /// Register a set of core libraries like stdllib.
 pub(crate) fn register_builtin_functions(registry: &mut Registry) {
@@ -24,10 +24,8 @@ pub(crate) fn register_builtin_functions(registry: &mut Registry) {
     // === Time Library ===
     let time = LibraryItem::define("time")
         .with_fn("now", vec![], Type::Float, |_| {
-            let now = SystemTime::now()
-                .duration_since(UNIX_EPOCH)
-                .unwrap_or_default()
-                .as_secs_f64();
+            let now =
+                SystemTime::now().duration_since(UNIX_EPOCH).unwrap_or_default().as_secs_f64();
             Ok(Value::Float(now))
         })
         .with_fn("mark", vec![], Type::Float, |_| {
