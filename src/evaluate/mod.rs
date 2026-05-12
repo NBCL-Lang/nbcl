@@ -40,6 +40,8 @@ pub(crate) struct Evaluator {
     loaded_files: HashSet<PathBuf>,
     mod_resolver: Option<FileModuleResolver>,
     flow: FlowControl,
+    call_stack_depth: usize,
+    max_depth: usize,
 }
 
 impl Scope {
@@ -50,13 +52,19 @@ impl Scope {
 
 impl Evaluator {
     /// Create a new [`Evaluator`]
-    pub fn new(registry: Registry, mod_resolver: Option<FileModuleResolver>) -> Self {
+    pub fn new(
+        registry: Registry, 
+        mod_resolver: Option<FileModuleResolver>,
+        max_depth: usize,
+    ) -> Self {
         Self {
             registry,
             scopes: vec![Scope::new(ScopeKind::TopLevel)],
             loaded_files: HashSet::new(),
             mod_resolver,
             flow: FlowControl::None,
+            call_stack_depth: 0,
+            max_depth,
         }
     }
 

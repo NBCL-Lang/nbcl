@@ -137,6 +137,15 @@ impl Evaluator {
             }
 
             ExprKind::Call(callee, args_exprs) => {
+                self.call_stack_depth += 1;
+                if self.call_stack_depth > self.max_depth {
+                    return Err(NbclError::Runtime {
+                        message: format!("maximum recursion depth of {} exceeded", self.max_depth),
+                        hint: Some("Check for infinite recursion in your functions or increase the limit.".into()),
+                        span: Some(callee.span.clone()),
+                    });
+                }
+
                 let func_name = match &callee.kind {
                     ExprKind::Variable(name) => name,
                     ExprKind::Field(source, field, _) => {
@@ -208,6 +217,7 @@ impl Evaluator {
                         }
                     }
 
+                    self.call_stack_depth -= 1;
                     return (native_schema.body)(args);
                 }
 
@@ -293,6 +303,7 @@ impl Evaluator {
                 }
 
                 let explicit_return = std::mem::replace(&mut self.flow, FlowControl::None);
+                self.call_stack_depth -= 1;
                 self.scopes.pop();
 
                 match explicit_return {
