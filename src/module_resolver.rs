@@ -2,6 +2,12 @@
 use crate::error::{NbclError, Result};
 use std::path::{Path, PathBuf};
 
+/// Trait for implementing custm module resolvers
+pub trait ModuleResolver: Send + Sync + std::fmt::Debug {
+    /// Resolves a module relative path into absolute path
+    fn find_target(&self, path: &str) -> Result<PathBuf>;
+}
+
 /// Simple module resolver.
 #[derive(Debug, Clone)]
 pub struct FileModuleResolver {
@@ -13,9 +19,11 @@ impl FileModuleResolver {
     pub fn new(fpath: PathBuf) -> Self {
         Self { file_path: fpath }
     }
+}
 
+impl ModuleResolver for FileModuleResolver {
     /// Resolve a module based on relative string (e.g. test/node.nbl)
-    pub fn find_target(&self, path_str: &str) -> Result<PathBuf> {
+    fn find_target(&self, path_str: &str) -> Result<PathBuf> {
         // Determine the base directory
         // If file_path is "main.nbl", parent() might be empty, so we default to "."
         let current_dir = self

@@ -17,16 +17,7 @@ impl Evaluator {
     ) -> Result<()> {
         match imp.def {
             ImportDefType::Module(path_str, alias) => {
-                let target_path = match &self.mod_resolver {
-                    Some(r) => r.find_target(&path_str),
-                    None => {
-                        return Err(NbclError::Runtime {
-                            message: "module resolver is not registered".into(),
-                            hint: Some("Looks like the developer messed with the module resolver... You'd have to stick with a singular crate for now.".to_string()),
-                            span: Some(imp.span),
-                        })
-                    }
-                }?;
+                let target_path = self.module_resolver.find_target(&path_str)?;
 
                 // Avoiding circular imports
                 if self.loaded_files.contains(&target_path) {

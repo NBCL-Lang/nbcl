@@ -7,11 +7,12 @@ mod stmt;
 
 use crate::{
     ast::Value, ast::resolved::ResolvedTree, ast::source::*, error::Result,
-    module_resolver::FileModuleResolver, registry::Registry,
+    module_resolver::ModuleResolver, registry::Registry,
 };
 use rustc_hash::FxHashMap;
 use std::collections::HashSet;
 use std::path::PathBuf;
+use std::rc::Rc;
 
 // Todo: Maybe add break and continue
 pub enum FlowControl {
@@ -40,7 +41,7 @@ pub(crate) struct Evaluator {
     registry: Registry,
     scopes: Vec<Scope>,
     loaded_files: HashSet<PathBuf>,
-    mod_resolver: Option<FileModuleResolver>,
+    module_resolver: Rc<dyn ModuleResolver>,
     flow: FlowControl,
     call_stack_depth: usize,
     max_depth: usize,
@@ -56,14 +57,14 @@ impl Evaluator {
     /// Create a new [`Evaluator`]
     pub fn new(
         registry: Registry,
-        mod_resolver: Option<FileModuleResolver>,
+        module_resolver: Rc<dyn ModuleResolver>,
         max_depth: usize,
     ) -> Self {
         Self {
             registry,
             scopes: vec![Scope::new(ScopeKind::TopLevel)],
             loaded_files: HashSet::new(),
-            mod_resolver,
+            module_resolver,
             flow: FlowControl::None,
             call_stack_depth: 0,
             max_depth,

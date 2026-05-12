@@ -47,6 +47,8 @@ pub mod module_resolver;
 pub mod parser;
 pub mod registry;
 pub mod utils;
+
+#[cfg(feature = "wasm")]
 pub mod wasm;
 
 mod engine;
