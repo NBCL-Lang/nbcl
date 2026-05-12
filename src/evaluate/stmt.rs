@@ -181,32 +181,32 @@ impl Evaluator {
                         self.scopes.pop();
                     }
                     Value::List(items) => {
+                        let loop_scope = Scope::new(ScopeKind::Block);
+                        self.scopes.push(loop_scope);
+                        let scope_idx = self.scopes.len() - 1;
+
                         for (i, item) in items.into_iter().enumerate() {
                             if let FlowControl::Return(_) = self.flow {
                                 break;
                             }
 
-                            let mut loop_scope = Scope::new(ScopeKind::Block);
-
                             // Handle pattern matching (len 1 or len 2)
                             if patterns.len() == 1 {
-                                loop_scope.variables.insert(patterns[0].clone(), item);
+                                self.scopes[scope_idx].variables.insert(patterns[0].clone(), item);
                             } else if patterns.len() == 2 {
-                                loop_scope.variables.insert(patterns[0].clone(), Value::Int(i as i64));
-                                loop_scope.variables.insert(patterns[1].clone(), item);
+                                self.scopes[scope_idx].variables.insert(patterns[0].clone(), Value::Int(i as i64));
+                                self.scopes[scope_idx].variables.insert(patterns[1].clone(), item);
                             }
-
-                            self.scopes.push(loop_scope);
 
                             // Execute the block logic
                             self.execute_block_internal(&body)?;
-
-                            self.scopes.pop();
 
                             if let FlowControl::Return(_) = self.flow {
                                 break;
                             }
                         }
+
+                        self.scopes.pop();
                     }
 
                     // unreachable
