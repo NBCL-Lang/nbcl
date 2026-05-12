@@ -211,7 +211,16 @@ assignable_lhs = {
       | "[" ~ expr ~ "]"           // indexing
     )*
 }
-assign_stmt = { "set" ~ assignable_lhs ~ "=" ~ expr }
+
+equal      = { "=" }
+plus_equal = { "+=" }
+min_equal  = { "-=" }
+mult_equal = { "*=" }
+div_equal  = { "/=" }
+
+assignment_op = { plus_equal | min_equal | mult_equal | div_equal | equal }
+
+assign_stmt = { "set" ~ assignable_lhs ~ assignment_op ~ expr }
 local_stmt  = { "local" ~ snake_ident ~ (":" ~ type_hint)? ~ "=" ~ expr }
 global_stmt = { "global" ~ snake_ident ~ (":" ~ type_hint)? ~ "=" ~ expr }
 

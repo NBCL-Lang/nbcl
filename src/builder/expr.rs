@@ -39,11 +39,29 @@ pub fn build_stmt(pair: Pair<Rule>) -> Result<Stmt> {
             let mut ii = inner.clone().into_inner();
             let name = build_expr(ii.next().unwrap())?;
 
+            // assignment op
+            let pair = ii.next().unwrap();
+            let inner = pair.into_inner().next().unwrap();
+            let assign_op = match inner.as_rule() {
+                Rule::equal      => AssignOp::Equal,
+                Rule::plus_equal => AssignOp::PlusEqual,
+                Rule::min_equal  => AssignOp::MinEqual,
+                Rule::mult_equal => AssignOp::MultEqual,
+                Rule::div_equal  => AssignOp::DivEqual,
+                _ => {
+                    return Err(NbclError::Parse {
+                        message: format!("Unkown assign operator ('{}') encountered.", inner.as_str().to_string()),
+                        hint: Some("Replace the assign operator with one of these: '=', '+=', '-='.".into()),
+                        span: Some(span.clone()),
+                    })
+                }
+            };
+
             // expr
             let next = ii.next().unwrap();
             let value = build_expr(next)?;
 
-            Ok(Stmt::Assign(name, value, span))
+            Ok(Stmt::Assign(name, assign_op, value, span))
         }
         Rule::for_stmt => {
             let mut ii = inner.into_inner();

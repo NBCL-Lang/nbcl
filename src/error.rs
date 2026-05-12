@@ -139,7 +139,13 @@ fn rule_to_human(rule: Rule) -> &'static str {
         // === Statements ===
         Rule::stmt => "a statement",
         Rule::node_stmt => "a statement",
+        Rule::equal => "'=' statement",
+        Rule::plus_equal => "'+=' statement",
+        Rule::min_equal => "'-=' statement",
+        Rule::mult_equal => "'*=' statement",
+        Rule::div_equal => "'/=' statement",
         Rule::assignable_lhs => "a 'set' assignment variable",
+        Rule::assignment_op => "a 'set' assignment operator",
         Rule::assign_stmt => "a 'set' assignment",
         Rule::local_stmt => "a 'local' declaration",
         Rule::global_stmt => "a 'global' declaration",

@@ -2,7 +2,7 @@ use super::{Evaluator, FlowControl, Scope, ScopeKind};
 use crate::{
     ast::Value,
     ast::source::*,
-    error::{NbclError, Result},
+    error::{NbclError, Result, Span},
 };
 
 impl Evaluator {
@@ -70,7 +70,7 @@ impl Evaluator {
 
                 Value::Null
             }
-            Stmt::Assign(lhs, rhs_expr, span) => {
+            Stmt::Assign(lhs, assign_op, rhs_expr, span) => {
                 let new_val = self.eval_expr(&rhs_expr)?;
 
                 match &lhs.kind {
@@ -78,7 +78,8 @@ impl Evaluator {
                         let mut found = false;
                         for scope in self.scopes.iter_mut().rev() {
                             if let Some(val_ref) = scope.variables.get_mut(name) {
-                                *val_ref = new_val;
+                                let updated = Self::apply_assign_op(val_ref.clone(), &assign_op, new_val, Some(span))?;
+                                *val_ref = updated;
                                 found = true;
                                 break;
                             }
@@ -102,9 +103,18 @@ impl Evaluator {
                         let mut target_map = self.eval_expr(&base)?;
                         if let Value::Map(ref mut entries) = target_map {
                             if let Some(pos) = entries.iter().position(|(k, _)| k == field_name) {
-                                entries[pos].1 = new_val;
+                                let old_val = entries[pos].1.clone();
+                                entries[pos].1 = Self::apply_assign_op(old_val, &assign_op, new_val, Some(&span))?;
                             } else {
-                                entries.push((field_name.clone(), new_val));
+                                if assign_op == &AssignOp::Equal {
+                                    entries.push((field_name.clone(), new_val));
+                                } else {
+                                    return Err(NbclError::Runtime {
+                                        message: format!("cannot update field '{}' that doesn't exist", field_name),
+                                        span: Some(span.clone()),
+                                        hint: None,
+                                    });
+                                }
                             }
                             self.reassign_to_lhs(&base, target_map)?;
                         } else {
@@ -124,7 +134,8 @@ impl Evaluator {
                             (Value::List(items), Value::Int(i)) => {
                                 let idx = i as usize;
                                 if idx < items.len() {
-                                    items[idx] = new_val;
+                                    let old_val = items[idx].clone();
+                                    items[idx] = Self::apply_assign_op(old_val, &assign_op, new_val, Some(&span))?;
                                     self.reassign_to_lhs(&base, target_coll)?;
                                 } else {
                                     return Err(NbclError::Runtime {
@@ -312,6 +323,52 @@ impl Evaluator {
                 Ok(())
             }
             _ => Ok(()),
+        }
+    }
+
+    fn apply_assign_op(current: Value, op: &AssignOp, rhs: Value, span: Option<&Span>) -> Result<Value> {
+        match op {
+            AssignOp::Equal => Ok(rhs),
+            AssignOp::PlusEqual => match (current, rhs) {
+                (Value::Int(a), Value::Int(b)) => Ok(Value::Int(a + b)),
+                (Value::Float(a), Value::Float(b)) => Ok(Value::Float(a + b)),
+                (Value::Str(mut a), Value::Str(b)) => {
+                    a.push_str(&b);
+                    Ok(Value::Str(a))
+                }
+                _ => Err(NbclError::Runtime {
+                    message: "type mismatch in '+=' operation".into(),
+                    span: span.cloned(),
+                    hint: Some("Both sides must be the same numeric or string type.".into()),
+                }),
+            },
+            AssignOp::MinEqual => match (current, rhs) {
+                (Value::Int(a), Value::Int(b)) => Ok(Value::Int(a - b)),
+                (Value::Float(a), Value::Float(b)) => Ok(Value::Float(a - b)),
+                _ => Err(NbclError::Runtime {
+                    message: "type mismatch in '-=' operation".into(),
+                    span: span.cloned(),
+                    hint: Some("Subtraction is only supported for numeric types.".into()),
+                }),
+            },
+            AssignOp::MultEqual => match (current, rhs) {
+                (Value::Int(a), Value::Int(b)) => Ok(Value::Int(a * b)),
+                (Value::Float(a), Value::Float(b)) => Ok(Value::Float(a * b)),
+                _ => Err(NbclError::Runtime {
+                    message: "type mismatch in '*=' operation".into(),
+                    span: span.cloned(),
+                    hint: Some("Multiplication is only supported for numeric types.".into()),
+                }),
+            }
+            AssignOp::DivEqual => match (current, rhs) {
+                (Value::Int(a), Value::Int(b)) => Ok(Value::Int(a / b)),
+                (Value::Float(a), Value::Float(b)) => Ok(Value::Float(a / b)),
+                _ => Err(NbclError::Runtime {
+                    message: "type mismatch in '/=' operation".into(),
+                    span: span.cloned(),
+                    hint: Some("Division is only supported for numeric types.".into()),
+                }),
+            }
         }
     }
 }

@@ -105,13 +105,22 @@ pub struct Block {
 /// Statements supported in the language
 #[derive(Debug, Clone)]
 pub enum Stmt {
-    Assign(Expr, Expr, Span),
+    Assign(Expr, AssignOp, Expr, Span),
     Local(String, Option<String>, Expr),
     Global(String, Option<String>, Expr),
     For(Vec<String>, Expr, Block),
     While(Expr, Block),
     Return(Option<Expr>, Span),
     Expr(Expr),
+}
+
+#[derive(Debug, PartialEq, Clone)]
+pub enum AssignOp {
+    Equal,
+    PlusEqual,
+    MinEqual,
+    MultEqual,
+    DivEqual,
 }
 
 #[derive(Debug, Clone)]
