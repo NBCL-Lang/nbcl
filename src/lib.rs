@@ -26,13 +26,13 @@
 //!     match engine.parse_str(code) {
 //!         Ok(ast) => {
 //!             match engine.evaluate(ast) {
-//!                 Ok(resolved) {
+//!                 Ok(resolved) => {
 //!                     println!("Resolved configuration: {:#?}", resolved);
 //!                 }
-//!                 Err(e) => println!("Evaluation error: {}", e);
+//!                 Err(e) => println!("Evaluation error: {}", e)
 //!             }
 //!         }
-//!         Err(e) => println!("Parse Error: {}", e);
+//!         Err(e) => println!("Parse Error: {}", e)
 //!     }
 //! }
 //! ```
