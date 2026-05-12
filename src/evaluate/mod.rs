@@ -7,7 +7,8 @@ use crate::{
     ast::Value, ast::resolved::ResolvedTree, ast::source::*, error::Result,
     module_resolver::FileModuleResolver, registry::Registry,
 };
-use std::collections::{HashMap, HashSet};
+use rustc_hash::FxHashMap;
+use std::collections::HashSet;
 use std::path::PathBuf;
 
 // Todo: Maybe add break and continue
@@ -28,7 +29,7 @@ pub enum ScopeKind {
 /// Internal structure used for scope handling
 #[derive(PartialEq)]
 pub(crate) struct Scope {
-    pub variables: HashMap<String, Value>,
+    pub variables: FxHashMap<String, Value>,
     pub kind: ScopeKind,
 }
 
@@ -43,7 +44,7 @@ pub(crate) struct Evaluator {
 
 impl Scope {
     pub fn new(kind: ScopeKind) -> Self {
-        Self { variables: HashMap::new(), kind }
+        Self { variables: FxHashMap::default(), kind }
     }
 }
 

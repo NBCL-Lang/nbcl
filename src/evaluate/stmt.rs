@@ -277,11 +277,9 @@ impl Evaluator {
         match &lhs.kind {
             ExprKind::Variable(name) => {
                 for scope in self.scopes.iter_mut().rev() {
-                    if scope.variables.contains_key(name) {
-                        if let Some(val_ref) = scope.variables.get_mut(name) {
-                            *val_ref = value;
-                            return Ok(());
-                        }
+                    if let Some(val_ref) = scope.variables.get_mut(name) {
+                        *val_ref = value;
+                        return Ok(());
                     }
                 }
                 Err(NbclError::Runtime { 
