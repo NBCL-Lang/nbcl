@@ -153,29 +153,32 @@ impl Evaluator {
                 let iter_val = self.eval_expr(&iter_expr)?;
                 match iter_val {
                     Value::Range(start, end) => {
+                        let loop_scope = Scope::new(ScopeKind::Block);
+                        self.scopes.push(loop_scope);
+                        let scope_idx = self.scopes.len() - 1;
+
                         for i in start..end {
                             if let FlowControl::Return(_) = self.flow {
                                 break;
                             }
 
-                            let mut loop_scope = Scope::new(ScopeKind::Block);
                             let val_i = Value::Int(i);
 
                             if patterns.len() == 1 {
-                                loop_scope.variables.insert(patterns[0].clone(), val_i);
+                                self.scopes[scope_idx].variables.insert(patterns[0].clone(), val_i);
                             } else if patterns.len() == 2 {
-                                loop_scope.variables.insert(patterns[0].clone(), val_i.clone());
-                                loop_scope.variables.insert(patterns[1].clone(), val_i);
+                                self.scopes[scope_idx].variables.insert(patterns[0].clone(), val_i.clone());
+                                self.scopes[scope_idx].variables.insert(patterns[1].clone(), val_i);
                             }
 
-                            self.scopes.push(loop_scope);
                             self.execute_block_internal(&body)?;
-                            self.scopes.pop();
 
                             if let FlowControl::Return(_) = self.flow {
                                 break;
                             }
                         }
+
+                        self.scopes.pop();
                     }
                     Value::List(items) => {
                         for (i, item) in items.into_iter().enumerate() {
