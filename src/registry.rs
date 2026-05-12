@@ -3,8 +3,9 @@ use crate::ast::{NativeFnSchema, NativeNodeSchema, Type, Value};
 use crate::error::Result;
 use crate::library::Library;
 use std::collections::HashMap;
-use std::fmt;
 use std::sync::Arc;
+use std::rc::Rc;
+use std::fmt;
 
 /// Registry containing important data about source.
 #[derive(Default, Clone)]
@@ -19,7 +20,7 @@ pub struct Registry {
     pub(crate) native_functions: HashMap<String, NativeFnSchema>,
 
     /// User-defined functions from the .nbl file
-    pub(crate) functions: HashMap<String, FnDef>,
+    pub(crate) functions: HashMap<String, Rc<FnDef>>,
 
     /// Pre-evaluated global variables (regular name)
     pub(crate) globals: HashMap<String, Value>,
@@ -59,7 +60,7 @@ impl Registry {
     }
 
     pub fn register_function(&mut self, def: FnDef) {
-        self.functions.insert(def.name.clone(), def);
+        self.functions.insert(def.name.clone(), Rc::new(def));
     }
 
     pub fn add_library(&mut self, library: Library) {

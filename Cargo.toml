@@ -21,3 +21,7 @@ crate-type = ["cdylib", "rlib"]
 [features]
 wasm = ["wasm-bindgen", "serde_json"]
 pretty-errors = ["dep:ariadne"]
+
+[profile.release]
+lto = "fat"
+codegen-units = 1

@@ -4,6 +4,7 @@ use crate::{
     ast::source::*,
     error::{NbclError, Result, Span},
 };
+use std::rc::Rc;
 
 // Extend for expr support.
 impl Evaluator {
@@ -211,7 +212,7 @@ impl Evaluator {
                 }
 
                 let func_def =
-                    self.registry.functions.get(func_name).cloned().ok_or_else(|| {
+                    self.registry.functions.get(func_name).map(Rc::clone).ok_or_else(|| {
                         // Collect all possible function names for the suggestion
                         let all_funcs = self
                             .registry
