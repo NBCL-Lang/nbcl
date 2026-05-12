@@ -77,8 +77,8 @@ impl Evaluator {
                     ExprKind::Variable(name) => {
                         let mut found = false;
                         for scope in self.scopes.iter_mut().rev() {
-                            if scope.variables.contains_key(name) {
-                                scope.variables.insert(name.clone(), new_val);
+                            if let Some(val_ref) = scope.variables.get_mut(name) {
+                                *val_ref = new_val;
                                 found = true;
                                 break;
                             }
@@ -106,7 +106,7 @@ impl Evaluator {
                             } else {
                                 entries.push((field_name.clone(), new_val));
                             }
-                            self.reassign_to_lhs(*base.clone(), target_map)?;
+                            self.reassign_to_lhs(&base, target_map)?;
                         } else {
                             return Err(NbclError::Runtime {
                                 message: "cannot set field on non-map".into(),
@@ -125,7 +125,7 @@ impl Evaluator {
                                 let idx = i as usize;
                                 if idx < items.len() {
                                     items[idx] = new_val;
-                                    self.reassign_to_lhs(*base.clone(), target_coll)?;
+                                    self.reassign_to_lhs(&base, target_coll)?;
                                 } else {
                                     return Err(NbclError::Runtime {
                                         message: format!("index {} out of bounds", i),
@@ -153,7 +153,15 @@ impl Evaluator {
                 let iter_val = self.eval_expr(&iter_expr)?;
                 match iter_val {
                     Value::Range(start, end) => {
-                        let loop_scope = Scope::new(ScopeKind::Block);
+                        let mut loop_scope = Scope::new(ScopeKind::Block);
+
+                        // Optimization:
+                        // Create dummy patterns and then only modify
+                        // the value in the loop to avoid allocations.
+                        for pattern in patterns {
+                            loop_scope.variables.insert(pattern.clone(), Value::Null);
+                        }
+
                         self.scopes.push(loop_scope);
                         let scope_idx = self.scopes.len() - 1;
 
@@ -162,13 +170,17 @@ impl Evaluator {
                                 break;
                             }
 
-                            let val_i = Value::Int(i);
-
                             if patterns.len() == 1 {
-                                self.scopes[scope_idx].variables.insert(patterns[0].clone(), val_i);
+                                if let Some(val) = self.scopes[scope_idx].variables.get_mut(&patterns[0]) {
+                                    *val = Value::Int(i);
+                                }
                             } else if patterns.len() == 2 {
-                                self.scopes[scope_idx].variables.insert(patterns[0].clone(), val_i.clone());
-                                self.scopes[scope_idx].variables.insert(patterns[1].clone(), val_i);
+                                if let Some(val1) = self.scopes[scope_idx].variables.get_mut(&patterns[0]) {
+                                    *val1 = Value::Int(i);
+                                }
+                                if let Some(val2) = self.scopes[scope_idx].variables.get_mut(&patterns[1]) {
+                                    *val2 = Value::Int(i);
+                                }
                             }
 
                             self.execute_block_internal(&body)?;
@@ -217,6 +229,8 @@ impl Evaluator {
             }
 
             Stmt::While(condition_expr, body) => {
+                self.scopes.push(Scope::new(ScopeKind::Block));
+
                 // Keep looping as long as the condition evaluates to truthy
                 // and we haven't hit a Return statement.
                 while self.eval_expr(&condition_expr)?.is_truthy() {
@@ -224,17 +238,15 @@ impl Evaluator {
                         break;
                     }
 
-                    self.scopes.push(Scope::new(ScopeKind::Block));
-
                     // Execute the block logic
                     self.execute_block_internal(&body)?;
-
-                    self.scopes.pop();
 
                     if let FlowControl::Return(_) = self.flow {
                         break;
                     }
                 }
+
+                self.scopes.pop();
 
                 Value::Null
             }
@@ -261,13 +273,15 @@ impl Evaluator {
         Ok(Value::Null)
     }
 
-    fn reassign_to_lhs(&mut self, lhs: Expr, value: Value) -> Result<()> {
-        match lhs.kind {
+    fn reassign_to_lhs(&mut self, lhs: &Expr, value: Value) -> Result<()> {
+        match &lhs.kind {
             ExprKind::Variable(name) => {
                 for scope in self.scopes.iter_mut().rev() {
-                    if scope.variables.contains_key(&name) {
-                        scope.variables.insert(name, value);
-                        return Ok(());
+                    if scope.variables.contains_key(name) {
+                        if let Some(val_ref) = scope.variables.get_mut(name) {
+                            *val_ref = value;
+                            return Ok(());
+                        }
                     }
                 }
                 Err(NbclError::Runtime { 
@@ -279,12 +293,12 @@ impl Evaluator {
             ExprKind::Field(base, field, _) => {
                 let mut parent = self.eval_expr(&base)?;
                 if let Value::Map(ref mut entries) = parent {
-                    if let Some(pos) = entries.iter().position(|(k, _)| k == &field) {
+                    if let Some(pos) = entries.iter().position(|(k, _)| k == field) {
                         entries[pos].1 = value;
                     } else {
-                        entries.push((field, value));
+                        entries.push((field.clone(), value));
                     }
-                    self.reassign_to_lhs(*base, parent)
+                    self.reassign_to_lhs(&base, parent)
                 } else { Ok(()) }
             }
             ExprKind::Index(base, index_expr) => {
@@ -294,7 +308,7 @@ impl Evaluator {
                     let idx = i as usize;
                     if idx < items.len() {
                         items[idx] = value;
-                        self.reassign_to_lhs(*base, parent)?;
+                        self.reassign_to_lhs(&base, parent)?;
                     }
                 }
                 Ok(())
