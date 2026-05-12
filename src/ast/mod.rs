@@ -13,9 +13,17 @@ use std::sync::Arc;
 #[derive(Debug, Clone, PartialEq, Deserialize)]
 pub enum Value {
     /// Integers (1)
+    #[cfg(not(feature = "i32-ints"))]
     Int(i64),
+    #[cfg(feature = "i32-ints")]
+    Int(i32),
+
     /// Floating numbers (1.5)
+    #[cfg(not(feature = "f32-floats"))]
     Float(f64),
+    #[cfg(feature = "f32-floats")]
+    Float(f32),
+
     /// Boolean (true/false)
     Bool(bool),
     /// String ("Hello, World")

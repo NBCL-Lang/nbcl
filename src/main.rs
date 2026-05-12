@@ -17,8 +17,6 @@ fn main() {
 
     match engine.parse_str(&source) {
         Ok(ast) => {
-            println!("AST: {:#?}", ast);
-
             match engine.evaluate(ast) {
                 Ok(evaled) => println!("{:#?}", evaled),
                 Err(e) => println!("{}", e),

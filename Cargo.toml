@@ -20,8 +20,17 @@ wasm-bindgen = { version = "0.2.121", optional = true }
 crate-type = ["cdylib", "rlib"]
 
 [features]
-wasm = ["wasm-bindgen", "serde_json"]
+# Disable imports (module and lib)
+no-module-imports = []
+no-lib-imports = []
+# Use i32 for Integers
+i32-ints = []
+# Use f32 for Floats
+f32-floats = []
+# Makes printed errors beautiful
 pretty-errors = ["dep:ariadne"]
+# Add wasm support
+wasm = ["wasm-bindgen", "serde_json"]
 
 [profile.release]
 lto = "fat"

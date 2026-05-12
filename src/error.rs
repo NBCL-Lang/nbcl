@@ -272,7 +272,6 @@ impl From<pest::error::Error<Rule>> for NbclError {
 
                     (msg, hint.to_string())
                 } else {
-                    // Only negatives — something was explicitly rejected
                     let rejected: Vec<&str> = negatives.iter().map(|r| rule_to_human(*r)).collect();
                     (
                         format!("{} is not valid here", rejected.join(", ")),
