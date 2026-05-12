@@ -23,10 +23,6 @@ crate-type = ["cdylib", "rlib"]
 # Disable imports (module and lib)
 no-module-imports = []
 no-lib-imports = []
-# Use i32 for Integers
-i32-ints = []
-# Use f32 for Floats
-f32-floats = []
 # Makes printed errors beautiful
 pretty-errors = ["dep:ariadne"]
 # Add wasm support

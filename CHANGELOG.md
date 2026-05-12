@@ -14,8 +14,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - Better variable handling with FxHashMap for performance.
 - `no-module-imports` feature to disable module imports.
 - `no-lib-imports` feature to disable library imports.
-- `i32-ints` feature to use i32 as integers instead of i64.
-- `f32-floats` feature to use f32 as floats instead of f64.
 
 ## [0.1.0] - 2026-05-12
 
