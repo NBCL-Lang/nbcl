@@ -41,8 +41,6 @@ pub mod ast;
 pub mod error;
 pub mod library;
 pub mod module_resolver;
-pub mod parser;
-pub mod registry;
 
 #[cfg(feature = "wasm")]
 pub mod wasm;
@@ -52,6 +50,8 @@ mod utils;
 mod evaluate;
 mod builder;
 mod builtin;
+mod parser;
+mod registry;
 
 pub use engine::*;
 pub use ast::utils::*;

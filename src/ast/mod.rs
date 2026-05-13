@@ -2,4 +2,4 @@
 
 pub mod resolved;
 pub mod source;
-pub mod utils;
+pub(crate) mod utils;

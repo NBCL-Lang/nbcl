@@ -6,7 +6,7 @@ use std::collections::HashMap;
 use std::fmt;
 use std::sync::Arc;
 
-/// Possible data types in Nbcl (used interanally to hold value)
+/// Possible data types in Nbcl (used to hold value)
 #[derive(Debug, Clone, PartialEq, Deserialize)]
 pub enum Value {
     /// Integers (1)
@@ -205,7 +205,7 @@ pub struct NativeNodeSchema {
     pub child_count: Option<(u32, u32)>,
 }
 
-/// Internal structure used for registering custom functions.
+/// Public structure used for registering custom functions.
 #[derive(Clone)]
 pub struct NativeFnSchema {
     pub(crate) name: String,
