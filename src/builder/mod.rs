@@ -97,7 +97,6 @@ fn build_fn_def(pair: Pair<Rule>) -> Result<FnDef> {
     let name = inner.next().unwrap().as_str().to_string();
 
     let mut params = Vec::new();
-    let mut return_type = None;
     let mut body = Vec::new();
 
     for part in inner {
@@ -107,9 +106,6 @@ fn build_fn_def(pair: Pair<Rule>) -> Result<FnDef> {
                 let p_name = p_inner.next().unwrap().as_str().to_string();
                 let p_type = p_inner.next().map(|t| t.as_str().to_string());
                 params.push(FnParam { name: p_name, type_hint: p_type });
-            }
-            Rule::fn_return_type => {
-                return_type = Some(part.into_inner().next().unwrap().as_str().to_string());
             }
             Rule::fn_body => {
                 for item in part.into_inner() {
@@ -134,7 +130,7 @@ fn build_fn_def(pair: Pair<Rule>) -> Result<FnDef> {
         }
     }
 
-    Ok(FnDef { name, params, return_type, body, span })
+    Ok(FnDef { name, params, body, span })
 }
 
 pub fn unquote(s: &str) -> String {

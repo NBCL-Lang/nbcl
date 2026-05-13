@@ -61,7 +61,6 @@ pub struct Parameter {
 pub struct FnDef {
     pub name: String,
     pub params: Vec<FnParam>,
-    pub return_type: Option<String>,
     pub body: Vec<FnItem>,
     pub span: Span,
 }

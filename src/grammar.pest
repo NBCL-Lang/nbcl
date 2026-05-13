@@ -276,15 +276,12 @@ match_pattern = {
 fn_def = {
     "fn" ~ snake_ident
   ~ "(" ~ (fn_param ~ ("," ~ fn_param)*)? ~ ")"
-  ~ fn_return_type?
   ~ fn_body
 }
 
 fn_param = {
     snake_ident ~ (":" ~ type_hint)?
 }
-
-fn_return_type = { "->" ~ type_hint }
 
 // Function body can contain statements AND node invocations
 // (a fn can build and return a tree of nodes)

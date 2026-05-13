@@ -177,7 +177,6 @@ fn rule_to_human(rule: Rule) -> &'static str {
         // === Functions ===
         Rule::fn_def => "a function definition ('fn name(...) { ... }')",
         Rule::fn_param => "a function parameter",
-        Rule::fn_return_type => "a return type annotation ('-> Type')",
         Rule::fn_body => "a function body '{...}'",
         Rule::fn_item => "a statement or node inside a function",
 
