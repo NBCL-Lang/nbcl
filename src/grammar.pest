@@ -23,7 +23,7 @@ top_level_item = {
   | import_lib_stmt
   | component_def
   | fn_def
-  | node_invocation   // e.g. Window "name" { … }  at the top level
+  | node_invocation   // e.g. Window "name" { ... }  at the top level
   | stmt
 }
 
@@ -181,7 +181,7 @@ type_hint = {
 }
 
 
-// === Statements  (expression world) ===
+// === Statements ===
 
 stmt = {
     assign_stmt
@@ -244,7 +244,6 @@ return_stmt = { "return" ~ expr? }
 // bare expression used as statement (e.g. a function call)
 expr_stmt = { expr }
 
-// Shared if/match: valid in both worlds as expressions
 if_expr = {
     "if" ~ expr ~ block_body
   ~ else_if_branch*
@@ -316,20 +315,19 @@ param_item = {
     snake_ident ~ (":" ~ type_hint)? ~ "?"?
 }
 
-// === NODE WORLD ===
+// === NODES ===
 //
 //  Syntax:  TypeName "optional_id" { node_body }
 //           TypeName { node_body }
 //
 //  node_body contains:
 //    - prop assignments:       key = value
-//    - child nodes:            TypeName { … }
-//    - inline shorthand node:  TypeName { key: value }
+//    - child nodes:            TypeName { ... }
 //    - control flow:           for / if (bodies are node bodies)
 
 node_invocation = {
     pascal_ident
-  ~ (id_expression)?            // optional ID: Window "main" { … }
+  ~ (id_expression)? // optional ID: Window "main" { ... }
   ~ node_block
 }
 
@@ -343,22 +341,11 @@ node_item = {
     node_prop          // key = value
   | node_stmt          // local, for, while, etc.
   | node_invocation    // child node
-  | node_inline        // TypeName { key: val, key: val }  (no nested nodes)
 }
 
-// prop = value  (value is from the expression world)
+// prop = value  (value is an expression)
 node_prop = { prop_key ~ "=" ~ prop_value }
 
 prop_value = {
-    expr               // literals, variables, fn calls, lambdas, map { }
+    expr // literals, variables, fn calls, lambdas, map { }
 }
-
-// Inline shorthand:  Label { text: "Hi", color: "red" }
-// Only props, no child nodes, uses ":" separator
-node_inline = {
-    pascal_ident
-  ~ string_lit?
-  ~ "{" ~ (inline_prop ~ ("," ~ inline_prop)*)? ~ ","? ~ "}"
-}
-
-inline_prop = { prop_key ~ ":" ~ prop_value }

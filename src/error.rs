@@ -193,8 +193,6 @@ fn rule_to_human(rule: Rule) -> &'static str {
         Rule::node_item => "a node property, child node, or statement",
         Rule::node_prop => "a property assignment (key = value)",
         Rule::prop_value => "a property value",
-        Rule::node_inline => "an inline node (e.g. 'Label { text: \"Hi\" }')",
-        Rule::inline_prop => "an inline property (key: value)",
 
         // === Imports ===
         Rule::import_stmt => "an import statement",
