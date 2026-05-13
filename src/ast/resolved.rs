@@ -1,5 +1,4 @@
 use super::utils::Value;
-use crate::error::Span;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -22,7 +21,7 @@ pub struct ResolvedNode {
 
     /// Span metadata of the Node
     #[cfg(feature = "metadata")]
-    pub span: Span,
+    pub span: crate::error::Span,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
