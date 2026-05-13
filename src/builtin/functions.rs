@@ -1,4 +1,4 @@
-use crate::ast::{Type, Value};
+use crate::ast::utils::{Type, Value};
 use crate::error::NbclError;
 use crate::registry::Registry;
 

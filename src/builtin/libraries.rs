@@ -1,4 +1,4 @@
-use crate::ast::{Type, Value};
+use crate::ast::utils::{Type, Value};
 use crate::library::{Library, LibraryItem};
 use crate::registry::Registry;
 use std::time::{Instant, SystemTime, UNIX_EPOCH};

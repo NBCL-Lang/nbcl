@@ -1,6 +1,6 @@
 use super::{Evaluator, FlowControl, Scope, ScopeKind};
 use crate::{
-    ast::Value,
+    ast::utils::Value,
     ast::source::*,
     error::{NbclError, Result, Span},
 };

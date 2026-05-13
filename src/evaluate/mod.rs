@@ -6,7 +6,7 @@ mod node;
 mod stmt;
 
 use crate::{
-    ast::Value, ast::resolved::ResolvedTree, ast::source::*, error::Result,
+    ast::utils::Value, ast::resolved::ResolvedTree, ast::source::*, error::Result,
     module_resolver::ModuleResolver, registry::Registry,
 };
 use rustc_hash::FxHashMap;

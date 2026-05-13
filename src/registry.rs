@@ -1,7 +1,7 @@
 //! Registry that holds core information for evaluation
 
 use crate::ast::source::{ComponentDef, FnDef};
-use crate::ast::{NativeFnSchema, NativeNodeSchema, Type, Value};
+use crate::ast::utils::{NativeFnSchema, NativeNodeSchema, Type, Value};
 use crate::error::Result;
 use crate::library::Library;
 use std::collections::HashMap;

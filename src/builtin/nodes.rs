@@ -1,4 +1,4 @@
-use crate::ast::{NativeNodeSchema, PropValidation};
+use crate::ast::utils::{NativeNodeSchema, PropValidation};
 use crate::registry::Registry;
 
 /// Register the default nodes present in Nbcl

@@ -38,21 +38,23 @@
 //! ```
 
 pub mod ast;
-pub mod builder;
-pub mod builtin;
 pub mod error;
-pub mod evaluate;
 pub mod library;
 pub mod module_resolver;
 pub mod parser;
 pub mod registry;
-pub mod utils;
 
 #[cfg(feature = "wasm")]
 pub mod wasm;
 
 mod engine;
+mod utils;
+mod evaluate;
+mod builder;
+mod builtin;
+
 pub use engine::*;
+pub use ast::utils::*;
 
 /// Print a message that automatically goes to right buffer.
 ///

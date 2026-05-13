@@ -2,7 +2,7 @@ use super::{Evaluator, Scope, ScopeKind};
 use crate::{
     ast::resolved::ResolvedNode,
     ast::source::*,
-    ast::{PropValidation, Type, Value},
+    ast::utils::{PropValidation, Type, Value},
     error::{NbclError, Result},
 };
 use std::collections::HashMap;

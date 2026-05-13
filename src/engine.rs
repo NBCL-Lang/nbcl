@@ -3,7 +3,7 @@
 use crate::{
     ast::resolved::ResolvedTree,
     ast::source::File,
-    ast::{NativeNodeSchema, Type, Value},
+    ast::utils::{NativeNodeSchema, Type, Value},
     builder::build_file,
     error::{NbclError, Result},
     evaluate::Evaluator,
