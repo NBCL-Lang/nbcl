@@ -172,6 +172,7 @@ pub struct IfExpr {
 pub struct MatchArm {
     pub pattern: String,
     pub body: LambdaBody,
+    pub is_var: bool,
 }
 
 #[derive(Debug, Clone)]

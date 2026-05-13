@@ -393,7 +393,12 @@ fn build_match_arm(pair: Pair<Rule>) -> Result<MatchArm> {
     let mut inner = pair.into_inner();
 
     let pattern_pair = inner.next().unwrap();
-    let pattern = pattern_pair.as_str().to_string();
+    let pattern_inner = pattern_pair.into_inner().next().unwrap();
+    let is_var = match pattern_inner.as_rule() {
+        Rule::snake_ident => true,
+        _ => false,
+    };
+    let pattern = unquote(pattern_inner.as_str());
 
     let body_pair = inner.next().unwrap();
     let body = match body_pair.as_rule() {
@@ -407,7 +412,7 @@ fn build_match_arm(pair: Pair<Rule>) -> Result<MatchArm> {
         }
     };
 
-    Ok(MatchArm { pattern, body })
+    Ok(MatchArm { pattern, body, is_var })
 }
 
 pub fn build_lambda(pair: Pair<Rule>) -> Result<ExprKind> {

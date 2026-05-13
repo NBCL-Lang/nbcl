@@ -375,10 +375,14 @@ impl Evaluator {
 
             ExprKind::Match(subject_expr, arms) => {
                 let value = self.eval_expr(subject_expr)?;
+                eprintln!("[match] subject value: {:?}", value);
 
                 let mut matched_branch = None;
+                let mut match_scope = Scope::new(ScopeKind::Block);
 
                 for arm in arms {
+                    eprintln!("[match] trying arm: pattern={:?} is_var={}", arm.pattern, arm.is_var);
+
                     // "matching" logic
                     let is_match = match arm.pattern.as_str() {
                         "_" => true, // Wildcard matches everything
@@ -391,18 +395,21 @@ impl Evaluator {
                         },
                     };
 
-                    if is_match {
+                    if is_match || arm.is_var {
                         matched_branch = Some(&arm.body);
+                        if arm.is_var {
+                            match_scope.variables.insert(arm.pattern.clone(), value);
+                        }
                         break;
                     }
                 }
 
+                self.scopes.push(match_scope);
+
                 // Execute the branch body
-                if let Some(body) = matched_branch {
+                let result = if let Some(body) = matched_branch {
                     match body {
                         LambdaBody::Block(stmts, final_expr) => {
-                            self.scopes.push(Scope::new(ScopeKind::Block));
-
                             for stmt in stmts {
                                 self.execute_stmt(stmt)?;
                             }
@@ -413,14 +420,16 @@ impl Evaluator {
                                 Value::Null
                             };
 
-                            self.scopes.pop();
                             Ok(result)
                         }
                         LambdaBody::Expr(e) => self.eval_expr(e),
                     }
                 } else {
                     Ok(Value::Null)
-                }
+                };
+
+                self.scopes.pop();
+                result
             }
 
             ExprKind::Range(start_expr, end_expr, inclusive) => {
