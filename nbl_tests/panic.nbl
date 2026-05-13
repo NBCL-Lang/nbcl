@@ -1,9 +1,0 @@
-fn test() {
-    test2()
-}
-
-fn test2() {
-    test()
-}
-
-test()
