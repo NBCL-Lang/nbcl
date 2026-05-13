@@ -3,7 +3,7 @@ use crate::{
     ast::resolved::ResolvedNode,
     ast::source::*,
     ast::utils::{PropValidation, Type, Value},
-    error::{NbclError, Result},
+    error::{NbclError, Result, Span},
 };
 use std::collections::HashMap;
 
@@ -55,7 +55,7 @@ impl Evaluator {
 
             // Check: Are these properties allowed and are their type correct?
             if let PropValidation::Strict(allowed_map) = &schema.validation {
-                for (key, value) in props.iter() {
+                for (key, (value, span)) in props.iter() {
                     // Existence Check
                     if let Some(expected_type) = allowed_map.get(key) {
                         // Type Check
@@ -69,7 +69,7 @@ impl Evaluator {
                                     value.type_name()
                                 ),
                                 hint: None,
-                                span: Some(inv.span.clone()),
+                                span: Some(span.clone()),
                             });
                         }
                     } else {
@@ -83,16 +83,27 @@ impl Evaluator {
                                 key, inv.type_name
                             ),
                             hint,
-                            span: Some(inv.span.clone()),
+                            span: Some(span.clone()),
                         });
                     }
                 }
             }
 
+            let resolved_props = {
+                #[cfg(feature = "metadata")]
+                {
+                    props
+                }
+                #[cfg(not(feature = "metadata"))]
+                {
+                    props.into_iter().map(|(k, (v, _span))| (k, v)).collect()
+                }
+            };
+
             return Ok(vec![ResolvedNode {
                 type_name: inv.type_name,
                 id: resolved_id,
-                props,
+                props: resolved_props,
                 children,
             }]);
         }
@@ -142,7 +153,7 @@ impl Evaluator {
         // Enforce properties
         for item in &def.body {
             match item {
-                NodeItem::Prop(key, expr) => {
+                NodeItem::Prop(key, expr, _) => {
                     let constraint_val = self.eval_expr(expr)?;
 
                     match key.as_str() {
@@ -220,7 +231,7 @@ impl Evaluator {
             ComponentInterface::Loose(name) => {
                 // Pack all props into a single Map value
                 let mut prop_list = Vec::new();
-                for (k, v) in caller_props {
+                for (k, (v, _span)) in caller_props {
                     prop_list.push((k, v));
                 }
                 component_scope.variables.insert(name.clone(), Value::Map(prop_list));
@@ -231,7 +242,7 @@ impl Evaluator {
                     let value = caller_props.remove(&param.name);
 
                     match value {
-                        Some(v) => {
+                        Some((v, prop_span)) => {
                             // Validate Type Hint if it exists
                             if let Some(hint) = &param.type_hint {
                                 if let Some(expected_type) = Type::from_str(hint) {
@@ -245,7 +256,7 @@ impl Evaluator {
                                                 v.type_name()
                                             ),
                                             hint: None,
-                                            span: Some(inv.span.clone()),
+                                            span: Some(prop_span),
                                         });
                                     }
                                 }
@@ -311,13 +322,16 @@ impl Evaluator {
     fn resolve_node_items(
         &mut self,
         items: Vec<NodeItem>,
-        props: &mut HashMap<String, Value>,
+        props: &mut HashMap<String, (Value, Span)>, 
         children: &mut Vec<ResolvedNode>,
     ) -> Result<()> {
         for item in items {
             match item {
-                NodeItem::Prop(key, expr) => {
-                    props.insert(key, self.eval_expr(&expr)?);
+                // Capture the span from the variant here ---v
+                NodeItem::Prop(key, expr, span) => {
+                    let val = self.eval_expr(&expr)?;
+                    // Store both the resolved value and the source span
+                    props.insert(key, (val, span));
                 }
                 NodeItem::Child(child_inv) => {
                     children.extend(self.resolve_node(child_inv)?);

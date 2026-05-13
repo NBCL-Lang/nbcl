@@ -90,7 +90,7 @@ pub struct NodeInvocation {
 
 #[derive(Debug, Clone)]
 pub enum NodeItem {
-    Prop(String, Expr),
+    Prop(String, Expr, Span),
     Child(NodeInvocation),
     Stmt(Stmt),
 }

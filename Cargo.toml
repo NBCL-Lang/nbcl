@@ -23,6 +23,8 @@ crate-type = ["cdylib", "rlib"]
 # Disable imports (module and lib)
 no-module-imports = []
 no-lib-imports = []
+# Add span info in resolved tree and node
+metadata = []
 # Makes printed errors beautiful
 pretty-errors = ["dep:ariadne"]
 # Add wasm support

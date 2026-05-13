@@ -1,4 +1,5 @@
 use super::utils::Value;
+use crate::error::Span;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -11,6 +12,9 @@ pub struct ResolvedNode {
     pub id: Option<String>,
 
     /// Final, evaluated properties (no logic left, just data)
+    #[cfg(feature = "metadata")]
+    pub props: HashMap<String, (Value, Span)>,
+    #[cfg(not(feature = "metadata"))]
     pub props: HashMap<String, Value>,
 
     /// Nested child nodes

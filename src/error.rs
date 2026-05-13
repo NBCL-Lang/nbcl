@@ -29,6 +29,7 @@ pub mod pretty_error {
 
 /// Start..end data that is useful for error reporting
 #[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "metadata", derive(serde::Serialize, serde::Deserialize))]
 pub struct Span {
     pub start: usize,
     pub end: usize,
@@ -42,12 +43,23 @@ impl Span {
     pub fn from_pair(pair: &Pair<Rule>) -> Self {
         let pest_span = pair.as_span();
         let (line, col) = pest_span.start_pos().line_col();
-        Span {
+        Self {
             start: pest_span.start(),
             end: pest_span.end(),
             line,
             col,
             slice: pest_span.as_str().to_string(),
+        }
+    }
+    
+    /// Create a dummy span
+    pub fn dummy() -> Self {
+        Self {
+            start: 0,
+            end: 0,
+            line: 0,
+            col: 0,
+            slice: String::new(),
         }
     }
 }

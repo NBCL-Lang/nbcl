@@ -42,14 +42,16 @@ pub fn build_node_item(pair: Pair<Rule>) -> Result<NodeItem> {
         Rule::node_prop => {
             let mut ii = inner.into_inner();
             let key = ii.next().unwrap().as_str().to_string();
-            let val = expr::build_expr(ii.next().unwrap().into_inner().next().unwrap())?;
-            Ok(NodeItem::Prop(key, val))
+            let next = ii.next().unwrap().into_inner().next().unwrap();
+            let span = Span::from_pair(&next);
+            let val = expr::build_expr(next)?;
+            Ok(NodeItem::Prop(key, val, span))
         }
         Rule::node_invocation => Ok(NodeItem::Child(build_node_invocation(inner)?)),
         Rule::node_stmt => {
             let stmt = expr::build_stmt(inner.into_inner().next().unwrap())?;
             Ok(NodeItem::Stmt(stmt))
         }
-        _ => Ok(NodeItem::Prop("error".into(), expr::build_expr(inner)?)),
+        _ => Ok(NodeItem::Prop("error".into(), expr::build_expr(inner)?, Span::dummy())),
     }
 }
