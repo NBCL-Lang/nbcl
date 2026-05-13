@@ -1,5 +1,5 @@
 fn give_children() {
-    return Object "children" {
+    Object "children" {
         Object {}
         Object {}
         Object {}

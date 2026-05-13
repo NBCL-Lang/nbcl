@@ -1,4 +1,4 @@
-use super::unquote;
+use super::{unquote, node};
 use crate::ast::source::*;
 use crate::error::{NbclError, Result, Span};
 use crate::parser::Rule;
@@ -96,8 +96,26 @@ pub fn build_stmt(pair: Pair<Rule>) -> Result<Stmt> {
 
         Rule::return_stmt => {
             let mut ii = inner.into_inner();
-            let expr = if let Some(e_pair) = ii.next() { Some(build_expr(e_pair)?) } else { None };
-            Ok(Stmt::Return(expr, span))
+            let return_type = if let Some(e_pair) = ii.next() {
+                match e_pair.as_rule() {
+                    Rule::node_invocation => {
+                        let node_inv = node::build_node_invocation(e_pair)?;
+                        Some(ReturnType::Node(node_inv))
+                    }
+                    Rule::expr => {
+                        let expr = build_expr(e_pair)?;
+                        Some(ReturnType::Expr(expr))
+                    }
+                    rt => return Err(NbclError::Ast {
+                        message: format!("unknown return type: {:?}", rt),
+                        hint: None,
+                        span: Some(span),
+                    })
+                }
+            } else {
+                None
+            };
+            Ok(Stmt::Return(return_type, span))
         }
 
         Rule::expr_stmt => Ok(Stmt::Expr(build_expr(inner.into_inner().next().unwrap())?)),

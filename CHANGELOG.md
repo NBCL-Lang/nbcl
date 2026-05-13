@@ -16,7 +16,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - `no-module-imports` feature to disable module imports.
 - `no-lib-imports` feature to disable library imports.
 - `metadata` feature to add spans in resolved tree and node.
-- Implicit return support to functions.
+
+### Fixed
+
+- Not being able to explicitly return nodes in functions.
+- Not being able to implicitly return expressions in functions.
 
 ## [0.1.0] - 2026-05-12
 

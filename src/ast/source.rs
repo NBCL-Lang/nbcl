@@ -110,7 +110,7 @@ pub enum Stmt {
     Global(String, Option<String>, Expr),
     For(Vec<String>, Expr, Block),
     While(Expr, Block),
-    Return(Option<Expr>, Span),
+    Return(Option<ReturnType>, Span),
     Expr(Expr),
 }
 
@@ -121,6 +121,12 @@ pub enum AssignOp {
     MinEqual,
     MultEqual,
     DivEqual,
+}
+
+#[derive(Debug, Clone)]
+pub enum ReturnType {
+    Node(NodeInvocation),
+    Expr(Expr),
 }
 
 #[derive(Debug, Clone)]
