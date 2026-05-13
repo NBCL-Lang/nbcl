@@ -225,8 +225,9 @@ local_stmt  = { "local" ~ snake_ident ~ (":" ~ type_hint)? ~ "=" ~ expr }
 global_stmt = { "global" ~ snake_ident ~ (":" ~ type_hint)? ~ "=" ~ expr }
 
 // for x in range/list { stmts }
+in_kw = { "in" }
 for_stmt = {
-    "for" ~ for_pattern ~ "in" ~ (range_expr | expr) ~ block_body
+    "for" ~ for_pattern ~ in_kw ~ (range_expr | expr) ~ block_body
 }
 
 for_pattern = {

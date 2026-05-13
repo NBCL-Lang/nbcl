@@ -163,6 +163,7 @@ fn rule_to_human(rule: Rule) -> &'static str {
         Rule::assign_stmt => "a 'set' assignment",
         Rule::local_stmt => "a 'local' declaration",
         Rule::global_stmt => "a 'global' declaration",
+        Rule::in_kw => "'in' keyword",
         Rule::for_stmt => "a 'for' loop",
         Rule::for_pattern => "a loop variable or destructure pattern '(k, v)'",
         Rule::while_stmt => "a 'while' loop",

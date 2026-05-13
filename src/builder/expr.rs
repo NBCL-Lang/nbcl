@@ -77,6 +77,9 @@ pub fn build_stmt(pair: Pair<Rule>) -> Result<Stmt> {
                 patterns.push(ident.as_str().to_string());
             }
 
+            // skip 'in' keyword
+            let _ = ii.next().unwrap();
+
             let iter_expr = build_expr(ii.next().unwrap())?;
 
             let block_pair = ii.next().unwrap();
