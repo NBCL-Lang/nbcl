@@ -20,7 +20,7 @@ pub fn wasm_print(msg: String) {
 #[wasm_bindgen]
 pub fn run(source: &str) -> String {
     let config = r#"{
-        "max_depth": 5,
+        "max_depth": 5
     }"#;
     run_with_config(source, config)
 }
