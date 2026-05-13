@@ -1,4 +1,4 @@
-use nbcl::ast::{NativeNodeSchema, PropValidation, Type, Value};
+use nbcl::{NativeNodeSchema, PropValidation, Type, Value};
 use std::sync::{Arc, Mutex};
 
 #[test]
