@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - `run_with_config` (wasm) function to evaluate with a custom config.
 - `no-module-imports` feature to disable module imports.
 - `no-lib-imports` feature to disable library imports.
+- `metadata` feature to add spans in resolved tree and node.
 
 ## [0.1.0] - 2026-05-12
 

@@ -19,6 +19,10 @@ pub struct ResolvedNode {
 
     /// Nested child nodes
     pub children: Vec<ResolvedNode>,
+
+    /// Span metadata of the Node
+    #[cfg(feature = "metadata")]
+    pub span: Span,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]

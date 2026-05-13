@@ -105,6 +105,7 @@ impl Evaluator {
                 id: resolved_id,
                 props: resolved_props,
                 children,
+                span: inv.span.clone(),
             }]);
         }
 
