@@ -307,6 +307,10 @@ fn build_literal(pair: Pair<Rule>) -> Result<Literal> {
                 let mut inner_pair = p.into_inner();
 
                 let key = inner_pair.next().unwrap().as_str().to_string();
+
+                // skip equal statement
+                let _ = inner_pair.next().unwrap();
+
                 let value = build_expr(inner_pair.next().unwrap())?;
 
                 pairs.push((key, value));

@@ -163,7 +163,6 @@ fn rule_to_human(rule: Rule) -> &'static str {
         Rule::assign_stmt => "a 'set' assignment",
         Rule::local_stmt => "a 'local' declaration",
         Rule::global_stmt => "a 'global' declaration",
-        Rule::in_kw => "'in' keyword",
         Rule::for_stmt => "a 'for' loop",
         Rule::for_pattern => "a loop variable or destructure pattern '(k, v)'",
         Rule::while_stmt => "a 'while' loop",
@@ -198,7 +197,6 @@ fn rule_to_human(rule: Rule) -> &'static str {
         Rule::inline_prop => "an inline property (key: value)",
 
         // === Imports ===
-        Rule::as_kw => "'as' keyword",
         Rule::import_stmt => "an import statement",
         Rule::import_lib_stmt => "a library import statement",
 
@@ -212,6 +210,10 @@ fn rule_to_human(rule: Rule) -> &'static str {
         Rule::COMMENT => "a comment",
         Rule::line_comment => "a line comment ('#')",
         Rule::block_comment => "a block comment ('#- ... -#')",
+
+        // === Keywords ===
+        Rule::in_kw => "'in' keyword",
+        Rule::as_kw => "'as' keyword",
     }
 }
 

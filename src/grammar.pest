@@ -92,7 +92,7 @@ list_lit = { "[" ~ (expr ~ ("," ~ expr)*)? ~ ","? ~ "]" }
 
 // map literals  (key = value inside a prop value position)
 map_lit = { "{" ~ (map_entry ~ ("," ~ map_entry)*)? ~ ","? ~ "}" }
-map_entry = { prop_key ~ "=" ~ expr }
+map_entry = { prop_key ~ equal ~ expr }
 
 // === Ranges  (used in for loops) ===
 
