@@ -284,18 +284,26 @@ impl Evaluator {
 
                 self.scopes.push(call_scope);
                 let mut nodes = Vec::new();
+                let mut implicit_return: Option<Value> = None;
+                let body_len = &func_def.body.len();
 
-                for item in &func_def.body {
+                for (i, item) in func_def.body.iter().enumerate() {
                     match item {
-                        FnItem::Stmt(s) => {
-                            let val = self.execute_stmt(s)?;
-                            if let Value::Nodes(new_nodes) = val {
-                                nodes.extend(new_nodes);
+                        FnItem::Node(n) => {
+                            if i == body_len - 1 {
+                                let resolved = self.resolve_node(n.clone())?;
+                                nodes.extend(resolved);
                             }
                         }
-                        FnItem::Node(n) => {
-                            let resolved = self.resolve_node(n.clone())?;
-                            nodes.extend(resolved);
+                        FnItem::Stmt(s) => {
+                            let val = self.execute_stmt(s)?;
+                            if i == body_len - 1 {
+                                if let Value::Nodes(new_nodes) = val {
+                                    nodes.extend(new_nodes);
+                                } else {
+                                    implicit_return = Some(val);
+                                }
+                            }
                         }
                     }
 
@@ -309,13 +317,17 @@ impl Evaluator {
                 self.call_stack_depth -= 1;
                 self.scopes.pop();
 
+                if let Some(val) = implicit_return {
+                    return Ok(val)
+                }
+
                 match explicit_return {
-                    FlowControl::Return(val) => Ok(val),
+                    FlowControl::Return(val) => return Ok(val),
                     FlowControl::None => {
                         if !nodes.is_empty() {
-                            Ok(Value::Nodes(nodes))
+                            return Ok(Value::Nodes(nodes))
                         } else {
-                            Ok(Value::Null)
+                            return Ok(Value::Null)
                         }
                     }
                 }

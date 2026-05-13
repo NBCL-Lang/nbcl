@@ -1,0 +1,11 @@
+fn give_children() {
+    return Object "children" {
+        Object {}
+        Object {}
+        Object {}
+    }
+}
+
+Object "example" {
+    give_children()
+}
