@@ -1,0 +1,6 @@
+local x = "Baz"
+
+match x {
+    "Foo" => print("x is 'Foo'")
+    _ => print("x didn't match any of the pattern") 
+}

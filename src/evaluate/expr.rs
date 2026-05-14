@@ -375,14 +375,11 @@ impl Evaluator {
 
             ExprKind::Match(subject_expr, arms) => {
                 let value = self.eval_expr(subject_expr)?;
-                eprintln!("[match] subject value: {:?}", value);
 
                 let mut matched_branch = None;
                 let mut match_scope = Scope::new(ScopeKind::Block);
 
                 for arm in arms {
-                    eprintln!("[match] trying arm: pattern={:?} is_var={}", arm.pattern, arm.is_var);
-
                     // "matching" logic
                     let is_match = match arm.pattern.as_str() {
                         "_" => true, // Wildcard matches everything

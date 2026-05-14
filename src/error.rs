@@ -172,6 +172,7 @@ fn rule_to_human(rule: Rule) -> &'static str {
         // === Match ===
         Rule::match_arm => "a match arm (pattern => body)",
         Rule::match_pattern => "a match pattern (literal, identifier, or '_')",
+        Rule::match_underscore => "a match arm underscore ('_') wildcard",
 
         // === Functions ===
         Rule::fn_def => "a function definition ('fn name(...) { ... }')",

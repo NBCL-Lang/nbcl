@@ -264,11 +264,12 @@ match_arm = {
 }
 
 match_pattern = {
-    "_"           // wildcard
+    match_underscore // wildcard
   | literal
   | snake_ident
 }
 
+match_underscore = { "_" }
 
 // === Function definitions ===
 
