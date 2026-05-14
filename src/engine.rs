@@ -27,7 +27,7 @@ pub struct NbclEngine {
 }
 
 impl NbclEngine {
-    /// Create a ew Nbcl Engine
+    /// Create a new Nbcl Engine
     pub fn new() -> Self {
         let mut registry = Registry::default();
         crate::builtin::functions::register_builtin_functions(&mut registry);
@@ -86,7 +86,7 @@ impl NbclEngine {
     }
 
     /// Evaluate a source AST
-    pub fn evaluate(&self, file: File) -> Result<ResolvedTree> {
+    pub fn evaluate_ast(&self, file: File) -> Result<ResolvedTree> {
         let mut evaluator = Evaluator::new(
             self.registry.clone(),
             self.module_resolver.clone(),
@@ -96,9 +96,9 @@ impl NbclEngine {
     }
 
     /// Parse and evaluate a source string
-    pub fn parse_eval(&self, source: &str)  -> Result<ResolvedTree> {
+    pub fn evaluate(&self, source: &str)  -> Result<ResolvedTree> {
         let ast = self.parse_str(source)?;
-        self.evaluate(ast)
+        self.evaluate_ast(ast)
     }
 
     // === Registration API's ===

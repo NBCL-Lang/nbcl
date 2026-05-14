@@ -23,16 +23,9 @@
 //!     "#;
 //!
 //!     let engine = NbclEngine::new();
-//!     match engine.parse_str(code) {
-//!         Ok(ast) => {
-//!             match engine.evaluate(ast) {
-//!                 Ok(resolved) => {
-//!                     println!("Resolved configuration: {:#?}", resolved);
-//!                 }
-//!                 Err(e) => println!("Evaluation error: {}", e)
-//!             }
-//!         }
-//!         Err(e) => println!("Parse Error: {}", e)
+//!     match engine.evaluate(code) {
+//!         Ok(cfg) => println!("Resolved config: {:#?}", cfg),
+//!         Err(e) => println!("Error: {}", e)
 //!     }
 //! }
 //! ```

@@ -14,7 +14,7 @@ fn test_native_fn_registration() {
     });
 
     let file = engine.parse_str("increment() increment()").unwrap();
-    engine.evaluate(file).unwrap();
+    engine.evaluate_ast(file).unwrap();
 
     assert_eq!(*call_count.lock().unwrap(), 2);
 }
@@ -47,7 +47,7 @@ fn test_complex_logic_and_scoping() {
     "#;
 
     let file = engine.parse_str(code).unwrap();
-    let resolved = engine.evaluate(file).unwrap();
+    let resolved = engine.evaluate_ast(file).unwrap();
 
     let node = &resolved.root_nodes[0];
     assert_eq!(node.props.get("cpu").unwrap(), &Value::Int(8));
