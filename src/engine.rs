@@ -95,6 +95,12 @@ impl NbclEngine {
         evaluator.run(file)
     }
 
+    /// Parse and evaluate a source string
+    pub fn parse_eval(&self, source: &str)  -> Result<ResolvedTree> {
+        let ast = self.parse_str(source)?;
+        self.evaluate(ast)
+    }
+
     // === Registration API's ===
 
     /// Registers a custom node into the engine.
