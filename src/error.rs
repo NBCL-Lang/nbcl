@@ -105,7 +105,7 @@ fn rule_to_human(rule: Rule) -> &'static str {
         Rule::call_args => "function call arguments '(...)'",
 
         // === Identifiers ===
-        Rule::snake_ident => "an identifier (snake_case)",
+        Rule::snake_ident => "an identifier (snake_case or SNAKE_CASE)",
         Rule::pascal_ident => "a type or component name (PascalCase)",
         Rule::prop_key => "a property key",
         Rule::keyword => "a keyword",

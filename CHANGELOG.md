@@ -21,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ### Changed
 
 - Handling of to support calling `to_string(Any)` to be called as `Any.to_string()`.
+- snake_ident to support snake cases in ALL_CAPS.
 
 ### Fixed
 

@@ -7,8 +7,8 @@ use std::time::{Instant, SystemTime, UNIX_EPOCH};
 pub(crate) fn register_builtin_functions(registry: &mut Registry) {
     // === Math Library ===
     let math = LibraryItem::define("math")
-        .with_global("pi", Value::Float(std::f64::consts::PI))
-        .with_global("e", Value::Float(std::f64::consts::E))
+        .with_global("PI", Value::Float(std::f64::consts::PI))
+        .with_global("E", Value::Float(std::f64::consts::E))
         .with_fn("abs", vec![Type::Int], Type::Int, |args| {
             Ok(Value::Int(args[0].as_int().unwrap().abs()))
         })

@@ -47,8 +47,18 @@ keyword = _{
 // snake_ident must not be a reserved keyword
 // The !keyword prevents "local" from parsing as an ident even though
 // it matches the character pattern.
-snake_ident  = @{ !(keyword ~ !ASCII_ALPHANUMERIC) ~ ASCII_ALPHA_LOWER ~ (ASCII_ALPHANUMERIC | "_")* }
-pascal_ident = @{ ASCII_ALPHA_UPPER ~ ASCII_ALPHANUMERIC* }
+snake_ident = @{
+    !(keyword ~ !ASCII_ALPHANUMERIC)
+    ~ (
+        ASCII_ALPHA_LOWER ~ (ASCII_ALPHANUMERIC | "_")*
+      | ASCII_ALPHA_UPPER ~ (ASCII_ALPHA_UPPER | ASCII_DIGIT | "_")+
+    )
+    ~ !(ASCII_ALPHANUMERIC | "_")
+}
+pascal_ident = @{
+    ASCII_ALPHA_UPPER
+    ~ ASCII_ALPHA_LOWER ~ (ASCII_ALPHANUMERIC | "_")*
+}
 
 // A prop key is always snake_case
 prop_key = { snake_ident }
