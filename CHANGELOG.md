@@ -18,6 +18,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - `no-lib-imports` feature to disable library imports.
 - `metadata` feature to add spans in resolved tree and node.
 
+### Changed
+
+- Handling of to support calling `to_string(Any)` to be called as `Any.to_string()`.
+
 ### Fixed
 
 - Not being able to explicitly return nodes in functions.

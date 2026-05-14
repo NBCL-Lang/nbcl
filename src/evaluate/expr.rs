@@ -149,18 +149,17 @@ impl Evaluator {
                     });
                 }
 
+                let mut args = Vec::new();
+                for e in args_exprs {
+                    args.push(self.eval_expr(e)?);
+                }
+
                 let func_name = match &callee.kind {
                     ExprKind::Variable(name) => name,
                     ExprKind::Field(source, field, _) => {
-                        if let ExprKind::Variable(ref alias) = source.kind {
-                            &format!("{}.{}", alias, field)
-                        } else {
-                            return Err(NbclError::Runtime {
-                                message: "complex paths in calls are not supported yet".into(),
-                                hint: Some("Try assigning the object to a local variable first, e.g. 'local f = obj.func; f()'".to_string()),
-                                span: Some(callee.span.clone()),
-                            });
-                        }
+                        let receiver = self.eval_expr(source)?;
+                        args.insert(0, receiver);
+                        field
                     }
                     _ => {
                         return Err(NbclError::Runtime {
@@ -170,11 +169,6 @@ impl Evaluator {
                         });
                     }
                 };
-
-                let mut args = Vec::new();
-                for e in args_exprs {
-                    args.push(self.eval_expr(e)?);
-                }
 
                 // Native functions built into it
                 if let Some(native_schema) = self.registry.native_functions.get(func_name) {
