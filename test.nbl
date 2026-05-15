@@ -1,1 +1,3 @@
-print("'Hi' len: " + "Hi".len().to_string())
+local sum = { test = |a, b| a + b }
+
+print(sum.test(2, 3))

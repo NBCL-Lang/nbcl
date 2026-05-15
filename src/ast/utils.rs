@@ -25,6 +25,8 @@ pub enum Value {
     Map(Vec<(String, Value)>),
     /// Regular Nodes
     Nodes(Vec<ResolvedNode>),
+    /// Lambda functions
+    Lambda(String),
     /// Null (no data)
     Null,
 }
@@ -59,6 +61,7 @@ impl Serialize for Value {
                 }
                 seq.end()
             }
+            Value::Lambda(v) => s.serialize_str(v),
         }
     }
 }
@@ -82,6 +85,7 @@ impl fmt::Display for Value {
                 write!(f, "{{{}}}", parts.join(", "))
             }
             Value::Nodes(_) => write!(f, "<nodes>"),
+            Value::Lambda(v) => write!(f, "{v}"),
         }
     }
 }
@@ -108,6 +112,7 @@ impl Value {
             Value::Range(_, _) => "Range",
             Value::Map(_) => "Map",
             Value::Nodes(_) => "Nodes",
+            Value::Lambda(_) => "Lambda",
             Value::Null => "Null",
         }
     }

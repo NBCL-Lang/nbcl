@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- Lambda support.
 - Augmented assignments.
 - Maximum recursion depth to avoid stack overflow.
 - Better variable handling with FxHashMap for performance.

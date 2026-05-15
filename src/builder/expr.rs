@@ -1,6 +1,7 @@
 use super::{unquote, node};
 use crate::ast::source::*;
 use crate::error::{NbclError, Result, Span};
+use std::sync::atomic::{AtomicU64, Ordering};
 use crate::parser::Rule;
 use pest::iterators::Pair;
 
@@ -404,18 +405,25 @@ fn build_match_arm(pair: Pair<Rule>) -> Result<MatchArm> {
     let body = match body_pair.as_rule() {
         Rule::block_body => {
             let block = build_block(body_pair)?;
-            LambdaBody::Block(block.stmts, block.terminator)
+            MatchBody::Block(block.stmts, block.terminator)
         }
         _ => {
             let expr = build_expr(body_pair)?;
-            LambdaBody::Expr(expr)
+            MatchBody::Expr(expr)
         }
     };
 
     Ok(MatchArm { pattern, body, is_var })
 }
 
+fn generate_anon_fn_name() -> String {
+    static COUNTER: AtomicU64 = AtomicU64::new(0);
+    let id = COUNTER.fetch_add(1, Ordering::Relaxed);
+    format!("<lambda:{}>", id)
+}
+
 pub fn build_lambda(pair: Pair<Rule>) -> Result<ExprKind> {
+    let span = Span::from_pair(&pair);
     let mut inner = pair.clone().into_inner();
     let mut params = Vec::new();
 
@@ -424,39 +432,54 @@ pub fn build_lambda(pair: Pair<Rule>) -> Result<ExprKind> {
             let mut param_inner = inner.next().unwrap().into_inner();
             let name = param_inner.next().unwrap().as_str().to_string();
             let type_hint = param_inner.next().map(|t| t.as_str().to_string());
-            params.push((name, type_hint));
+            params.push(FnParam { name, type_hint });
         } else {
-            // Found the lambda_body
             break;
         }
     }
 
-    // Parse lambda body
     let body_pair = inner.next().ok_or_else(|| NbclError::Ast {
         message: "Lambda must have a body".into(),
         hint: None,
-        span: Some(Span::from_pair(&pair)),
+        span: Some(span.clone()),
     })?;
 
-    let body = match body_pair.as_rule() {
-        Rule::lambda_body => {
-            let actual_body = body_pair.into_inner().next().unwrap();
-            match actual_body.as_rule() {
-                Rule::block_body => {
-                    let block = build_block(actual_body)?;
-                    LambdaBody::Block(block.stmts, block.terminator)
-                }
-                _ => LambdaBody::Expr(build_expr(actual_body)?),
-            }
-        }
-        Rule::block_body => {
-            let block = build_block(body_pair)?;
-            LambdaBody::Block(block.stmts, block.terminator)
-        }
-        _ => LambdaBody::Expr(build_expr(body_pair)?),
+    let mut body_items = Vec::new();
+
+    let actual_body = if body_pair.as_rule() == Rule::lambda_body {
+        body_pair.into_inner().next().unwrap()
+    } else {
+        body_pair
     };
 
-    Ok(ExprKind::Lambda(params, Box::new(body)))
+    match actual_body.as_rule() {
+        Rule::block_body => {
+            let block = build_block(actual_body)?;
+            
+            // Push all regular statements into the function body
+            for stmt in block.stmts {
+                body_items.push(FnItem::Stmt(stmt));
+            }
+            
+            if let Some(terminator_expr) = block.terminator {
+                body_items.push(FnItem::Stmt(Stmt::Expr(terminator_expr)));
+            }
+        }
+        _ => {
+            // Single expression lambda: |x| x + 1
+            let expr = build_expr(actual_body)?;
+            body_items.push(FnItem::Stmt(Stmt::Expr(expr)));
+        }
+    }
+
+    let fn_def = FnDef {
+        name: generate_anon_fn_name(),
+        params,
+        body: body_items,
+        span,
+    };
+
+    Ok(ExprKind::Lambda(fn_def))
 }
 
 pub fn build_block(pair: Pair<Rule>) -> Result<Block> {

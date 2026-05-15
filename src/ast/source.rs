@@ -145,17 +145,10 @@ pub enum ExprKind {
     Field(Box<Expr>, String, bool),
     Index(Box<Expr>, Box<Expr>),
     Call(Box<Expr>, Vec<Expr>),
-    Lambda(Vec<(String, Option<String>)>, Box<LambdaBody>),
+    Lambda(FnDef),
     If(Box<IfExpr>),
     Match(Box<Expr>, Vec<MatchArm>),
     Range(Box<Expr>, Box<Expr>, bool), // bool is inclusive
-}
-
-/// Lambda functions
-#[derive(Debug, Clone)]
-pub enum LambdaBody {
-    Expr(Expr),
-    Block(Vec<Stmt>, Option<Expr>),
 }
 
 /// If/else expressions
@@ -171,8 +164,14 @@ pub struct IfExpr {
 #[derive(Debug, Clone)]
 pub struct MatchArm {
     pub pattern: String,
-    pub body: LambdaBody,
+    pub body: MatchBody,
     pub is_var: bool,
+}
+
+#[derive(Debug, Clone)]
+pub enum MatchBody {
+    Expr(Expr),
+    Block(Vec<Stmt>, Option<Expr>),
 }
 
 #[derive(Debug, Clone)]

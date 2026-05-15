@@ -154,72 +154,115 @@ impl Evaluator {
                     args.push(self.eval_expr(e)?);
                 }
 
-                let func_name = match &callee.kind {
-                    ExprKind::Variable(name) => name,
-                    ExprKind::Field(source, field, _) => {
+                let (func_name, is_lambda) =match &callee.kind {
+                    ExprKind::Variable(name) => {
+                        if let Some(Value::Lambda(internal_name)) = self.lookup_var(name) {
+                            (internal_name, true)
+                        } else {
+                            (name.clone(), false)
+                        }
+                    },
+                    ExprKind::Field(source, field, is_safe) => {
                         let receiver = self.eval_expr(source)?;
-                        args.insert(0, receiver);
-                        field
+
+                        if let Value::Map(ref pairs) = receiver {
+                            let found = pairs.iter().find(|(k, _)| k == field).map(|(_, v)| v.clone());
+                            
+                            match found {
+                                Some(Value::Lambda(internal_name)) => {
+                                    (internal_name, true)
+                                }
+                                Some(other_val) => {
+                                    return Err(NbclError::Runtime {
+                                        message: format!("field '{}' is not a callable function, got: {:?}", field, other_val),
+                                        hint: None,
+                                        span: Some(callee.span.clone()),
+                                    });
+                                }
+                                None => {
+                                    if *is_safe {
+                                        self.call_stack_depth -= 1;
+                                        return Ok(Value::Null);
+                                    }
+                                    return Err(NbclError::Runtime {
+                                        message: format!("map has no field: {}", field),
+                                        hint: None,
+                                        span: Some(callee.span.clone()),
+                                    });
+                                }
+                            }
+                        } else {
+                            // Its a normal method
+                            args.insert(0, receiver);
+                            (field.clone(), false)
+                        }
                     }
                     _ => {
-                        return Err(NbclError::Runtime {
-                            message: "only variables can be called as functions currently".into(),
-                            hint: None,
-                            span: Some(callee.span.clone()),
-                        });
-                    }
-                };
-
-                // Native functions built into it
-                if let Some(native_schema) = self.registry.native_functions.get(func_name) {
-                    if args.len() != native_schema.params.len() {
-                        let expected_params: Vec<String> =
-                            native_schema.params.iter().map(|p| format!("{:?}", p)).collect();
-
-                        return Err(NbclError::Runtime {
-                            message: format!(
-                                "native function '{}' expected {} args, got {}",
-                                func_name,
-                                native_schema.params.len(),
-                                args.len()
-                            ),
-                            hint: Some(format!(
-                                "Usage: {}({})",
-                                func_name,
-                                expected_params.join(", ")
-                            )),
-                            span: Some(expr.span.clone()),
-                        });
-                    }
-
-                    for (i, (arg, expected)) in args.iter().zip(&native_schema.params).enumerate() {
-                        if !expected.matches_value(arg) {
-                            let hint = match (arg, expected) {
-                                (Value::Str(s), _) if s.parse::<i64>().is_ok() =>
-                                    Some("This value is a string, but the function needs a number. Try removing the quotes.".to_string()),
-                                _ => Some(format!("Check the {} argument. It must be a {:?}.", crate::utils::ordinal(i + 1), expected)),
-                            };
-
+                        if let Value::Lambda(internal_name) = self.eval_expr(callee)? {
+                            (internal_name, true)
+                        } else {
                             return Err(NbclError::Runtime {
-                                message: format!(
-                                    "native function '{}' arg {} expected {:?}, got {}",
-                                    func_name,
-                                    i,
-                                    expected,
-                                    arg.type_name()
-                                ),
-                                hint,
-                                span: Some(expr.span.clone()),
+                                message: "callee expression is not callable".into(),
+                                hint: None,
+                                span: Some(callee.span.clone()),
                             });
                         }
                     }
+                };
 
-                    self.call_stack_depth -= 1;
-                    return (native_schema.body)(args);
+                // Native function checking
+                if !is_lambda {
+                    // Native functions built into it
+                    if let Some(native_schema) = self.registry.native_functions.get(&func_name) {
+                        if args.len() != native_schema.params.len() {
+                            let expected_params: Vec<String> =
+                                native_schema.params.iter().map(|p| format!("{:?}", p)).collect();
+
+                            return Err(NbclError::Runtime {
+                                message: format!(
+                                    "native function '{}' expected {} args, got {}",
+                                    func_name,
+                                    native_schema.params.len(),
+                                    args.len()
+                                ),
+                                hint: Some(format!(
+                                    "Usage: {}({})",
+                                    func_name,
+                                    expected_params.join(", ")
+                                )),
+                                span: Some(expr.span.clone()),
+                            });
+                        }
+
+                        for (i, (arg, expected)) in args.iter().zip(&native_schema.params).enumerate() {
+                            if !expected.matches_value(arg) {
+                                let hint = match (arg, expected) {
+                                    (Value::Str(s), _) if s.parse::<i64>().is_ok() =>
+                                        Some("This value is a string, but the function needs a number. Try removing the quotes.".to_string()),
+                                    _ => Some(format!("Check the {} argument. It must be a {:?}.", crate::utils::ordinal(i + 1), expected)),
+                                };
+
+                                return Err(NbclError::Runtime {
+                                    message: format!(
+                                        "native function '{}' arg {} expected {:?}, got {}",
+                                        func_name,
+                                        i,
+                                        expected,
+                                        arg.type_name()
+                                    ),
+                                    hint,
+                                    span: Some(expr.span.clone()),
+                                });
+                            }
+                        }
+
+                        self.call_stack_depth -= 1;
+                        return (native_schema.body)(args);
+                    }
                 }
 
                 let func_def =
-                    self.registry.functions.get(func_name).map(Rc::clone).ok_or_else(|| {
+                    self.registry.functions.get(&func_name).map(Rc::clone).ok_or_else(|| {
                         // Collect all possible function names for the suggestion
                         let all_funcs = self
                             .registry
@@ -227,7 +270,7 @@ impl Evaluator {
                             .keys()
                             .chain(self.registry.functions.keys());
 
-                        let suggestion = crate::utils::find_best_match(func_name, all_funcs);
+                        let suggestion = crate::utils::find_best_match(&func_name, all_funcs);
                         let hint = suggestion.map(|s| format!("Did you mean \"{}\"?", s));
 
                         NbclError::Runtime {
@@ -327,7 +370,10 @@ impl Evaluator {
                 }
             }
 
-            ExprKind::Lambda(_, _) => todo!(),
+            ExprKind::Lambda(fn_def) => {
+                self.registry.register_function(fn_def.clone());
+                Ok(Value::Lambda(fn_def.name.clone()))
+            },
 
             ExprKind::If(if_expr) => {
                 let mut target_branch = None;
@@ -400,7 +446,7 @@ impl Evaluator {
                 // Execute the branch body
                 let result = if let Some(body) = matched_branch {
                     match body {
-                        LambdaBody::Block(stmts, final_expr) => {
+                        MatchBody::Block(stmts, final_expr) => {
                             for stmt in stmts {
                                 self.execute_stmt(stmt)?;
                             }
@@ -413,7 +459,7 @@ impl Evaluator {
 
                             Ok(result)
                         }
-                        LambdaBody::Expr(e) => self.eval_expr(e),
+                        MatchBody::Expr(e) => self.eval_expr(e),
                     }
                 } else {
                     Ok(Value::Null)
