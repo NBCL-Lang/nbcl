@@ -5,7 +5,7 @@ pub mod expr;
 pub mod node;
 
 use crate::ast::source::*;
-use crate::error::{NbclError, Result, Span};
+use crate::error::{Result, Span};
 use crate::parser::Rule;
 use pest::iterators::Pair;
 
@@ -34,12 +34,10 @@ pub(crate) fn build_file(pair: Pair<Rule>) -> Result<File> {
 
                         let path = unquote(path_pair.as_str());
 
-                        let alias_pair = inner.next().ok_or_else(|| NbclError::Ast {
-                            message: "import statement missing 'as' alias".into(),
-                            hint: Some("All imports must follow this structure: 'import \"..\" as example'.".to_string()),
-                            span: Some(Span::from_pair(&path_pair)),
-                        })?;
+                        // skip 'as' keyword
+                        let _  = inner.next().unwrap();
 
+                        let alias_pair = inner.next().unwrap();
                         let alias = alias_pair.as_str().to_string();
 
                         TopLevelItem::Import(ImportDef {

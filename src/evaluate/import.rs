@@ -62,14 +62,19 @@ impl Evaluator {
                 })?;
 
                 let ast = crate::builder::build_file(file_pair)?;
-                let mut global_var = Vec::new();
+                let mut import_map = Vec::new();
 
                 for item in ast.items.clone() {
                     match item {
                         TopLevelItem::Import(imp) => self.handle_import(imp.clone(), root_nodes)?,
                         TopLevelItem::FnDef(mut f) => {
-                            f.name = format!("{}.{}", alias, f.name);
+                            let new_internal_name = 
+                                crate::builder::expr::generate_anon_fn_name();
+                            let old_name = f.name;
+                            f.name = new_internal_name.clone();
+
                             self.registry.register_function(f);
+                            import_map.push((old_name, Value::Lambda(new_internal_name)))
                         }
                         TopLevelItem::ComponentDef(mut c) => {
                             c.name = format!("{}.{}", alias, c.name);
@@ -78,14 +83,14 @@ impl Evaluator {
                         TopLevelItem::Stmt(Stmt::Global(name, _, expr)) => {
                             // We evaluate globals now so they are available in Loop 2
                             let val = self.eval_expr(&expr)?;
-                            global_var.push((name.clone(), val));
+                            import_map.push((name.clone(), val));
                         }
                         _ => {}
                     }
                 }
 
-                if !global_var.is_empty() {
-                    self.registry.globals.insert(alias, Value::Map(global_var));
+                if !import_map.is_empty() {
+                    self.registry.globals.insert(alias, Value::Map(import_map));
                 }
 
                 for item in ast.items {
@@ -165,19 +170,23 @@ impl Evaluator {
                     }
                 };
 
-                for (fn_name, schema) in item.native_functions.clone() {
-                    let new_name = format!("{}.{}", &lib_item, fn_name);
-                    self.registry.native_functions.insert(new_name, schema);
-                }
-
-                let mut global_var = Vec::new();
+                let mut import_map = Vec::new();
 
                 for (name, var) in item.globals.clone() {
-                    global_var.push((name, var))
+                    import_map.push((name, var))
                 }
 
-                if !global_var.is_empty() {
-                    self.registry.globals.insert(lib_item, Value::Map(global_var));
+                for (fn_name, mut schema) in item.native_functions.clone() {
+                    let new_internal_name = 
+                        crate::builder::expr::generate_anon_fn_name();
+                    schema.name = new_internal_name.clone();
+
+                    self.registry.native_functions.insert(new_internal_name.clone(), schema);
+                    import_map.push((fn_name, Value::Lambda(new_internal_name)));
+                }
+
+                if !import_map.is_empty() {
+                    self.registry.globals.insert(lib_item, Value::Map(import_map));
                 }
 
                 Ok(())

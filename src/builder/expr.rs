@@ -416,13 +416,13 @@ fn build_match_arm(pair: Pair<Rule>) -> Result<MatchArm> {
     Ok(MatchArm { pattern, body, is_var })
 }
 
-fn generate_anon_fn_name() -> String {
+pub fn generate_anon_fn_name() -> String {
     static COUNTER: AtomicU64 = AtomicU64::new(0);
     let id = COUNTER.fetch_add(1, Ordering::Relaxed);
     format!("<lambda:{}>", id)
 }
 
-pub fn build_lambda(pair: Pair<Rule>) -> Result<ExprKind> {
+fn build_lambda(pair: Pair<Rule>) -> Result<ExprKind> {
     let span = Span::from_pair(&pair);
     let mut inner = pair.clone().into_inner();
     let mut params = Vec::new();
