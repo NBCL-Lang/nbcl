@@ -40,7 +40,7 @@ impl Evaluator {
                 let val = match maybe_rt {
                     Some(ReturnType::Node(n)) => {
                         let resolved_nodes = self.resolve_node(n.clone())?;
-                        Value::Nodes(resolved_nodes)
+                        Value::Node(resolved_nodes)
                     },
                     Some(ReturnType::Expr(e)) => self.eval_expr(&e)?,
                     None => Value::Null,

@@ -187,7 +187,7 @@ block_body = { "{" ~ stmt* ~ expr? ~ "}" }
 // == Type hints  (for documentation / future use) ==
 
 type_hint = {
-    "String" | "Int" | "Float" | "Bool" | "List" | "Map" | "Any"
+    "String" | "Int" | "Float" | "Bool" | "List" | "Map" | "Node" | "Lambda" | "Any"
 }
 
 

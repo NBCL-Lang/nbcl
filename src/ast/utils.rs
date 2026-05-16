@@ -24,7 +24,7 @@ pub enum Value {
     /// Map { key: value  }
     Map(Vec<(String, Value)>),
     /// Regular Nodes
-    Nodes(Vec<ResolvedNode>),
+    Node(Vec<ResolvedNode>),
     /// Lambda functions
     Lambda(String),
     /// Null (no data)
@@ -54,7 +54,7 @@ impl Serialize for Value {
                 }
                 map.end()
             }
-            Value::Nodes(v) => {
+            Value::Node(v) => {
                 let mut seq = s.serialize_seq(Some(v.len()))?;
                 for item in v {
                     seq.serialize_element(item)?;
@@ -84,7 +84,7 @@ impl fmt::Display for Value {
                     entries.iter().map(|(k, v)| format!("{} = {}", k, v)).collect();
                 write!(f, "{{{}}}", parts.join(", "))
             }
-            Value::Nodes(_) => write!(f, "<nodes>"),
+            Value::Node(_) => write!(f, "<nodes>"),
             Value::Lambda(v) => write!(f, "{v}"),
         }
     }
@@ -111,7 +111,7 @@ impl Value {
             Value::List(_) => "List",
             Value::Range(_, _) => "Range",
             Value::Map(_) => "Map",
-            Value::Nodes(_) => "Nodes",
+            Value::Node(_) => "Nodes",
             Value::Lambda(_) => "Lambda",
             Value::Null => "Null",
         }
@@ -141,7 +141,8 @@ pub enum Type {
     Str,
     List,
     Map,
-    Nodes,
+    Node,
+    Lambda,
     /// Additional constant that
     /// symbolizes all data types.
     Any,
@@ -158,7 +159,8 @@ impl Type {
             "String" => Some(Type::Str),
             "List" => Some(Type::List),
             "Map" => Some(Type::Map),
-            "Nodes" => Some(Type::Nodes),
+            "Node" => Some(Type::Node),
+            "Lambda" => Some(Type::Lambda),
             "Null" => Some(Type::Null),
             _ => None,
         }
@@ -177,7 +179,8 @@ impl Type {
             (Type::Str, Value::Str(_)) => true,
             (Type::List, Value::List(_)) => true,
             (Type::Map, Value::Map(_)) => true,
-            (Type::Nodes, Value::Nodes(_)) => true,
+            (Type::Node, Value::Node(_)) => true,
+            (Type::Lambda, Value::Lambda(_)) => true,
             (Type::Null, Value::Null) => true,
             _ => false,
         }

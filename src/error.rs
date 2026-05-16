@@ -148,7 +148,7 @@ fn rule_to_human(rule: Rule) -> &'static str {
         Rule::block_body => "a block '{...}'",
 
         // === Type Hints ===
-        Rule::type_hint => "a type hint (String, Int, Float, Bool, List, Map, Any)",
+        Rule::type_hint => "a type hint (String, Int, Float, Bool, List, Map, Node, Lambda, Any)",
 
         // === Statements ===
         Rule::stmt => "a statement",

@@ -335,7 +335,7 @@ impl Evaluator {
                         FnItem::Stmt(s) => {
                             let val = self.execute_stmt(s)?;
                             if i == body_len - 1 {
-                                if let Value::Nodes(new_nodes) = val {
+                                if let Value::Node(new_nodes) = val {
                                     nodes.extend(new_nodes);
                                 } else {
                                     implicit_return = Some(val);
@@ -362,7 +362,7 @@ impl Evaluator {
                     FlowControl::Return(val) => return Ok(val),
                     FlowControl::None => {
                         if !nodes.is_empty() {
-                            return Ok(Value::Nodes(nodes))
+                            return Ok(Value::Node(nodes))
                         } else {
                             return Ok(Value::Null)
                         }

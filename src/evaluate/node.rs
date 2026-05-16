@@ -226,7 +226,7 @@ impl Evaluator {
         // Generate component.* namspace
         let mut meta_map = Vec::new();
         meta_map.push(("id".to_string(), resolved_id_val));
-        meta_map.push(("children".to_string(), Value::Nodes(caller_children)));
+        meta_map.push(("children".to_string(), Value::Node(caller_children)));
         component_scope.variables.insert("self".to_string(), Value::Map(meta_map));
 
         match &def.interface {
@@ -341,7 +341,7 @@ impl Evaluator {
                 NodeItem::Stmt(stmt) => {
                     let result = self.execute_stmt(&stmt)?;
 
-                    if let Value::Nodes(returned_nodes) = result {
+                    if let Value::Node(returned_nodes) = result {
                         children.extend(returned_nodes);
                     }
                 }
