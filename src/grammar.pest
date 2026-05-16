@@ -40,12 +40,12 @@ import_lib_stmt = { "import" ~ snake_ident ~ dot ~ snake_ident }
 
 // Reserved keywords cannot be used as identifiers
 keyword = _{
-    "any" | "set" | "local" | "global" | "fn" | "for" | "in" | "while" | "if" 
+    "any" | "set" | "let" | "const" | "fn" | "for" | "in" | "while" | "if" 
   | "else" | "match" | "return" | "import" | "true" | "false" | "null"
 }
 
 // snake_ident must not be a reserved keyword
-// The !keyword prevents "local" from parsing as an ident even though
+// The !keyword prevents "let" from parsing as an ident even though
 // it matches the character pattern.
 snake_ident = @{
     !(keyword ~ !ASCII_ALPHANUMERIC)
@@ -187,8 +187,8 @@ block_body = { "{" ~ stmt* ~ expr? ~ "}" }
 
 stmt = {
     assign_stmt
-  | local_stmt
-  | global_stmt
+  | let_stmt
+  | const_stmt
   | for_stmt
   | while_stmt
   | return_stmt
@@ -198,14 +198,14 @@ stmt = {
 // Statements allowed inside a Node Block
 node_stmt = {
     assign_stmt
-  | local_stmt
+  | let_stmt
   | for_stmt
   | while_stmt
   | if_expr
   | expr_stmt
 }
 
-// Assign, local, and global statements
+// Assign, let, and consts statements
 assignable_lhs = {
     primary_expr
     ~ (
@@ -223,8 +223,8 @@ div_equal  = { "/=" }
 assignment_op = { plus_equal | min_equal | mult_equal | div_equal | equal }
 
 assign_stmt = { "set" ~ assignable_lhs ~ assignment_op ~ expr }
-local_stmt  = { "local" ~ snake_ident ~ "=" ~ expr }
-global_stmt = { "global" ~ snake_ident ~ "=" ~ expr }
+let_stmt  = { "let" ~ snake_ident ~ "=" ~ expr }
+const_stmt = { "const" ~ snake_ident ~ "=" ~ expr }
 
 // for x in range/list { stmts }
 in_kw = { "in" }
@@ -342,7 +342,7 @@ node_block = { "{" ~ node_item* ~ "}" }
 
 node_item = {
     node_prop          // key = value
-  | node_stmt          // local, for, while, etc.
+  | node_stmt          // let, for, while, etc.
   | node_invocation    // child node
 }
 

@@ -1,4 +1,4 @@
-use super::{Evaluator, FlowControl, Scope, ScopeKind};
+use super::{Evaluator, FlowControl, Scope, VariableBinding, ScopeKind};
 use crate::{
     ast::utils::Value,
     ast::source::*,
@@ -48,27 +48,24 @@ impl Evaluator {
                 self.flow = FlowControl::Return(val.clone());
                 val
             }
-            Stmt::Global(name, expr) => {
+            Stmt::Const(name, expr) => {
                 let val = self.eval_expr(&expr)?;
-
-                // A 'global' always goes into the very first scope (index 0),
-                // regardless of how many components or blocks deep we are.
-                if let Some(global_scope) = self.scopes.first_mut() {
-                    global_scope.variables.insert(name.to_string(), val);
-                } else {
-                    // Fallback: if somehow scopes is empty (shouldn't happen),
-                    // create a new one.
-                    let mut map = Scope::new(ScopeKind::TopLevel);
-                    map.variables.insert(name.to_string(), val);
-                    self.scopes.push(map);
+                if let Some(current_scope) = self.scopes.last_mut() {
+                    current_scope.variables.insert(name.to_string(), VariableBinding {
+                        value: val,
+                        is_const: true,
+                    });
                 }
 
                 Value::Null
             }
-            Stmt::Local(name, expr) => {
+            Stmt::Let(name, expr) => {
                 let val = self.eval_expr(&expr)?;
                 if let Some(current_scope) = self.scopes.last_mut() {
-                    current_scope.variables.insert(name.to_string(), val);
+                    current_scope.variables.insert(name.to_string(), VariableBinding {
+                        value: val,
+                        is_const: false
+                    });
                 }
 
                 Value::Null
@@ -80,14 +77,22 @@ impl Evaluator {
                     ExprKind::Variable(name) => {
                         let mut found = false;
                         for scope in self.scopes.iter_mut().rev() {
-                            if let Some(val_ref) = scope.variables.get_mut(name) {
+                            if let Some(binding_ref) = scope.variables.get_mut(name) {
+                                if binding_ref.is_const {
+                                    return Err(NbclError::Runtime {
+                                        message: format!("cannot reassign to constant variable '{}'", name),
+                                        hint: Some("This variable was declared with 'const', or is an immutable loop/property binding.".into()),
+                                        span: Some(span.clone()),
+                                    });
+                                }
+
                                 let updated = Self::apply_assign_op(
-                                    val_ref.clone(),
+                                    binding_ref.value.clone(),
                                     &assign_op,
                                     new_val,
                                     Some(span),
                                 )?;
-                                *val_ref = updated;
+                                binding_ref.value = updated;
                                 found = true;
                                 break;
                             }
@@ -194,7 +199,10 @@ impl Evaluator {
                         // Create dummy patterns and then only modify
                         // the value in the loop to avoid allocations.
                         for pattern in patterns {
-                            loop_scope.variables.insert(pattern.clone(), Value::Null);
+                            loop_scope.variables.insert(pattern.clone(), VariableBinding {
+                                value: Value::Null,
+                                is_const: true,
+                            });
                         }
 
                         self.scopes.push(loop_scope);
@@ -209,18 +217,18 @@ impl Evaluator {
                                 if let Some(val) =
                                     self.scopes[scope_idx].variables.get_mut(&patterns[0])
                                 {
-                                    *val = Value::Int(i);
+                                    val.value = Value::Int(i);
                                 }
                             } else if patterns.len() == 2 {
                                 if let Some(val1) =
                                     self.scopes[scope_idx].variables.get_mut(&patterns[0])
                                 {
-                                    *val1 = Value::Int(i);
+                                    val1.value = Value::Int(i);
                                 }
                                 if let Some(val2) =
                                     self.scopes[scope_idx].variables.get_mut(&patterns[1])
                                 {
-                                    *val2 = Value::Int(i);
+                                    val2.value = Value::Int(i);
                                 }
                             }
 
@@ -245,12 +253,25 @@ impl Evaluator {
 
                             // Handle pattern matching (len 1 or len 2)
                             if patterns.len() == 1 {
-                                self.scopes[scope_idx].variables.insert(patterns[0].clone(), item);
+                                self.scopes[scope_idx].variables.insert(patterns[0].clone(), VariableBinding {
+                                    value: item,
+                                    is_const: true,
+                                });
                             } else if patterns.len() == 2 {
-                                self.scopes[scope_idx]
-                                    .variables
-                                    .insert(patterns[0].clone(), Value::Int(i as i64));
-                                self.scopes[scope_idx].variables.insert(patterns[1].clone(), item);
+                                self.scopes[scope_idx].variables.insert(
+                                    patterns[0].clone(),
+                                    VariableBinding {
+                                        value: Value::Int(i as i64),
+                                        is_const: true,
+                                    },
+                                );
+                                self.scopes[scope_idx].variables.insert(
+                                    patterns[1].clone(),
+                                    VariableBinding { 
+                                        value: item,
+                                        is_const: true,
+                                    },
+                                );
                             }
 
                             // Execute the block logic
@@ -320,8 +341,8 @@ impl Evaluator {
         match &lhs.kind {
             ExprKind::Variable(name) => {
                 for scope in self.scopes.iter_mut().rev() {
-                    if let Some(val_ref) = scope.variables.get_mut(name) {
-                        *val_ref = value;
+                    if let Some(binding_ref) = scope.variables.get_mut(name) {
+                        binding_ref.value = value;
                         return Ok(());
                     }
                 }

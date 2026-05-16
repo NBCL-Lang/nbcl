@@ -79,7 +79,7 @@ impl Evaluator {
                         TopLevelItem::ComponentDef(c) => {
                             self.registry.register_component(c);
                         }
-                        TopLevelItem::Stmt(Stmt::Global(name, expr)) => {
+                        TopLevelItem::Stmt(Stmt::Const(name, expr)) => {
                             // We evaluate globals now so they are available in Loop 2
                             let val = self.eval_expr(&expr)?;
                             import_map.push((name.clone(), val));

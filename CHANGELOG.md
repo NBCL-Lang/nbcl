@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [UNRELEASED]
 
+### Changed
+
+- Replaced `local` and `global` with `let` and `const`.
+
 ### Remove
 
 - Type hints.

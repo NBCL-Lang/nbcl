@@ -1,4 +1,4 @@
-use super::{Evaluator, FlowControl, Scope, ScopeKind};
+use super::{Evaluator, FlowControl, Scope, VariableBinding, ScopeKind};
 use crate::{
     ast::utils::Value,
     ast::source::*,
@@ -295,7 +295,10 @@ impl Evaluator {
 
                 let mut call_scope = Scope::new(ScopeKind::Function);
                 for (param, value) in func_def.params.iter().zip(args) {
-                    call_scope.variables.insert(param.clone(), value);
+                    call_scope.variables.insert(param.clone(), VariableBinding {
+                        value,
+                        is_const: false,
+                    });
                 }
 
                 self.scopes.push(call_scope);
@@ -414,7 +417,10 @@ impl Evaluator {
                     if is_match || arm.is_var {
                         matched_branch = Some(&arm.body);
                         if arm.is_var {
-                            match_scope.variables.insert(arm.pattern.clone(), value);
+                            match_scope.variables.insert(arm.pattern.clone(), VariableBinding{
+                                value,
+                                is_const: false,
+                            });
                         }
                         break;
                     }
@@ -477,7 +483,7 @@ impl Evaluator {
         // Search local scope stack (reversed for shadowing)
         for scope in self.scopes.iter().rev() {
             if let Some(val) = scope.variables.get(name) {
-                return Some(val.clone());
+                return Some(val.value.clone());
             }
         }
         // Search globals in Registry

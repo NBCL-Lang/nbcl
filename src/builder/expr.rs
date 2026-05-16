@@ -13,16 +13,16 @@ pub fn build_stmt(pair: Pair<Rule>) -> Result<Stmt> {
     let span = Span::from_pair(&inner);
 
     match inner.as_rule() {
-        Rule::local_stmt | Rule::global_stmt => {
+        Rule::let_stmt | Rule::const_stmt => {
             let mut ii = inner.clone().into_inner();
             let name = ii.next().unwrap().as_str().to_string();
             let next = ii.next().unwrap();
 
             let value = build_expr(next)?;
-            if inner.as_rule() == Rule::local_stmt {
-                Ok(Stmt::Local(name, value))
+            if inner.as_rule() == Rule::let_stmt {
+                Ok(Stmt::Let(name, value))
             } else {
-                Ok(Stmt::Global(name, value))
+                Ok(Stmt::Const(name, value))
             }
         }
         Rule::assign_stmt => {
