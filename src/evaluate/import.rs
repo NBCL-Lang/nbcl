@@ -77,7 +77,6 @@ impl Evaluator {
                             import_map.push((old_name, Value::Lambda(new_internal_name)))
                         }
                         TopLevelItem::ComponentDef(mut c) => {
-                            c.name = format!("{}.{}", alias, c.name);
                             self.registry.register_component(c);
                         }
                         TopLevelItem::Stmt(Stmt::Global(name, _, expr)) => {
