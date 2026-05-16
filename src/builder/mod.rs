@@ -102,8 +102,7 @@ fn build_fn_def(pair: Pair<Rule>) -> Result<FnDef> {
             Rule::fn_param => {
                 let mut p_inner = part.into_inner();
                 let p_name = p_inner.next().unwrap().as_str().to_string();
-                let p_type = p_inner.next().map(|t| t.as_str().to_string());
-                params.push(FnParam { name: p_name, type_hint: p_type });
+                params.push(p_name);
             }
             Rule::fn_body => {
                 for item in part.into_inner() {

@@ -147,9 +147,6 @@ fn rule_to_human(rule: Rule) -> &'static str {
         Rule::lambda_body => "a lambda body",
         Rule::block_body => "a block '{...}'",
 
-        // === Type Hints ===
-        Rule::type_hint => "a type hint (String, Int, Float, Bool, List, Map, Node, Lambda, Any)",
-
         // === Statements ===
         Rule::stmt => "a statement",
         Rule::node_stmt => "a statement",

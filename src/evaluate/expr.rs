@@ -282,41 +282,20 @@ impl Evaluator {
 
                 // Validate argument count
                 if args.len() != func_def.params.len() {
-                    let param_names: Vec<String> =
-                        func_def.params.iter().map(|p| p.name.clone()).collect();
-
                     return Err(NbclError::Runtime {
                         message: format!(
                             "expected {} arguments, got {}",
                             func_def.params.len(),
                             args.len()
                         ),
-                        hint: Some(format!("Signature: {}({})", func_name, param_names.join(", "))),
+                        hint: Some(format!("Signature: {}({})", func_name, func_def.params.join(", "))),
                         span: Some(expr.span.clone()),
                     });
                 }
 
                 let mut call_scope = Scope::new(ScopeKind::Function);
                 for (param, value) in func_def.params.iter().zip(args) {
-                    if let Some(expected_type) = &param.type_hint {
-                        let actual_type = value.type_name();
-
-                        if expected_type != actual_type && expected_type != "Any" {
-                            return Err(NbclError::Runtime {
-                                message: format!(
-                                    "type mismatch for parameter '{}' in function '{}'. Expected {}, got {}",
-                                    param.name, func_name, expected_type, actual_type
-                                ),
-                                hint: Some(format!(
-                                    "The parameter '{}' expects {}, but you passed {}. Double-check the order of your arguments.",
-                                    param.name, expected_type, actual_type
-                                )),
-                                span: Some(expr.span.clone()),
-                            });
-                        }
-                    }
-
-                    call_scope.variables.insert(param.name.clone(), value);
+                    call_scope.variables.insert(param.clone(), value);
                 }
 
                 self.scopes.push(call_scope);

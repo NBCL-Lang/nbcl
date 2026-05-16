@@ -60,17 +60,14 @@ fn build_interface(pair: Pair<Rule>) -> Result<ComponentInterface> {
 fn build_param_item(pair: Pair<Rule>) -> Result<Parameter> {
     let mut inner = pair.into_inner();
     let name = inner.next().unwrap().as_str().to_string();
-    let mut type_hint = None;
     let mut is_optional = false;
 
     for part in inner {
         match part.as_rule() {
-            Rule::type_hint => type_hint = Some(part.as_str().to_string()),
-            // If the grammar has "?" as a token, it will show up here
             _ if part.as_str() == "?" => is_optional = true,
             _ => {}
         }
     }
 
-    Ok(Parameter { name, type_hint, is_optional })
+    Ok(Parameter { name, is_optional })
 }

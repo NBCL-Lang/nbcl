@@ -16,21 +16,13 @@ pub fn build_stmt(pair: Pair<Rule>) -> Result<Stmt> {
         Rule::local_stmt | Rule::global_stmt => {
             let mut ii = inner.clone().into_inner();
             let name = ii.next().unwrap().as_str().to_string();
-            let mut next = ii.next().unwrap();
-
-            let type_hint = if next.as_rule() == Rule::type_hint {
-                let t = Some(next.as_str().to_string());
-                next = ii.next().unwrap();
-                t
-            } else {
-                None
-            };
+            let next = ii.next().unwrap();
 
             let value = build_expr(next)?;
             if inner.as_rule() == Rule::local_stmt {
-                Ok(Stmt::Local(name, type_hint, value))
+                Ok(Stmt::Local(name, value))
             } else {
-                Ok(Stmt::Global(name, type_hint, value))
+                Ok(Stmt::Global(name, value))
             }
         }
         Rule::assign_stmt => {
@@ -431,8 +423,7 @@ fn build_lambda(pair: Pair<Rule>) -> Result<ExprKind> {
         if next.as_rule() == Rule::lambda_param {
             let mut param_inner = inner.next().unwrap().into_inner();
             let name = param_inner.next().unwrap().as_str().to_string();
-            let type_hint = param_inner.next().map(|t| t.as_str().to_string());
-            params.push(FnParam { name, type_hint });
+            params.push(name);
         } else {
             break;
         }

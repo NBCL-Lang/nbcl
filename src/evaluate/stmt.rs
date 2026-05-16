@@ -48,8 +48,7 @@ impl Evaluator {
                 self.flow = FlowControl::Return(val.clone());
                 val
             }
-            // TODO: Use typehint in global and local
-            Stmt::Global(name, _type_hint, expr) => {
+            Stmt::Global(name, expr) => {
                 let val = self.eval_expr(&expr)?;
 
                 // A 'global' always goes into the very first scope (index 0),
@@ -66,7 +65,7 @@ impl Evaluator {
 
                 Value::Null
             }
-            Stmt::Local(name, _type_hint, expr) => {
+            Stmt::Local(name, expr) => {
                 let val = self.eval_expr(&expr)?;
                 if let Some(current_scope) = self.scopes.last_mut() {
                     current_scope.variables.insert(name.to_string(), val);

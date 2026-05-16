@@ -76,10 +76,10 @@ impl Evaluator {
                             self.registry.register_function(f);
                             import_map.push((old_name, Value::Lambda(new_internal_name)))
                         }
-                        TopLevelItem::ComponentDef(mut c) => {
+                        TopLevelItem::ComponentDef(c) => {
                             self.registry.register_component(c);
                         }
-                        TopLevelItem::Stmt(Stmt::Global(name, _, expr)) => {
+                        TopLevelItem::Stmt(Stmt::Global(name, expr)) => {
                             // We evaluate globals now so they are available in Loop 2
                             let val = self.eval_expr(&expr)?;
                             import_map.push((name.clone(), val));

@@ -174,7 +174,7 @@ lambda_expr = {
   ~ lambda_body
 }
 
-lambda_param = { snake_ident ~ (":" ~ type_hint)? }
+lambda_param = { snake_ident }
 
 lambda_body = {
     block_body  // { stmt* }
@@ -182,14 +182,6 @@ lambda_body = {
 }
 
 block_body = { "{" ~ stmt* ~ expr? ~ "}" }
-
-
-// == Type hints  (for documentation / future use) ==
-
-type_hint = {
-    "String" | "Int" | "Float" | "Bool" | "List" | "Map" | "Node" | "Lambda" | "Any"
-}
-
 
 // === Statements ===
 
@@ -231,8 +223,8 @@ div_equal  = { "/=" }
 assignment_op = { plus_equal | min_equal | mult_equal | div_equal | equal }
 
 assign_stmt = { "set" ~ assignable_lhs ~ assignment_op ~ expr }
-local_stmt  = { "local" ~ snake_ident ~ (":" ~ type_hint)? ~ "=" ~ expr }
-global_stmt = { "global" ~ snake_ident ~ (":" ~ type_hint)? ~ "=" ~ expr }
+local_stmt  = { "local" ~ snake_ident ~ "=" ~ expr }
+global_stmt = { "global" ~ snake_ident ~ "=" ~ expr }
 
 // for x in range/list { stmts }
 in_kw = { "in" }
@@ -290,7 +282,7 @@ fn_def = {
 }
 
 fn_param = {
-    snake_ident ~ (":" ~ type_hint)?
+    snake_ident
 }
 
 // Function body can contain statements AND node invocations
@@ -323,7 +315,7 @@ named_params = {
 }
 
 param_item = {
-    snake_ident ~ (":" ~ type_hint)? ~ "?"?
+    snake_ident ~ "?"?
 }
 
 // === NODES ===

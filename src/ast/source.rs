@@ -52,7 +52,6 @@ pub enum ComponentInterface {
 #[derive(Debug, Clone)]
 pub struct Parameter {
     pub name: String,
-    pub type_hint: Option<String>,
     pub is_optional: bool,
 }
 
@@ -60,16 +59,9 @@ pub struct Parameter {
 #[derive(Debug, Clone)]
 pub struct FnDef {
     pub name: String,
-    pub params: Vec<FnParam>,
+    pub params: Vec<String>,
     pub body: Vec<FnItem>,
     pub span: Span,
-}
-
-/// Parameters in a function
-#[derive(Debug, Clone)]
-pub struct FnParam {
-    pub name: String,
-    pub type_hint: Option<String>,
 }
 
 #[derive(Debug, Clone)]
@@ -105,8 +97,8 @@ pub struct Block {
 #[derive(Debug, Clone)]
 pub enum Stmt {
     Assign(Expr, AssignOp, Expr, Span),
-    Local(String, Option<String>, Expr),
-    Global(String, Option<String>, Expr),
+    Local(String, Expr),
+    Global(String, Expr),
     For(Vec<String>, Expr, Block),
     While(Expr, Block),
     Return(Option<ReturnType>, Span),

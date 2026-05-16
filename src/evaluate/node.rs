@@ -2,7 +2,7 @@ use super::{Evaluator, Scope, ScopeKind};
 use crate::{
     ast::resolved::ResolvedNode,
     ast::source::*,
-    ast::utils::{PropValidation, Type, Value},
+    ast::utils::{PropValidation, Value},
     error::{NbclError, Result, Span},
 };
 use std::collections::HashMap;
@@ -244,25 +244,7 @@ impl Evaluator {
                     let value = caller_props.remove(&param.name);
 
                     match value {
-                        Some((v, prop_span)) => {
-                            // Validate Type Hint if it exists
-                            if let Some(hint) = &param.type_hint {
-                                if let Some(expected_type) = Type::from_str(hint) {
-                                    if !expected_type.matches_value(&v) {
-                                        return Err(NbclError::Runtime {
-                                            message: format!(
-                                                "component '{}' expected {} for prop '{}', got {}",
-                                                def.name,
-                                                hint,
-                                                param.name,
-                                                v.type_name()
-                                            ),
-                                            hint: None,
-                                            span: Some(prop_span),
-                                        });
-                                    }
-                                }
-                            }
+                        Some((v, _)) => {
                             component_scope.variables.insert(param.name.clone(), v);
                         }
                         None => {
