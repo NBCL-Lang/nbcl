@@ -194,7 +194,8 @@ fn rule_to_human(rule: Rule) -> &'static str {
 
         // === Imports ===
         Rule::layout_list => "a layout list",
-        Rule::import_layout_block => "am import layout block",
+        Rule::import_layout_block => "an import layout block",
+        Rule::import_all_wildcard => "'*' wildcard",
         Rule::import_stmt => "an import statement",
         Rule::import_lib_stmt => "a library import statement",
 

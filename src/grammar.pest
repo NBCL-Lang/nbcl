@@ -30,8 +30,9 @@ top_level_item = {
 // === Import ===
 
 as_kw           = { "as" }
-import_layout_block = { "{" ~ layout_list ~ "}" }
+import_layout_block = { "{" ~ (layout_list | import_all_wildcard) ~ "}" }
 layout_list         = { pascal_ident ~ ("," ~ pascal_ident)* ~ ","? }
+import_all_wildcard    = { "*" }
 import_stmt     = { 
     "import" 
   ~ !ASCII_ALPHANUMERIC 

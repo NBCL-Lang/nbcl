@@ -77,9 +77,16 @@ impl Evaluator {
                             import_map.push((old_name, Value::Lambda(new_internal_name)))
                         }
                         TopLevelItem::ComponentDef(c) => {
-                            if let Some(ref allowed_comps) = components {
-                                if allowed_comps.contains(&c.name) {
-                                    self.registry.register_component(c);
+                            if let Some(ref selection) = components {
+                                match selection {
+                                    ComponentSelection::Wildcard => {
+                                        self.registry.register_component(c);
+                                    }
+                                    ComponentSelection::List(allowed_comps) => {
+                                        if allowed_comps.contains(&c.name) {
+                                            self.registry.register_component(c);
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -100,12 +107,13 @@ impl Evaluator {
                     self.registry.globals.insert(alias, Value::Map(import_map));
                 }
 
-                if let Some(ref allowed_comps) = components {
+                if let Some(ComponentSelection::List(ref allowed_comps)) = components {
                     for req in allowed_comps {
                         let found = ast.items.iter().any(|i| match i {
                             TopLevelItem::ComponentDef(c) => &c.name == req,
-                            _ => false
+                            _ => false,
                         });
+                        
                         if !found {
                             return Err(NbclError::Ast {
                                 message: format!("Component '{}' not found in '{}'", req, path_str),

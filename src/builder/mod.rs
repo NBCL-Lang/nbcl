@@ -41,8 +41,15 @@ pub(crate) fn build_file(pair: Pair<Rule>) -> Result<File> {
                         let alias = alias_pair.as_str().to_string();
 
                         let components = if let Some(block_pair) = inner.next() {
-                            let list_pair = block_pair.into_inner().next().unwrap();
-                            Some(list_pair.into_inner().map(|p| p.as_str().to_string()).collect())
+                            let inner_block = block_pair.into_inner().next().unwrap();
+                            match inner_block.as_rule() {
+                                Rule::import_all_wildcard => Some(ComponentSelection::Wildcard),
+                                Rule::layout_list => {
+                                    let list = inner_block.into_inner().map(|p| p.as_str().to_string()).collect();
+                                    Some(ComponentSelection::List(list))
+                                }
+                                _ => unreachable!(),
+                            }
                         } else {
                             None
                         };
