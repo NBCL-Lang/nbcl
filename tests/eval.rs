@@ -30,14 +30,14 @@ fn test_complex_logic_and_scoping() {
     });
 
     let code = r#"
-        local base_cpu = 2
-        local multiplier = 4
-        local total_cpu = (base_cpu + 2) * multiplier / 2 # (4 * 4) / 2 = 8
+        let base_cpu = 2
+        let multiplier = 4
+        let total_cpu = (base_cpu + 2) * multiplier / 2 # (4 * 4) / 2 = 8
         
-        local is_valid = total_cpu == 8 && true
+        let is_valid = total_cpu == 8 && true
         
         # Test truthy/falsy coalescing
-        local version = null || "v1.0"
+        let version = null || "v1.0"
         
         Result "check" {
             cpu = total_cpu
