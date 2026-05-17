@@ -29,7 +29,7 @@ pub struct ImportDef {
 /// Module (e.g. `import "file" ...`), and Library (e.g. stdlib).
 #[derive(Debug, Clone)]
 pub enum ImportDefType {
-    Module(String, String),
+    Module(String, String, Option<Vec<String>>),
     Library(String, String),
 }
 

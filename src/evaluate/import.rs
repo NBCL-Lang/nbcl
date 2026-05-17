@@ -16,7 +16,7 @@ impl Evaluator {
         root_nodes: &mut Vec<ResolvedNode>,
     ) -> Result<()> {
         match imp.def {
-            ImportDefType::Module(path_str, alias) => {
+            ImportDefType::Module(path_str, alias, components) => {
                 let target_path = self.module_resolver.find_target(&path_str)?;
 
                 // Avoiding circular imports
@@ -77,10 +77,18 @@ impl Evaluator {
                             import_map.push((old_name, Value::Lambda(new_internal_name)))
                         }
                         TopLevelItem::ComponentDef(c) => {
-                            self.registry.register_component(c);
+                            if let Some(ref allowed_comps) = components {
+                                if allowed_comps.contains(&c.name) {
+                                    self.registry.register_component(c);
+                                }
+                            }
                         }
+                        // We insert globals now so they are available in Loop 2
                         TopLevelItem::Stmt(Stmt::Const(name, expr)) => {
-                            // We evaluate globals now so they are available in Loop 2
+                            let val = self.eval_expr(&expr)?;
+                            import_map.push((name.clone(), val));
+                        }
+                        TopLevelItem::Stmt(Stmt::Let(name, expr)) => {
                             let val = self.eval_expr(&expr)?;
                             import_map.push((name.clone(), val));
                         }
@@ -90,6 +98,22 @@ impl Evaluator {
 
                 if !import_map.is_empty() {
                     self.registry.globals.insert(alias, Value::Map(import_map));
+                }
+
+                if let Some(ref allowed_comps) = components {
+                    for req in allowed_comps {
+                        let found = ast.items.iter().any(|i| match i {
+                            TopLevelItem::ComponentDef(c) => &c.name == req,
+                            _ => false
+                        });
+                        if !found {
+                            return Err(NbclError::Ast {
+                                message: format!("Component '{}' not found in '{}'", req, path_str),
+                                hint: Some("Check your spelling inside the import block.".to_string()),
+                                span: None,
+                            });
+                        }
+                    }
                 }
 
                 for item in ast.items {

@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ### Changed
 
 - Replaced `local` and `global` with `let` and `const`.
+- Import module statement to optionally import components.
 
 ### Remove
 

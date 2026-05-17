@@ -1,0 +1,5 @@
+import 'theme.nbl' as theme { StyledButton }
+import std.math
+
+let map = { sum = |a, b| a+b }
+print(map.sum(2, 3))

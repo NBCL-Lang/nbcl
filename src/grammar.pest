@@ -30,7 +30,16 @@ top_level_item = {
 // === Import ===
 
 as_kw           = { "as" }
-import_stmt     = { "import" ~ !ASCII_ALPHANUMERIC ~ string_lit ~ as_kw ~ snake_ident }
+import_layout_block = { "{" ~ layout_list ~ "}" }
+layout_list         = { pascal_ident ~ ("," ~ pascal_ident)* ~ ","? }
+import_stmt     = { 
+    "import" 
+  ~ !ASCII_ALPHANUMERIC 
+  ~ string_lit 
+  ~ as_kw 
+  ~ snake_ident 
+  ~ import_layout_block? 
+}
 import_lib_stmt = { "import" ~ snake_ident ~ dot ~ snake_ident }
 
 // === Identifiers ===
