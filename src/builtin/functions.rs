@@ -21,7 +21,7 @@ pub(crate) fn register_builtin_functions(registry: &mut Registry) {
         Some(i) => Ok(Value::Int(i)),
         None => {
             return Err(NbclError::Runtime {
-                message: format!("as_float() not supported for type {}", args[0].type_name()),
+                message: format!("as_int() not supported for type {}", args[0].type_name()),
                 hint: None,
                 span: None,
             });

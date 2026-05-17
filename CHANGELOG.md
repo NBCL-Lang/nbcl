@@ -12,6 +12,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - Replaced `local` and `global` with `let` and `const`.
 - Import module statement to optionally import components.
 
+### Fixed
+
+- Errors from `as_int` saying its `as_float`.
+
 ### Remove
 
 - Type hints.
