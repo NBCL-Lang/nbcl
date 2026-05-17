@@ -4,7 +4,7 @@ use crate::ast::source::{ComponentDef, FnDef};
 use crate::ast::utils::{NativeFnSchema, NativeNodeSchema, Type, Value};
 use crate::error::Result;
 use crate::library::Library;
-use std::collections::HashMap;
+use rustc_hash::FxHashMap;
 use std::fmt;
 use std::rc::Rc;
 use std::sync::Arc;
@@ -13,19 +13,19 @@ use std::sync::Arc;
 #[derive(Default, Clone)]
 pub struct Registry {
     /// Built-in nodes defined in Rust
-    pub(crate) native_nodes: HashMap<String, NativeNodeSchema>,
+    pub(crate) native_nodes: FxHashMap<String, NativeNodeSchema>,
 
     /// User-defined components from the .nbl file
-    pub(crate) components: HashMap<String, ComponentDef>,
+    pub(crate) components: FxHashMap<String, ComponentDef>,
 
     /// Built-in functions defined in Rust
-    pub(crate) native_functions: HashMap<String, NativeFnSchema>,
+    pub(crate) native_functions: FxHashMap<String, NativeFnSchema>,
 
     /// User-defined functions from the .nbl file
-    pub(crate) functions: HashMap<String, Rc<FnDef>>,
+    pub(crate) functions: FxHashMap<String, Rc<FnDef>>,
 
     /// Pre-evaluated global variables (regular name)
-    pub(crate) globals: HashMap<String, Value>,
+    pub(crate) globals: FxHashMap<String, Value>,
 
     /// All registered libraries
     pub(crate) libraries: Vec<Library>,
