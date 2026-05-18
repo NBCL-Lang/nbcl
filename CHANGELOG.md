@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 - Replaced `local` and `global` with `let` and `const`.
 - Import module statement to optionally import components.
+- `no-module-imports` and `no-lib-imports` feature to be additive instead.
 
 ### Fixed
 

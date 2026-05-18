@@ -20,9 +20,11 @@ wasm-bindgen = { version = "0.2.121", optional = true }
 crate-type = ["cdylib", "rlib"]
 
 [features]
-# Disable imports (module and lib)
-no-module-imports = []
-no-lib-imports = []
+default = ["module-imports", "lib-imports"]
+
+# Enable imports (module and lib)
+module-imports = []
+lib-imports = []
 # Add span info in resolved tree and node
 metadata = []
 # Makes printed errors beautiful

@@ -18,12 +18,12 @@ pub(crate) fn build_file(pair: Pair<Rule>) -> Result<File> {
             Rule::top_level_item => {
                 let child = inner.into_inner().next().unwrap();
                 let item = match child.as_rule() {
-                    #[cfg_attr(feature = "no-module-imports", allow(unreachable_code))]
+                    #[cfg_attr(not(feature = "module-imports"), allow(unreachable_code))]
                     Rule::import_stmt => {
                         let mut inner = child.clone().into_inner();
                         let path_pair = inner.next().unwrap();
 
-                        #[cfg(feature = "no-module-imports")]
+                        #[cfg(not(feature = "module-imports"))]
                         {
                             return Err(NbclError::Ast {
                                 message: "module imports are disabled".into(),
@@ -65,12 +65,12 @@ pub(crate) fn build_file(pair: Pair<Rule>) -> Result<File> {
                             span: Span::from_pair(&child),
                         })
                     }
-                    #[cfg_attr(feature = "no-lib-imports", allow(unreachable_code))]
+                    #[cfg_attr(not(feature = "lib-imports"), allow(unreachable_code))]
                     Rule::import_lib_stmt => {
                         let mut inner = child.clone().into_inner();
                         let library_pair = inner.next().unwrap();
 
-                        #[cfg(feature = "no-lib-imports")]
+                        #[cfg(not(feature = "lib-imports"))]
                         {
                             return Err(NbclError::Ast {
                                 message: "library imports are disabled".into(),
