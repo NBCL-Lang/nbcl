@@ -68,8 +68,7 @@ impl Evaluator {
                     match item {
                         TopLevelItem::Import(imp) => self.handle_import(imp.clone(), root_nodes)?,
                         TopLevelItem::FnDef(mut f) => {
-                            let new_internal_name = 
-                                crate::builder::expr::generate_anon_fn_name();
+                            let new_internal_name = crate::builder::expr::generate_anon_fn_name();
                             let old_name = f.name;
                             f.name = new_internal_name.clone();
 
@@ -113,11 +112,13 @@ impl Evaluator {
                             TopLevelItem::ComponentDef(c) => &c.name == req,
                             _ => false,
                         });
-                        
+
                         if !found {
                             return Err(NbclError::Ast {
                                 message: format!("Component '{}' not found in '{}'", req, path_str),
-                                hint: Some("Check your spelling inside the import block.".to_string()),
+                                hint: Some(
+                                    "Check your spelling inside the import block.".to_string(),
+                                ),
                                 span: None,
                             });
                         }
@@ -208,8 +209,7 @@ impl Evaluator {
                 }
 
                 for (fn_name, mut schema) in item.native_functions.clone() {
-                    let new_internal_name = 
-                        crate::builder::expr::generate_anon_fn_name();
+                    let new_internal_name = crate::builder::expr::generate_anon_fn_name();
                     schema.name = new_internal_name.clone();
 
                     self.registry.native_functions.insert(new_internal_name.clone(), schema);

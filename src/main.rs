@@ -16,12 +16,10 @@ fn main() {
     let engine = NbclEngine::new();
 
     match engine.parse_str(&source) {
-        Ok(ast) => {
-            match engine.evaluate_ast(ast) {
-                Ok(evaled) => println!("{:#?}", evaled),
-                Err(e) => println!("{}", e),
-            }
-        }
+        Ok(ast) => match engine.evaluate_ast(ast) {
+            Ok(evaled) => println!("{:#?}", evaled),
+            Err(e) => println!("{}", e),
+        },
         Err(e) => eprintln!("{}", e),
     }
 }

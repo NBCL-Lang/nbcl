@@ -1,5 +1,5 @@
-use crate::error;
 use super::resolved::ResolvedNode;
+use crate::error;
 use serde::ser::{SerializeMap, SerializeSeq};
 use serde::{Deserialize, Serialize, Serializer};
 use std::collections::HashMap;

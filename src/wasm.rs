@@ -1,7 +1,7 @@
 //! API's for WebAssembly (available only with `wasm` feature)
+use serde::{Deserialize, Serialize};
 use std::cell::RefCell;
 use wasm_bindgen::prelude::*;
-use serde::{Serialize, Deserialize};
 
 thread_local! {
     static PRINT_BUFFER: RefCell<Vec<String>> = RefCell::new(Vec::new());
@@ -9,7 +9,7 @@ thread_local! {
 
 #[derive(Serialize, Deserialize)]
 pub struct WasmConfig {
-    max_depth: usize
+    max_depth: usize,
 }
 
 /// Print something to wasm buffer
@@ -29,7 +29,7 @@ pub fn run(source: &str) -> String {
 pub fn run_with_config(source: &str, config: &str) -> String {
     PRINT_BUFFER.with(|buf| buf.borrow_mut().clear());
     let Ok(wasm_config) = serde_json::from_str::<WasmConfig>(config) else {
-        return "invalid configuration was passed".to_string()
+        return "invalid configuration was passed".to_string();
     };
     let mut engine = crate::engine::NbclEngine::new();
 

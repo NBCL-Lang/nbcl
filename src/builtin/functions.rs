@@ -65,19 +65,23 @@ pub(crate) fn register_builtin_functions(registry: &mut Registry) {
     });
 
     // contains(List/Str, Any) -> Bool
-    registry.add_native_fn("contains", vec![Type::Any, Type::Any], Type::Bool, |args| {
-        match &args[0] {
+    registry.add_native_fn(
+        "contains",
+        vec![Type::Any, Type::Any],
+        Type::Bool,
+        |args| match &args[0] {
             Value::List(v) => Ok(Value::Bool(v.contains(&args[1]))),
             Value::Str(s) => match &args[1] {
                 Value::Str(sub) => Ok(Value::Bool(s.contains(sub.as_str()))),
-                _ => Ok(Value::Bool(false))
+                _ => Ok(Value::Bool(false)),
             },
             _ => Err(NbclError::Runtime {
                 message: format!("contains() not supported for type {}", args[0].type_name()),
-                hint: None, span: None,
-            })
-        }
-    });
+                hint: None,
+                span: None,
+            }),
+        },
+    );
 
     // == list functions == //
 
@@ -85,38 +89,31 @@ pub(crate) fn register_builtin_functions(registry: &mut Registry) {
     registry.add_native_fn("push", vec![Type::List, Type::Any], Type::List, |mut args| {
         let val = args.remove(1);
         match args.remove(0) {
-            Value::List(mut v) => { v.push(val); Ok(Value::List(v)) }
-            _ => unreachable!()
+            Value::List(mut v) => {
+                v.push(val);
+                Ok(Value::List(v))
+            }
+            _ => unreachable!(),
         }
     });
 
     // pop(List) -> Any
-    registry.add_native_fn("pop", vec![Type::List], Type::Any, |mut args| {
-        match args.remove(0) {
-            Value::List(mut v) => Ok(v.pop().unwrap_or(Value::Null)),
-            _ => unreachable!()
-        }
+    registry.add_native_fn("pop", vec![Type::List], Type::Any, |mut args| match args.remove(0) {
+        Value::List(mut v) => Ok(v.pop().unwrap_or(Value::Null)),
+        _ => unreachable!(),
     });
 
     // == map functions == //
 
     // keys(Map) -> List
-    registry.add_native_fn("keys", vec![Type::Map], Type::List, |args| {
-        match &args[0] {
-            Value::Map(m) => Ok(Value::List(
-                m.iter().map(|(k, _)| Value::Str(k.clone())).collect()
-            )),
-            _ => unreachable!()
-        }
+    registry.add_native_fn("keys", vec![Type::Map], Type::List, |args| match &args[0] {
+        Value::Map(m) => Ok(Value::List(m.iter().map(|(k, _)| Value::Str(k.clone())).collect())),
+        _ => unreachable!(),
     });
 
     // values(Map) -> List
-    registry.add_native_fn("values", vec![Type::Map], Type::List, |args| {
-        match &args[0] {
-            Value::Map(m) => Ok(Value::List(
-                m.iter().map(|(_, v)| v.clone()).collect()
-            )),
-            _ => unreachable!()
-        }
+    registry.add_native_fn("values", vec![Type::Map], Type::List, |args| match &args[0] {
+        Value::Map(m) => Ok(Value::List(m.iter().map(|(_, v)| v.clone()).collect())),
+        _ => unreachable!(),
     });
 }

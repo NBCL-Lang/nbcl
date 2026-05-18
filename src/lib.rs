@@ -38,16 +38,16 @@ pub mod module_resolver;
 #[cfg(feature = "wasm")]
 pub mod wasm;
 
-mod engine;
-mod utils;
-mod evaluate;
 mod builder;
 mod builtin;
+mod engine;
+mod evaluate;
 mod parser;
 mod registry;
+mod utils;
 
-pub use engine::*;
 pub use ast::utils::*;
+pub use engine::*;
 
 /// Print a message that automatically goes to right buffer.
 ///

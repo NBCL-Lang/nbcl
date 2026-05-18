@@ -1,7 +1,7 @@
-use super::{Evaluator, FlowControl, Scope, VariableBinding, ScopeKind};
+use super::{Evaluator, FlowControl, Scope, ScopeKind, VariableBinding};
 use crate::{
-    ast::utils::Value,
     ast::source::*,
+    ast::utils::Value,
     error::{NbclError, Result, Span},
 };
 
@@ -41,7 +41,7 @@ impl Evaluator {
                     Some(ReturnType::Node(n)) => {
                         let resolved_nodes = self.resolve_node(n.clone())?;
                         Value::Node(resolved_nodes)
-                    },
+                    }
                     Some(ReturnType::Expr(e)) => self.eval_expr(&e)?,
                     None => Value::Null,
                 };
@@ -51,10 +51,9 @@ impl Evaluator {
             Stmt::Const(name, expr) => {
                 let val = self.eval_expr(&expr)?;
                 if let Some(current_scope) = self.scopes.last_mut() {
-                    current_scope.variables.insert(name.to_string(), VariableBinding {
-                        value: val,
-                        is_const: true,
-                    });
+                    current_scope
+                        .variables
+                        .insert(name.to_string(), VariableBinding { value: val, is_const: true });
                 }
 
                 Value::Null
@@ -62,10 +61,9 @@ impl Evaluator {
             Stmt::Let(name, expr) => {
                 let val = self.eval_expr(&expr)?;
                 if let Some(current_scope) = self.scopes.last_mut() {
-                    current_scope.variables.insert(name.to_string(), VariableBinding {
-                        value: val,
-                        is_const: false
-                    });
+                    current_scope
+                        .variables
+                        .insert(name.to_string(), VariableBinding { value: val, is_const: false });
                 }
 
                 Value::Null
@@ -199,10 +197,10 @@ impl Evaluator {
                         // Create dummy patterns and then only modify
                         // the value in the loop to avoid allocations.
                         for pattern in patterns {
-                            loop_scope.variables.insert(pattern.clone(), VariableBinding {
-                                value: Value::Null,
-                                is_const: true,
-                            });
+                            loop_scope.variables.insert(
+                                pattern.clone(),
+                                VariableBinding { value: Value::Null, is_const: true },
+                            );
                         }
 
                         self.scopes.push(loop_scope);
@@ -253,24 +251,18 @@ impl Evaluator {
 
                             // Handle pattern matching (len 1 or len 2)
                             if patterns.len() == 1 {
-                                self.scopes[scope_idx].variables.insert(patterns[0].clone(), VariableBinding {
-                                    value: item,
-                                    is_const: true,
-                                });
+                                self.scopes[scope_idx].variables.insert(
+                                    patterns[0].clone(),
+                                    VariableBinding { value: item, is_const: true },
+                                );
                             } else if patterns.len() == 2 {
                                 self.scopes[scope_idx].variables.insert(
                                     patterns[0].clone(),
-                                    VariableBinding {
-                                        value: Value::Int(i as i64),
-                                        is_const: true,
-                                    },
+                                    VariableBinding { value: Value::Int(i as i64), is_const: true },
                                 );
                                 self.scopes[scope_idx].variables.insert(
                                     patterns[1].clone(),
-                                    VariableBinding { 
-                                        value: item,
-                                        is_const: true,
-                                    },
+                                    VariableBinding { value: item, is_const: true },
                                 );
                             }
 

@@ -1,9 +1,9 @@
-use super::{unquote, node};
+use super::{node, unquote};
 use crate::ast::source::*;
 use crate::error::{NbclError, Result, Span};
-use std::sync::atomic::{AtomicU64, Ordering};
 use crate::parser::Rule;
 use pest::iterators::Pair;
+use std::sync::atomic::{AtomicU64, Ordering};
 
 pub fn build_stmt(pair: Pair<Rule>) -> Result<Stmt> {
     let inner = match pair.as_rule() {
@@ -102,11 +102,13 @@ pub fn build_stmt(pair: Pair<Rule>) -> Result<Stmt> {
                         let expr = build_expr(e_pair)?;
                         Some(ReturnType::Expr(expr))
                     }
-                    rt => return Err(NbclError::Ast {
-                        message: format!("unknown return type: {:?}", rt),
-                        hint: None,
-                        span: Some(span),
-                    })
+                    rt => {
+                        return Err(NbclError::Ast {
+                            message: format!("unknown return type: {:?}", rt),
+                            hint: None,
+                            span: Some(span),
+                        });
+                    }
                 }
             } else {
                 None
@@ -446,12 +448,12 @@ fn build_lambda(pair: Pair<Rule>) -> Result<ExprKind> {
     match actual_body.as_rule() {
         Rule::block_body => {
             let block = build_block(actual_body)?;
-            
+
             // Push all regular statements into the function body
             for stmt in block.stmts {
                 body_items.push(FnItem::Stmt(stmt));
             }
-            
+
             if let Some(terminator_expr) = block.terminator {
                 body_items.push(FnItem::Stmt(Stmt::Expr(terminator_expr)));
             }
@@ -463,12 +465,7 @@ fn build_lambda(pair: Pair<Rule>) -> Result<ExprKind> {
         }
     }
 
-    let fn_def = FnDef {
-        name: generate_anon_fn_name(),
-        params,
-        body: body_items,
-        span,
-    };
+    let fn_def = FnDef { name: generate_anon_fn_name(), params, body: body_items, span };
 
     Ok(ExprKind::Lambda(fn_def))
 }

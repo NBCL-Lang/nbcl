@@ -1,4 +1,4 @@
-use super::{Evaluator, Scope, VariableBinding, ScopeKind};
+use super::{Evaluator, Scope, ScopeKind, VariableBinding};
 use crate::{
     ast::resolved::ResolvedNode,
     ast::source::*,
@@ -227,10 +227,10 @@ impl Evaluator {
         let mut meta_map = Vec::new();
         meta_map.push(("id".to_string(), resolved_id_val));
         meta_map.push(("children".to_string(), Value::Node(caller_children)));
-        component_scope.variables.insert("self".to_string(), VariableBinding {
-            value: Value::Map(meta_map),
-            is_const: true,
-        });
+        component_scope.variables.insert(
+            "self".to_string(),
+            VariableBinding { value: Value::Map(meta_map), is_const: true },
+        );
 
         match &def.interface {
             ComponentInterface::Loose(name) => {
@@ -239,10 +239,10 @@ impl Evaluator {
                 for (k, (v, _span)) in caller_props {
                     prop_list.push((k, v));
                 }
-                component_scope.variables.insert(name.clone(), VariableBinding{
-                    value: Value::Map(prop_list),
-                    is_const: true,
-                });
+                component_scope.variables.insert(
+                    name.clone(),
+                    VariableBinding { value: Value::Map(prop_list), is_const: true },
+                );
             }
 
             ComponentInterface::Strict(params) => {
@@ -251,10 +251,10 @@ impl Evaluator {
 
                     match value {
                         Some((v, _)) => {
-                            component_scope.variables.insert(param.name.clone(), VariableBinding {
-                                value: v,
-                                is_const: true,
-                            });
+                            component_scope.variables.insert(
+                                param.name.clone(),
+                                VariableBinding { value: v, is_const: true },
+                            );
                         }
                         None => {
                             if !param.is_optional {
@@ -274,10 +274,10 @@ impl Evaluator {
                                     span: Some(inv.span.clone()),
                                 });
                             }
-                            component_scope.variables.insert(param.name.clone(), VariableBinding {
-                                value: Value::Null,
-                                is_const: true,
-                            });
+                            component_scope.variables.insert(
+                                param.name.clone(),
+                                VariableBinding { value: Value::Null, is_const: true },
+                            );
                         }
                     }
                 }
@@ -318,7 +318,7 @@ impl Evaluator {
     fn resolve_node_items(
         &mut self,
         items: Vec<NodeItem>,
-        props: &mut HashMap<String, (Value, Span)>, 
+        props: &mut HashMap<String, (Value, Span)>,
         children: &mut Vec<ResolvedNode>,
     ) -> Result<()> {
         for item in items {

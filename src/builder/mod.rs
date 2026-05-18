@@ -27,15 +27,18 @@ pub(crate) fn build_file(pair: Pair<Rule>) -> Result<File> {
                         {
                             return Err(NbclError::Ast {
                                 message: "module imports are disabled".into(),
-                                hint: Some("Module import feature is disabled by the developer.".to_string()),
+                                hint: Some(
+                                    "Module import feature is disabled by the developer."
+                                        .to_string(),
+                                ),
                                 span: Some(Span::from_pair(&path_pair)),
-                            })
+                            });
                         }
 
                         let path = unquote(path_pair.as_str());
 
                         // skip 'as' keyword
-                        let _  = inner.next().unwrap();
+                        let _ = inner.next().unwrap();
 
                         let alias_pair = inner.next().unwrap();
                         let alias = alias_pair.as_str().to_string();
@@ -45,7 +48,10 @@ pub(crate) fn build_file(pair: Pair<Rule>) -> Result<File> {
                             match inner_block.as_rule() {
                                 Rule::import_all_wildcard => Some(ComponentSelection::Wildcard),
                                 Rule::layout_list => {
-                                    let list = inner_block.into_inner().map(|p| p.as_str().to_string()).collect();
+                                    let list = inner_block
+                                        .into_inner()
+                                        .map(|p| p.as_str().to_string())
+                                        .collect();
                                     Some(ComponentSelection::List(list))
                                 }
                                 _ => unreachable!(),
@@ -68,9 +74,12 @@ pub(crate) fn build_file(pair: Pair<Rule>) -> Result<File> {
                         {
                             return Err(NbclError::Ast {
                                 message: "library imports are disabled".into(),
-                                hint: Some("Library import feature is disabled by the developer.".to_string()),
+                                hint: Some(
+                                    "Library import feature is disabled by the developer."
+                                        .to_string(),
+                                ),
                                 span: Some(Span::from_pair(&library_pair)),
-                            })
+                            });
                         }
 
                         let library = library_pair.as_str().to_string();

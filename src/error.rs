@@ -51,16 +51,10 @@ impl Span {
             slice: pest_span.as_str().to_string(),
         }
     }
-    
+
     /// Create a dummy span
     pub fn dummy() -> Self {
-        Self {
-            start: 0,
-            end: 0,
-            line: 0,
-            col: 0,
-            slice: String::new(),
-        }
+        Self { start: 0, end: 0, line: 0, col: 0, slice: String::new() }
     }
 }
 

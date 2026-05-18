@@ -1,7 +1,7 @@
-use super::{Evaluator, FlowControl, Scope, VariableBinding, ScopeKind};
+use super::{Evaluator, FlowControl, Scope, ScopeKind, VariableBinding};
 use crate::{
-    ast::utils::Value,
     ast::source::*,
+    ast::utils::Value,
     error::{NbclError, Result, Span},
 };
 use std::rc::Rc;
@@ -154,27 +154,29 @@ impl Evaluator {
                     args.push(self.eval_expr(e)?);
                 }
 
-                let (func_name, is_lambda) =match &callee.kind {
+                let (func_name, is_lambda) = match &callee.kind {
                     ExprKind::Variable(name) => {
                         if let Some(Value::Lambda(internal_name)) = self.lookup_var(name) {
                             (internal_name, true)
                         } else {
                             (name.clone(), false)
                         }
-                    },
+                    }
                     ExprKind::Field(source, field, is_safe) => {
                         let receiver = self.eval_expr(source)?;
 
                         if let Value::Map(ref pairs) = receiver {
-                            let found = pairs.iter().find(|(k, _)| k == field).map(|(_, v)| v.clone());
-                            
+                            let found =
+                                pairs.iter().find(|(k, _)| k == field).map(|(_, v)| v.clone());
+
                             match found {
-                                Some(Value::Lambda(internal_name)) => {
-                                    (internal_name, true)
-                                }
+                                Some(Value::Lambda(internal_name)) => (internal_name, true),
                                 Some(other_val) => {
                                     return Err(NbclError::Runtime {
-                                        message: format!("field '{}' is not a callable function, got: {:?}", field, other_val),
+                                        message: format!(
+                                            "field '{}' is not a callable function, got: {:?}",
+                                            field, other_val
+                                        ),
                                         hint: None,
                                         span: Some(callee.span.clone()),
                                     });
@@ -234,7 +236,9 @@ impl Evaluator {
                             });
                         }
 
-                        for (i, (arg, expected)) in args.iter().zip(&native_schema.params).enumerate() {
+                        for (i, (arg, expected)) in
+                            args.iter().zip(&native_schema.params).enumerate()
+                        {
                             if !expected.matches_value(arg) {
                                 let hint = match (arg, expected) {
                                     (Value::Str(s), _) if s.parse::<i64>().is_ok() =>
@@ -288,17 +292,20 @@ impl Evaluator {
                             func_def.params.len(),
                             args.len()
                         ),
-                        hint: Some(format!("Signature: {}({})", func_name, func_def.params.join(", "))),
+                        hint: Some(format!(
+                            "Signature: {}({})",
+                            func_name,
+                            func_def.params.join(", ")
+                        )),
                         span: Some(expr.span.clone()),
                     });
                 }
 
                 let mut call_scope = Scope::new(ScopeKind::Function);
                 for (param, value) in func_def.params.iter().zip(args) {
-                    call_scope.variables.insert(param.clone(), VariableBinding {
-                        value,
-                        is_const: false,
-                    });
+                    call_scope
+                        .variables
+                        .insert(param.clone(), VariableBinding { value, is_const: false });
                 }
 
                 self.scopes.push(call_scope);
@@ -337,16 +344,16 @@ impl Evaluator {
                 self.scopes.pop();
 
                 if let Some(val) = implicit_return {
-                    return Ok(val)
+                    return Ok(val);
                 }
 
                 match explicit_return {
                     FlowControl::Return(val) => return Ok(val),
                     FlowControl::None => {
                         if !nodes.is_empty() {
-                            return Ok(Value::Node(nodes))
+                            return Ok(Value::Node(nodes));
                         } else {
-                            return Ok(Value::Null)
+                            return Ok(Value::Null);
                         }
                     }
                 }
@@ -355,7 +362,7 @@ impl Evaluator {
             ExprKind::Lambda(fn_def) => {
                 self.registry.register_function(fn_def.clone());
                 Ok(Value::Lambda(fn_def.name.clone()))
-            },
+            }
 
             ExprKind::If(if_expr) => {
                 let mut target_branch = None;
@@ -417,10 +424,10 @@ impl Evaluator {
                     if is_match || arm.is_var {
                         matched_branch = Some(&arm.body);
                         if arm.is_var {
-                            match_scope.variables.insert(arm.pattern.clone(), VariableBinding{
-                                value,
-                                is_const: false,
-                            });
+                            match_scope.variables.insert(
+                                arm.pattern.clone(),
+                                VariableBinding { value, is_const: false },
+                            );
                         }
                         break;
                     }

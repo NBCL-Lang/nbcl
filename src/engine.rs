@@ -8,7 +8,7 @@ use crate::{
     error::{NbclError, Result},
     evaluate::Evaluator,
     library::Library,
-    module_resolver::{ModuleResolver, FileModuleResolver},
+    module_resolver::{FileModuleResolver, ModuleResolver},
     parser::{NbclParser, Rule},
     registry::Registry,
 };
@@ -96,7 +96,7 @@ impl NbclEngine {
     }
 
     /// Parse and evaluate a source string
-    pub fn evaluate(&self, source: &str)  -> Result<ResolvedTree> {
+    pub fn evaluate(&self, source: &str) -> Result<ResolvedTree> {
         let ast = self.parse_str(source)?;
         self.evaluate_ast(ast)
     }
@@ -127,9 +127,9 @@ impl NbclEngine {
     }
 
     /// Register the module resolver for imports to work.
-    pub fn register_module_resolver<M>(&mut self, mres: M) 
-    where 
-        M: ModuleResolver + 'static 
+    pub fn register_module_resolver<M>(&mut self, mres: M)
+    where
+        M: ModuleResolver + 'static,
     {
         self.module_resolver = Rc::new(mres);
     }
