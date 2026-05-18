@@ -310,6 +310,57 @@ impl Evaluator {
         Ok(result)
     }
 
+    pub(crate) fn execute_fnitem_with_scope(&mut self, body: &Vec<FnItem>, scope: Scope) -> Result<Value> {
+        self.scopes.push(scope);
+        let mut nodes = Vec::new();
+        let mut implicit_return: Option<Value> = None;
+        let body_len = &body.len();
+
+        for (i, item) in body.iter().enumerate() {
+            match item {
+                FnItem::Node(n) => {
+                    if i == body_len - 1 {
+                        let resolved = self.resolve_node(n.clone())?;
+                        nodes.extend(resolved);
+                    }
+                }
+                FnItem::Stmt(s) => {
+                    let val = self.execute_stmt(s)?;
+                    if i == body_len - 1 {
+                        if let Value::Node(new_nodes) = val {
+                            nodes.extend(new_nodes);
+                        } else {
+                            implicit_return = Some(val);
+                        }
+                    }
+                }
+            }
+
+            // If the statement set a return value, stop executing the body immediately
+            if let FlowControl::Return(_) = self.flow {
+                break;
+            }
+        }
+
+        let explicit_return = std::mem::replace(&mut self.flow, FlowControl::None);
+        self.scopes.pop();
+
+        if let Some(val) = implicit_return {
+            return Ok(val);
+        }
+
+        match explicit_return {
+            FlowControl::Return(val) => return Ok(val),
+            FlowControl::None => {
+                if !nodes.is_empty() {
+                    return Ok(Value::Node(nodes));
+                } else {
+                    return Ok(Value::Null);
+                }
+            }
+        }
+    }
+
     /// Executes the statements in a block and evaluates the terminator if present.
     fn execute_block_internal(&mut self, block: &Block) -> Result<Value> {
         // Run all statements

@@ -6,7 +6,7 @@ use crate::{
     ast::utils::{NativeNodeSchema, Type, Value},
     builder::build_file,
     error::{NbclError, Result},
-    evaluate::Evaluator,
+    evaluate::{Evaluator, Scope, ScopeKind, VariableBinding},
     library::Library,
     module_resolver::{FileModuleResolver, ModuleResolver},
     parser::{NbclParser, Rule},
@@ -134,10 +134,51 @@ impl NbclEngine {
         self.module_resolver = Rc::new(mres);
     }
 
-    // === Other Configs ===
+    // === Other API ===
 
     /// Set maximum recursion depth
     pub fn set_max_depth(&mut self, max_depth: usize) {
         self.max_depth = max_depth;
+    }
+
+    /// Call an Nbcl function (including lambdas)
+    pub fn call_function(&self, name: &str, args: Vec<Value>) -> Result<Value> {
+        let mut evaluator = Evaluator::new(
+            self.registry.clone(),
+            self.module_resolver.clone(),
+            self.max_depth.clone(),
+        );
+
+        if let Some(user_fn) = self.registry.functions.get(name) {
+            let mut function_scope = Scope::new(ScopeKind::Function);
+
+            if user_fn.params.len() != args.len() {
+                return Err(NbclError::Ast {
+                    message: format!(
+                        "Argument count mismatch for function '{}'. Expected {}, got {}.",
+                        name,
+                        user_fn.params.len(),
+                        args.len()
+                    ),
+                    hint: Some("Verify your parameter count match over the FFI boundary.".into()),
+                    span: None,
+                });
+            }
+
+            for (param, arg_value) in user_fn.params.iter().zip(args) {
+                function_scope.variables.insert(param.clone(), VariableBinding {
+                    value: arg_value,
+                    is_const: false,
+                });
+            }
+
+            return evaluator.execute_fnitem_with_scope(&user_fn.body, function_scope);
+        }
+
+        Err(NbclError::Ast {
+            message: format!("Function or Lambda identifier '{}' could not be resolved.", name),
+            hint: Some("Ensure the function was registered or declared before invoking it.".into()),
+            span: None,
+        })
     }
 }
