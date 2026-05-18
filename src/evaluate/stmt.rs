@@ -310,7 +310,11 @@ impl Evaluator {
         Ok(result)
     }
 
-    pub(crate) fn execute_fnitem_with_scope(&mut self, body: &Vec<FnItem>, scope: Scope) -> Result<Value> {
+    pub(crate) fn execute_fnitem_with_scope(
+        &mut self,
+        body: &Vec<FnItem>,
+        scope: Scope,
+    ) -> Result<Value> {
         self.scopes.push(scope);
         let mut nodes = Vec::new();
         let mut implicit_return: Option<Value> = None;

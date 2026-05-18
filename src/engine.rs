@@ -166,10 +166,9 @@ impl NbclEngine {
             }
 
             for (param, arg_value) in user_fn.params.iter().zip(args) {
-                function_scope.variables.insert(param.clone(), VariableBinding {
-                    value: arg_value,
-                    is_const: false,
-                });
+                function_scope
+                    .variables
+                    .insert(param.clone(), VariableBinding { value: arg_value, is_const: false });
             }
 
             return evaluator.execute_fnitem_with_scope(&user_fn.body, function_scope);
