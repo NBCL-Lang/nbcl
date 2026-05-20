@@ -10,7 +10,7 @@ use crate::{
     library::Library,
     module_resolver::{FileModuleResolver, ModuleResolver},
     parser::{NbclParser, Rule},
-    registry::Registry,
+    registry::{Registry, Context},
 };
 use pest::Parser;
 use std::fs;
@@ -95,6 +95,20 @@ impl NbclEngine {
         evaluator.run(file)
     }
 
+    /// Evaluate a source AST and get the context
+    pub fn evaluate_ast_for_ctx(&self, file: File) -> Result<(ResolvedTree, Context)> {
+        let mut evaluator = Evaluator::new(
+            self.registry.clone(),
+            self.module_resolver.clone(),
+            self.max_depth.clone(),
+        );
+
+        let tree = evaluator.run(file)?;
+        let ctx = evaluator.return_context();
+
+        Ok((tree, ctx))
+    }
+
     /// Parse and evaluate a source string
     pub fn evaluate(&self, source: &str) -> Result<ResolvedTree> {
         let ast = self.parse_str(source)?;
@@ -142,9 +156,14 @@ impl NbclEngine {
     }
 
     /// Call an Nbcl function (including lambdas)
-    pub fn call_function(&self, name: &str, args: Vec<Value>) -> Result<Value> {
+    pub fn call_function(
+        &self,
+        name: &str,
+        args: Vec<Value>,
+        ctx: Context,
+    ) -> Result<Value> {
         let mut evaluator = Evaluator::new(
-            self.registry.clone(),
+            ctx.0.clone(),
             self.module_resolver.clone(),
             self.max_depth.clone(),
         );

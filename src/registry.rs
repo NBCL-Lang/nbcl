@@ -8,6 +8,7 @@ use rustc_hash::FxHashMap;
 use std::fmt;
 use std::rc::Rc;
 use std::sync::Arc;
+use std::ops::Deref;
 
 /// Registry containing important data about source.
 #[derive(Default, Clone)]
@@ -76,5 +77,15 @@ impl Registry {
                 self.libraries.push(library);
             }
         }
+    }
+}
+
+pub struct Context(pub(crate) Registry);
+
+impl Deref for Context {
+    type Target = Registry;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
     }
 }

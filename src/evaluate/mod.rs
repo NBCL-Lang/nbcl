@@ -7,7 +7,7 @@ mod stmt;
 
 use crate::{
     ast::resolved::ResolvedTree, ast::source::*, ast::utils::Value, error::Result,
-    module_resolver::ModuleResolver, registry::Registry,
+    module_resolver::ModuleResolver, registry::{Registry, Context},
 };
 use rustc_hash::FxHashMap;
 use std::collections::HashSet;
@@ -118,5 +118,9 @@ impl Evaluator {
         }
 
         Ok(ResolvedTree { root_nodes })
+    }
+
+    pub fn return_context(&self) -> Context {
+        Context(self.registry.clone())
     }
 }

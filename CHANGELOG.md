@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [UNRELEASED]
 
+### Added
+
+- Feature to resolve functions/lambdas even after evaluation.
+
 ### Changed
 
 - Replaced `local` and `global` with `let` and `const`.
