@@ -31,6 +31,7 @@
 //! ```
 
 pub mod ast;
+pub mod context;
 pub mod error;
 pub mod library;
 pub mod module_resolver;

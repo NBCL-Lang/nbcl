@@ -5,12 +5,13 @@ use crate::{
     ast::source::File,
     ast::utils::{NativeNodeSchema, Type, Value},
     builder::build_file,
+    context::Context,
     error::{NbclError, Result},
     evaluate::{Evaluator, Scope, ScopeKind, VariableBinding},
     library::Library,
     module_resolver::{FileModuleResolver, ModuleResolver},
     parser::{NbclParser, Rule},
-    registry::{Context, Registry},
+    registry::Registry,
 };
 use pest::Parser;
 use std::fs;
