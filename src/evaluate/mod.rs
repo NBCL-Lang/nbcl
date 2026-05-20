@@ -6,8 +6,12 @@ mod node;
 mod stmt;
 
 use crate::{
-    ast::resolved::ResolvedTree, ast::source::*, ast::utils::Value, error::Result,
-    module_resolver::ModuleResolver, registry::{Registry, Context},
+    ast::resolved::ResolvedTree,
+    ast::source::*,
+    ast::utils::Value,
+    error::Result,
+    module_resolver::ModuleResolver,
+    registry::{Context, Registry},
 };
 use rustc_hash::FxHashMap;
 use std::collections::HashSet;

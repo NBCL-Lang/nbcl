@@ -10,7 +10,7 @@ use crate::{
     library::Library,
     module_resolver::{FileModuleResolver, ModuleResolver},
     parser::{NbclParser, Rule},
-    registry::{Registry, Context},
+    registry::{Context, Registry},
 };
 use pest::Parser;
 use std::fs;
@@ -156,17 +156,9 @@ impl NbclEngine {
     }
 
     /// Call an Nbcl function (including lambdas)
-    pub fn call_function(
-        &self,
-        name: &str,
-        args: Vec<Value>,
-        ctx: Context,
-    ) -> Result<Value> {
-        let mut evaluator = Evaluator::new(
-            ctx.0.clone(),
-            self.module_resolver.clone(),
-            self.max_depth.clone(),
-        );
+    pub fn call_function(&self, name: &str, args: Vec<Value>, ctx: Context) -> Result<Value> {
+        let mut evaluator =
+            Evaluator::new(ctx.0.clone(), self.module_resolver.clone(), self.max_depth.clone());
 
         if let Some(user_fn) = self.registry.functions.get(name) {
             let mut function_scope = Scope::new(ScopeKind::Function);

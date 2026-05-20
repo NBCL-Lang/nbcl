@@ -6,9 +6,9 @@ use crate::error::Result;
 use crate::library::Library;
 use rustc_hash::FxHashMap;
 use std::fmt;
+use std::ops::Deref;
 use std::rc::Rc;
 use std::sync::Arc;
-use std::ops::Deref;
 
 /// Registry containing important data about source.
 #[derive(Default, Clone)]
