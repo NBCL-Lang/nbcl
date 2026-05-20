@@ -160,7 +160,7 @@ impl NbclEngine {
         let mut evaluator =
             Evaluator::new(ctx.0.clone(), self.module_resolver.clone(), self.max_depth.clone());
 
-        if let Some(user_fn) = self.registry.functions.get(name) {
+        if let Some(user_fn) = ctx.functions.get(name) {
             let mut function_scope = Scope::new(ScopeKind::Function);
 
             if user_fn.params.len() != args.len() {
