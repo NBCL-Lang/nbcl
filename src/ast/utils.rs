@@ -27,6 +27,8 @@ pub enum Value {
     Node(Vec<ResolvedNode>),
     /// Lambda functions
     Lambda(String),
+    /// Custom types registered by user (internal)
+    Object(String),
     /// Null (no data)
     Null,
 }
@@ -62,6 +64,7 @@ impl Serialize for Value {
                 seq.end()
             }
             Value::Lambda(v) => s.serialize_str(v),
+            Value::Object(v) => s.serialize_str(v),
         }
     }
 }
@@ -86,6 +89,7 @@ impl fmt::Display for Value {
             }
             Value::Node(_) => write!(f, "<nodes>"),
             Value::Lambda(v) => write!(f, "{v}"),
+            Value::Object(v) => write!(f, "{v}"),
         }
     }
 }
@@ -113,6 +117,7 @@ impl Value {
             Value::Map(_) => "Map",
             Value::Node(_) => "Nodes",
             Value::Lambda(_) => "Lambda",
+            Value::Object(_) => "Object",
             Value::Null => "Null",
         }
     }
@@ -146,6 +151,7 @@ pub enum Type {
     /// Additional constant that
     /// symbolizes all data types.
     Any,
+    Object(String),
     Null,
 }
 
@@ -181,6 +187,13 @@ impl Type {
             (Type::Map, Value::Map(_)) => true,
             (Type::Node, Value::Node(_)) => true,
             (Type::Lambda, Value::Lambda(_)) => true,
+            (Type::Object(s1), Value::Object(s2)) => {
+                if s1 == s2 {
+                    true
+                } else {
+                    false
+                }
+            }
             (Type::Null, Value::Null) => true,
             _ => false,
         }
