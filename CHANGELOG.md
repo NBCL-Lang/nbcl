@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ### Fixed
 
 - Strict prop validation throwing error on matching types.
+- Not checking child count on native nodes.
 
 ## [0.3.4] - 2026-05-21
 
