@@ -5,6 +5,12 @@ All notable changes to `nbcl` are documented here.
 This changelog follows the [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) format,
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.3.3] - 2026-05-21
+
+### Fixed
+
+- `call_function` requiring Context to be owned.
+
 ## [0.3.2] - 2026-05-20
 
 ### Fixed
