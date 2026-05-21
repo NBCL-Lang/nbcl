@@ -28,7 +28,7 @@ pub enum Value {
     /// Lambda functions
     Lambda(String),
     /// Custom types registered by user (internal)
-    Object(String),
+    Object(String, Box<Value>),
     /// Null (no data)
     Null,
 }
@@ -64,7 +64,13 @@ impl Serialize for Value {
                 seq.end()
             }
             Value::Lambda(v) => s.serialize_str(v),
-            Value::Object(v) => s.serialize_str(v),
+            Value::Object(v1, v2) => {
+                let mut seq = s.serialize_seq(Some(2))?;
+                seq.serialize_element(v1)?;
+                seq.serialize_element(v2)?;
+
+                seq.end()
+            },
         }
     }
 }
@@ -89,7 +95,7 @@ impl fmt::Display for Value {
             }
             Value::Node(_) => write!(f, "<nodes>"),
             Value::Lambda(v) => write!(f, "{v}"),
-            Value::Object(v) => write!(f, "{v}"),
+            Value::Object(v, _) => write!(f, "{v}"),
         }
     }
 }
@@ -117,7 +123,7 @@ impl Value {
             Value::Map(_) => "Map",
             Value::Node(_) => "Nodes",
             Value::Lambda(_) => "Lambda",
-            Value::Object(_) => "Object",
+            Value::Object(_, _) => "Object",
             Value::Null => "Null",
         }
     }
@@ -187,7 +193,7 @@ impl Type {
             (Type::Map, Value::Map(_)) => true,
             (Type::Node, Value::Node(_)) => true,
             (Type::Lambda, Value::Lambda(_)) => true,
-            (Type::Object(s1), Value::Object(s2)) => {
+            (Type::Object(s1), Value::Object(s2, _)) => {
                 if s1 == s2 {
                     true
                 } else {
