@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 - Internal Object type to register data that user cant interact with.
 
+### Fixed
+
+- Strict prop validation throwing error on matching types.
+
 ## [0.3.4] - 2026-05-21
 
 ### Fixed

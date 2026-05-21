@@ -59,7 +59,7 @@ impl Evaluator {
                     // Existence Check
                     if let Some(expected_type) = allowed_map.get(key) {
                         // Type Check
-                        if expected_type.matches_value(value) {
+                        if !expected_type.matches_value(value) {
                             return Err(NbclError::Runtime {
                                 message: format!(
                                     "type mismatch for '{}' on '{}': expected {:?}, found {:?}",
