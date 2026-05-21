@@ -33,13 +33,13 @@ as_kw           = { "as" }
 import_layout_block = { "{" ~ (layout_list | import_all_wildcard) ~ "}" }
 layout_list         = { pascal_ident ~ ("," ~ pascal_ident)* ~ ","? }
 import_all_wildcard    = { "*" }
-import_stmt     = { 
-    "import" 
-  ~ !ASCII_ALPHANUMERIC 
-  ~ string_lit 
-  ~ as_kw 
-  ~ snake_ident 
-  ~ import_layout_block? 
+import_stmt     = {
+    "import"
+  ~ !ASCII_ALPHANUMERIC
+  ~ string_lit
+  ~ as_kw
+  ~ snake_ident
+  ~ import_layout_block?
 }
 import_lib_stmt = { "import" ~ snake_ident ~ dot ~ snake_ident }
 
@@ -50,7 +50,7 @@ import_lib_stmt = { "import" ~ snake_ident ~ dot ~ snake_ident }
 
 // Reserved keywords cannot be used as identifiers
 keyword = _{
-    "any" | "set" | "let" | "const" | "fn" | "for" | "in" | "while" | "if" 
+    "any" | "set" | "let" | "const" | "fn" | "for" | "in" | "while" | "if"
   | "else" | "match" | "return" | "import" | "true" | "false" | "null"
 }
 
@@ -97,7 +97,7 @@ null_lit = { "null" }
 
 // string
 // "hello"  or  'hello'
-string_lit = ${ 
+string_lit = ${
     "\"" ~ double_quoted_inner ~ "\""
   | "'"  ~ single_quoted_inner ~ "'"
 }
@@ -111,7 +111,7 @@ escape_seq = @{ "\\" ~ ("n" | "t" | "r" | "\\" | "\"" | "'" | "u" ~ ASCII_HEX_DI
 list_lit = { "[" ~ (expr ~ ("," ~ expr)*)? ~ ","? ~ "]" }
 
 // map literals  (key = value inside a prop value position)
-map_lit = { "{" ~ (map_entry ~ ("," ~ map_entry)*)? ~ ","? ~ "}" }
+map_lit = { "{" ~ map_entry* ~ "}" }
 map_entry = { prop_key ~ equal ~ expr }
 
 // === Ranges  (used in for loops) ===
@@ -156,8 +156,8 @@ postfix_expr = {
     )*
 }
 
-accessor = { 
-    safe_dot | dot 
+accessor = {
+    safe_dot | dot
 }
 
 dot      = { "." }
