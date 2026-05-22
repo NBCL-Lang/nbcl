@@ -502,7 +502,7 @@ impl Evaluator {
             Literal::Int(i) => Ok(Value::Int(*i)),
             Literal::Float(f) => Ok(Value::Float(*f)),
             Literal::Bool(b) => Ok(Value::Bool(*b)),
-            Literal::Str(s) => Ok(Value::Str(s.clone())),
+            Literal::Str(s) => Ok(Value::Str(self.evaluate_string_interpolation(&s))),
             Literal::Null => Ok(Value::Null),
             Literal::List(exprs) => {
                 let mut values = Vec::new();
@@ -519,6 +519,45 @@ impl Evaluator {
                 Ok(Value::Map(values))
             }
         }
+    }
+
+    fn evaluate_string_interpolation(&self, s: &str) -> String {
+        let mut result = String::new();
+        let mut chars = s.chars().peekable();
+
+        while let Some(ch) = chars.next() {
+            if ch == '\\' {
+                match chars.peek() {
+                    Some(&'$')  => { chars.next(); result.push('$'); }
+                    Some(&'\\') => { chars.next(); result.push('\\'); }
+                    Some(&'n')  => { chars.next(); result.push('\n'); }
+                    Some(&'t')  => { chars.next(); result.push('\t'); }
+                    Some(&'r')  => { chars.next(); result.push('\r'); }
+                    Some(&'"')  => { chars.next(); result.push('"'); }
+                    Some(&'\'') => { chars.next(); result.push('\''); }
+                    Some(&'0')  => { chars.next(); result.push('\0'); }
+                    _           => result.push('\\'),
+                }
+            } else if ch == '$' && chars.peek() == Some(&'{') {
+                chars.next();
+
+                let mut var_name = String::new();
+                for inner in chars.by_ref() {
+                    if inner == '}' { break; }
+                    var_name.push(inner);
+                }
+
+                let value = self.lookup_var(var_name.trim())
+                    .map(|v| crate::builder::unquote(&v.to_string()))
+                    .unwrap_or_default();
+
+                result.push_str(&value);
+            } else {
+                result.push(ch);
+            }
+        }
+
+        result
     }
 
     fn apply_binary_op(&self, left: &Value, op: &str, right: &Value, span: &Span) -> Result<Value> {

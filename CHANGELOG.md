@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ### Added
 
 - Internal Object type to register data that user cant interact with.
+- String interpolation support for varibales.
 
 ### Fixed
 
