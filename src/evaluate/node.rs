@@ -310,7 +310,18 @@ impl Evaluator {
                     });
                 }
             }
-            ComponentInterface::None => {}
+            ComponentInterface::None => {
+                if !caller_props.is_empty() {
+                    return Err(NbclError::Runtime {
+                        message: format!(
+                            "component '{}' requires no properties but one or more properties were passed",
+                            def.name
+                        ),
+                        hint: Some("Remove all the properties passed to this component.".into()),
+                        span: Some(inv.span.clone()),
+                    });
+                }
+            }
         }
 
         self.scopes.push(component_scope);
