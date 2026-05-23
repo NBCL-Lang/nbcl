@@ -528,26 +528,53 @@ impl Evaluator {
         while let Some(ch) = chars.next() {
             if ch == '\\' {
                 match chars.peek() {
-                    Some(&'$')  => { chars.next(); result.push('$'); }
-                    Some(&'\\') => { chars.next(); result.push('\\'); }
-                    Some(&'n')  => { chars.next(); result.push('\n'); }
-                    Some(&'t')  => { chars.next(); result.push('\t'); }
-                    Some(&'r')  => { chars.next(); result.push('\r'); }
-                    Some(&'"')  => { chars.next(); result.push('"'); }
-                    Some(&'\'') => { chars.next(); result.push('\''); }
-                    Some(&'0')  => { chars.next(); result.push('\0'); }
-                    _           => result.push('\\'),
+                    Some(&'$') => {
+                        chars.next();
+                        result.push('$');
+                    }
+                    Some(&'\\') => {
+                        chars.next();
+                        result.push('\\');
+                    }
+                    Some(&'n') => {
+                        chars.next();
+                        result.push('\n');
+                    }
+                    Some(&'t') => {
+                        chars.next();
+                        result.push('\t');
+                    }
+                    Some(&'r') => {
+                        chars.next();
+                        result.push('\r');
+                    }
+                    Some(&'"') => {
+                        chars.next();
+                        result.push('"');
+                    }
+                    Some(&'\'') => {
+                        chars.next();
+                        result.push('\'');
+                    }
+                    Some(&'0') => {
+                        chars.next();
+                        result.push('\0');
+                    }
+                    _ => result.push('\\'),
                 }
             } else if ch == '$' && chars.peek() == Some(&'{') {
                 chars.next();
 
                 let mut var_name = String::new();
                 for inner in chars.by_ref() {
-                    if inner == '}' { break; }
+                    if inner == '}' {
+                        break;
+                    }
                     var_name.push(inner);
                 }
 
-                let value = self.lookup_var(var_name.trim())
+                let value = self
+                    .lookup_var(var_name.trim())
                     .map(|v| crate::builder::unquote(&v.to_string()))
                     .unwrap_or_default();
 

@@ -70,7 +70,7 @@ impl Serialize for Value {
                 seq.serialize_element(v2)?;
 
                 seq.end()
-            },
+            }
         }
     }
 }

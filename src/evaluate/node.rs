@@ -92,7 +92,10 @@ impl Evaluator {
                 let actual_count = children.len() as u32;
                 if actual_count < *min_children || actual_count > *max_children {
                     return Err(NbclError::Runtime {
-                        message: format!("Native Node '{}' requires between {} and {} children, but got {}.", schema.type_name, min_children, max_children, actual_count),
+                        message: format!(
+                            "Native Node '{}' requires between {} and {} children, but got {}.",
+                            schema.type_name, min_children, max_children, actual_count
+                        ),
                         hint: None,
                         span: Some(inv.span.clone()),
                     });
