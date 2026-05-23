@@ -38,7 +38,7 @@ pub fn run_with_config(source: &str, config: &str) -> String {
 
     // == Evaluate ==
     match engine.parse_str(source) {
-        Ok(result) => match engine.evaluate(result) {
+        Ok(result) => match engine.evaluate_ast(result) {
             Ok(value) => {
                 let output = PRINT_BUFFER.with(|buf| buf.borrow().join("\n"));
                 format!(

@@ -16,7 +16,23 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
-    - name: Build
+
+    # Setup tooling
+    - name: Install web-pack
+      run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
+
+    # Default and No Default
+    - name: Build (Default)
       run: cargo build --verbose
+    - name: Build (No Default)
+      run: cargo build --verbose --no-default-features
+
+    # Other features
+    - name: Build (Wasm)
+      run: wasm-pack build --verbose --target web --features wasm
+    - name: Build (pretty-errors)
+      run: cargo build --verbose --features pretty-errors
+
+    # Integration tests
     - name: Run tests
       run: cargo test --verbose

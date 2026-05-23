@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - Strict prop validation throwing error on matching types.
 - Not checking child count on native nodes.
 - Not throwing error when properties were passed to a component that expected none.
+- Wasm using outdated API.
 
 ## [0.3.4] - 2026-05-21
 
