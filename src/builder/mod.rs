@@ -69,13 +69,13 @@ pub(crate) fn build_file(pair: Pair<Rule>) -> Result<File> {
                     }
                     #[cfg_attr(not(feature = "lib-imports"), allow(unreachable_code))]
                     Rule::import_lib_stmt => {
-                        use crate::error::NbclError;
-
                         let mut inner = child.clone().into_inner();
                         let library_pair = inner.next().unwrap();
 
                         #[cfg(not(feature = "lib-imports"))]
                         {
+                            use crate::error::NbclError;
+
                             return Err(NbclError::Ast {
                                 message: "library imports are disabled".into(),
                                 hint: Some(
