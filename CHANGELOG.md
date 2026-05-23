@@ -5,12 +5,12 @@ All notable changes to `nbcl` are documented here.
 This changelog follows the [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) format,
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
-## [UNRELEASED]
+## [0.4.0] - 2026-05-23
 
 ### Added
 
 - Internal Object type to register data that user cant interact with.
-- String interpolation support for varibales.
+- String interpolation support for variables.
 
 ### Fixed
 
