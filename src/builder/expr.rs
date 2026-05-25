@@ -409,8 +409,8 @@ fn build_match_arm(pair: Pair<Rule>) -> Result<MatchArm> {
                         return Err(NbclError::Ast {
                             message: "Cannot match to a node in match block body".to_string(),
                             hint: None,
-                            span: Some(span)
-                        })
+                            span: Some(span),
+                        });
                     }
                 }
             }

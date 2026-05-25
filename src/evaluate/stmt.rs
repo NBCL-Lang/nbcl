@@ -288,11 +288,7 @@ impl Evaluator {
                     _ => {}
                 }
 
-                if !resolved_nodes.is_empty() {
-                    Value::Node(resolved_nodes)
-                } else {
-                    Value::Null
-                }
+                if !resolved_nodes.is_empty() { Value::Node(resolved_nodes) } else { Value::Null }
             }
 
             Stmt::While(condition_expr, body) => {
@@ -319,11 +315,7 @@ impl Evaluator {
 
                 self.scopes.pop();
 
-                if !resolved_nodes.is_empty() {
-                    Value::Node(resolved_nodes)
-                } else {
-                    Value::Null
-                }
+                if !resolved_nodes.is_empty() { Value::Node(resolved_nodes) } else { Value::Null }
             }
         };
         Ok(result)

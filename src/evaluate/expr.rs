@@ -405,14 +405,11 @@ impl Evaluator {
                         }
                     }
 
-                    let result =
-                        if let Some(e) = final_expr { self.eval_expr(e)? } else {
-                            if !return_node.is_empty() {
-                                Value::Node(return_node)
-                            } else {
-                                Value::Null
-                            }
-                        };
+                    let result = if let Some(e) = final_expr {
+                        self.eval_expr(e)?
+                    } else {
+                        if !return_node.is_empty() { Value::Node(return_node) } else { Value::Null }
+                    };
 
                     self.scopes.pop();
                     Ok(result)
