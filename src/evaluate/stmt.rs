@@ -189,6 +189,7 @@ impl Evaluator {
             }
             Stmt::For(patterns, iter_expr, body) => {
                 let iter_val = self.eval_expr(&iter_expr)?;
+                let mut resolved_nodes = Vec::new();
                 match iter_val {
                     Value::Range(start, end) => {
                         let mut loop_scope = Scope::new(ScopeKind::Block);
@@ -230,7 +231,10 @@ impl Evaluator {
                                 }
                             }
 
-                            self.execute_block_internal(&body)?;
+                            let result = self.execute_block_internal(&body)?;
+                            if let Value::Node(n) = result {
+                                resolved_nodes.extend(n);
+                            }
 
                             if let FlowControl::Return(_) = self.flow {
                                 break;
@@ -267,7 +271,10 @@ impl Evaluator {
                             }
 
                             // Execute the block logic
-                            self.execute_block_internal(&body)?;
+                            let result = self.execute_block_internal(&body)?;
+                            if let Value::Node(n) = result {
+                                resolved_nodes.extend(n);
+                            }
 
                             if let FlowControl::Return(_) = self.flow {
                                 break;
@@ -281,11 +288,16 @@ impl Evaluator {
                     _ => {}
                 }
 
-                Value::Null
+                if !resolved_nodes.is_empty() {
+                    Value::Node(resolved_nodes)
+                } else {
+                    Value::Null
+                }
             }
 
             Stmt::While(condition_expr, body) => {
                 self.scopes.push(Scope::new(ScopeKind::Block));
+                let mut resolved_nodes = Vec::new();
 
                 // Keep looping as long as the condition evaluates to truthy
                 // and we haven't hit a Return statement.
@@ -295,7 +307,10 @@ impl Evaluator {
                     }
 
                     // Execute the block logic
-                    self.execute_block_internal(&body)?;
+                    let result = self.execute_block_internal(&body)?;
+                    if let Value::Node(n) = result {
+                        resolved_nodes.extend(n);
+                    }
 
                     if let FlowControl::Return(_) = self.flow {
                         break;
@@ -304,15 +319,19 @@ impl Evaluator {
 
                 self.scopes.pop();
 
-                Value::Null
+                if !resolved_nodes.is_empty() {
+                    Value::Node(resolved_nodes)
+                } else {
+                    Value::Null
+                }
             }
         };
         Ok(result)
     }
 
-    pub(crate) fn execute_fnitem_with_scope(
+    pub(crate) fn execute_body_with_scope(
         &mut self,
-        body: &Vec<FnItem>,
+        body: &Vec<BodyItem>,
         scope: Scope,
     ) -> Result<Value> {
         self.scopes.push(scope);
@@ -322,13 +341,13 @@ impl Evaluator {
 
         for (i, item) in body.iter().enumerate() {
             match item {
-                FnItem::Node(n) => {
+                BodyItem::Node(n) => {
                     if i == body_len - 1 {
                         let resolved = self.resolve_node(n.clone())?;
                         nodes.extend(resolved);
                     }
                 }
-                FnItem::Stmt(s) => {
+                BodyItem::Stmt(s) => {
                     let val = self.execute_stmt(s)?;
                     if i == body_len - 1 {
                         if let Value::Node(new_nodes) = val {
@@ -368,10 +387,18 @@ impl Evaluator {
     /// Executes the statements in a block and evaluates the terminator if present.
     fn execute_block_internal(&mut self, block: &Block) -> Result<Value> {
         // Run all statements
-        for s in &block.stmts {
-            self.execute_stmt(s)?;
-            if let FlowControl::Return(_) = self.flow {
-                return Ok(Value::Null);
+        for item in &block.body {
+            match item {
+                BodyItem::Stmt(s) => {
+                    self.execute_stmt(s)?;
+                    if let FlowControl::Return(_) = self.flow {
+                        return Ok(Value::Null);
+                    }
+                }
+                BodyItem::Node(n) => {
+                    let resolved_node = self.resolve_node(n.clone())?;
+                    return Ok(Value::Node(resolved_node));
+                }
             }
         }
 

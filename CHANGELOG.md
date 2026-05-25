@@ -5,6 +5,14 @@ All notable changes to `nbcl` are documented here.
 This changelog follows the [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) format,
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.4.1] - 2026-05-25
+
+### Fixed
+
+- Not able to define node in if, while, for, etc.
+- Not being able to return node in lambda.
+- Node not expanding when returned from function at top level.
+
 ## [0.4.0] - 2026-05-23
 
 ### Added

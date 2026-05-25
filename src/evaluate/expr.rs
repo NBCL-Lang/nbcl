@@ -315,13 +315,13 @@ impl Evaluator {
 
                 for (i, item) in func_def.body.iter().enumerate() {
                     match item {
-                        FnItem::Node(n) => {
+                        BodyItem::Node(n) => {
                             if i == body_len - 1 {
                                 let resolved = self.resolve_node(n.clone())?;
                                 nodes.extend(resolved);
                             }
                         }
-                        FnItem::Stmt(s) => {
+                        BodyItem::Stmt(s) => {
                             let val = self.execute_stmt(s)?;
                             if i == body_len - 1 {
                                 if let Value::Node(new_nodes) = val {
@@ -385,15 +385,34 @@ impl Evaluator {
                 }
 
                 // Execute the chosen branch
-                if let Some((stmts, final_expr)) = target_branch {
+                if let Some((body, final_expr)) = target_branch {
                     self.scopes.push(Scope::new(ScopeKind::Block));
+                    let mut return_node = Vec::new();
 
-                    for stmt in stmts {
-                        self.execute_stmt(stmt)?;
+                    for item in body {
+                        match item {
+                            BodyItem::Stmt(s) => {
+                                let result = self.execute_stmt(s)?;
+
+                                if let Value::Node(nodes) = result {
+                                    return_node.extend(nodes);
+                                }
+                            }
+                            BodyItem::Node(n) => {
+                                let resolved_node = self.resolve_node(n.clone())?;
+                                return_node.extend(resolved_node);
+                            }
+                        }
                     }
 
                     let result =
-                        if let Some(e) = final_expr { self.eval_expr(e)? } else { Value::Null };
+                        if let Some(e) = final_expr { self.eval_expr(e)? } else {
+                            if !return_node.is_empty() {
+                                Value::Node(return_node)
+                            } else {
+                                Value::Null
+                            }
+                        };
 
                     self.scopes.pop();
                     Ok(result)

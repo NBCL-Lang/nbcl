@@ -67,12 +67,12 @@ pub struct Parameter {
 pub struct FnDef {
     pub name: String,
     pub params: Vec<String>,
-    pub body: Vec<FnItem>,
+    pub body: Vec<BodyItem>,
     pub span: Span,
 }
 
 #[derive(Debug, Clone)]
-pub enum FnItem {
+pub enum BodyItem {
     Node(NodeInvocation),
     Stmt(Stmt),
 }
@@ -96,7 +96,7 @@ pub enum NodeItem {
 // Expressions
 #[derive(Debug, Clone)]
 pub struct Block {
-    pub stmts: Vec<Stmt>,
+    pub body: Vec<BodyItem>,
     pub terminator: Option<Expr>,
 }
 
@@ -154,9 +154,9 @@ pub enum ExprKind {
 #[derive(Debug, Clone)]
 pub struct IfExpr {
     pub condition: Expr,
-    pub then_branch: (Vec<Stmt>, Option<Expr>),
-    pub else_ifs: Vec<(Expr, (Vec<Stmt>, Option<Expr>))>,
-    pub else_branch: Option<(Vec<Stmt>, Option<Expr>)>,
+    pub then_branch: (Vec<BodyItem>, Option<Expr>),
+    pub else_ifs: Vec<(Expr, (Vec<BodyItem>, Option<Expr>))>,
+    pub else_branch: Option<(Vec<BodyItem>, Option<Expr>)>,
 }
 
 /// Match

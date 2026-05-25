@@ -187,11 +187,11 @@ lambda_expr = {
 lambda_param = { snake_ident }
 
 lambda_body = {
-    block_body  // { stmt* }
+    fn_body     // { stmt* }
   | expr        // implicit return
 }
 
-block_body = { "{" ~ stmt* ~ expr? ~ "}" }
+block_body = { "{" ~ (stmt | node_invocation)* ~ expr? ~ "}" }
 
 // === Statements ===
 

@@ -111,7 +111,11 @@ impl Evaluator {
                     root_nodes.extend(nodes);
                 }
                 TopLevelItem::Stmt(stmt) => {
-                    self.execute_stmt(&stmt)?;
+                    let result = self.execute_stmt(&stmt)?;
+
+                    if let Value::Node(returned_nodes) = result {
+                        root_nodes.extend(returned_nodes);
+                    }
                 }
                 _ => {} // Rest are already handled
             }

@@ -138,10 +138,10 @@ fn build_fn_def(pair: Pair<Rule>) -> Result<FnDef> {
                             let child = item.into_inner().next().unwrap();
                             match child.as_rule() {
                                 Rule::node_invocation => {
-                                    body.push(FnItem::Node(node::build_node_invocation(child)?));
+                                    body.push(BodyItem::Node(node::build_node_invocation(child)?));
                                 }
                                 Rule::stmt => {
-                                    body.push(FnItem::Stmt(expr::build_stmt(child)?));
+                                    body.push(BodyItem::Stmt(expr::build_stmt(child)?));
                                 }
                                 _ => {}
                             }

@@ -345,28 +345,29 @@ fn build_if(pair: Pair<Rule>) -> Result<IfExpr> {
     Ok(IfExpr { condition, then_branch, else_ifs, else_branch })
 }
 
-fn build_branch(pair: Pair<Rule>) -> Result<(Vec<Stmt>, Option<Expr>)> {
-    let mut stmts = Vec::new();
+fn build_branch(pair: Pair<Rule>) -> Result<(Vec<BodyItem>, Option<Expr>)> {
+    let mut body = Vec::new();
     let mut final_expr = None;
 
     for p in pair.into_inner() {
         match p.as_rule() {
-            Rule::stmt => stmts.push(build_stmt(p)?),
+            Rule::stmt => body.push(BodyItem::Stmt(build_stmt(p)?)),
+            Rule::node_invocation => body.push(BodyItem::Node(node::build_node_invocation(p)?)),
             Rule::expr => final_expr = Some(build_expr(p)?),
             _ => {}
         }
     }
 
     if final_expr.is_none() {
-        if let Some(last_stmt) = stmts.last() {
-            if let Stmt::Expr(expr) = last_stmt {
+        if let Some(last_stmt) = body.last() {
+            if let BodyItem::Stmt(Stmt::Expr(expr)) = last_stmt {
                 final_expr = Some(expr.clone());
-                stmts.pop();
+                body.pop();
             }
         }
     }
 
-    Ok((stmts, final_expr))
+    Ok((body, final_expr))
 }
 
 fn build_match(pair: Pair<Rule>) -> Result<ExprKind> {
@@ -398,8 +399,23 @@ fn build_match_arm(pair: Pair<Rule>) -> Result<MatchArm> {
     let body_pair = inner.next().unwrap();
     let body = match body_pair.as_rule() {
         Rule::block_body => {
+            let span = Span::from_pair(&body_pair);
             let block = build_block(body_pair)?;
-            MatchBody::Block(block.stmts, block.terminator)
+            let mut stmts_found = Vec::new();
+            for item in block.body {
+                match item {
+                    BodyItem::Stmt(stmt) => stmts_found.push(stmt),
+                    BodyItem::Node(_) => {
+                        return Err(NbclError::Ast {
+                            message: "Cannot match to a node in match block body".to_string(),
+                            hint: None,
+                            span: Some(span)
+                        })
+                    }
+                }
+            }
+
+            MatchBody::Block(stmts_found, block.terminator)
         }
         _ => {
             let expr = build_expr(body_pair)?;
@@ -446,22 +462,28 @@ fn build_lambda(pair: Pair<Rule>) -> Result<ExprKind> {
     };
 
     match actual_body.as_rule() {
-        Rule::block_body => {
-            let block = build_block(actual_body)?;
-
-            // Push all regular statements into the function body
-            for stmt in block.stmts {
-                body_items.push(FnItem::Stmt(stmt));
-            }
-
-            if let Some(terminator_expr) = block.terminator {
-                body_items.push(FnItem::Stmt(Stmt::Expr(terminator_expr)));
+        Rule::fn_body => {
+            let item = actual_body.into_inner().next().unwrap();
+            match item.as_rule() {
+                Rule::fn_item => {
+                    let child = item.into_inner().next().unwrap();
+                    match child.as_rule() {
+                        Rule::node_invocation => {
+                            body_items.push(BodyItem::Node(node::build_node_invocation(child)?));
+                        }
+                        Rule::stmt => {
+                            body_items.push(BodyItem::Stmt(build_stmt(child)?));
+                        }
+                        _ => {}
+                    }
+                }
+                _ => {}
             }
         }
         _ => {
             // Single expression lambda: |x| x + 1
             let expr = build_expr(actual_body)?;
-            body_items.push(FnItem::Stmt(Stmt::Expr(expr)));
+            body_items.push(BodyItem::Stmt(Stmt::Expr(expr)));
         }
     }
 
@@ -471,14 +493,17 @@ fn build_lambda(pair: Pair<Rule>) -> Result<ExprKind> {
 }
 
 pub fn build_block(pair: Pair<Rule>) -> Result<Block> {
-    let mut stmts = Vec::new();
+    let mut body = Vec::new();
     let mut terminator = None;
 
     // inner will be the contents of the { ... }
     for inner_pair in pair.into_inner() {
         match inner_pair.as_rule() {
             Rule::stmt => {
-                stmts.push(build_stmt(inner_pair)?);
+                body.push(BodyItem::Stmt(build_stmt(inner_pair)?));
+            }
+            Rule::node_invocation => {
+                body.push(BodyItem::Node(node::build_node_invocation(inner_pair)?));
             }
             Rule::expr => {
                 // In the grammar: { stmt* ~ expr? }
@@ -489,5 +514,5 @@ pub fn build_block(pair: Pair<Rule>) -> Result<Block> {
         }
     }
 
-    Ok(Block { stmts, terminator })
+    Ok(Block { body, terminator })
 }

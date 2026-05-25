@@ -183,7 +183,7 @@ impl NbclEngine {
                     .insert(param.clone(), VariableBinding { value: arg_value, is_const: false });
             }
 
-            return evaluator.execute_fnitem_with_scope(&user_fn.body, function_scope);
+            return evaluator.execute_body_with_scope(&user_fn.body, function_scope);
         }
 
         Err(NbclError::Ast {
