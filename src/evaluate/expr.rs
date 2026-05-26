@@ -234,9 +234,7 @@ impl Evaluator {
                         });
                     }
 
-                    for (i, (arg, expected)) in
-                        args.iter().zip(&native_schema.params).enumerate()
-                    {
+                    for (i, (arg, expected)) in args.iter().zip(&native_schema.params).enumerate() {
                         if !expected.matches_value(arg) {
                             let hint = match (arg, expected) {
                                 (Value::Str(s), _) if s.parse::<i64>().is_ok() =>
