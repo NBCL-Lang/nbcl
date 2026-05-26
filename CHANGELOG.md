@@ -5,6 +5,12 @@ All notable changes to `nbcl` are documented here.
 This changelog follows the [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) format,
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.4.2] - 2026-05-26
+
+### Fixed
+
+- Not being able to call methods of LibraryItem
+
 ## [0.4.1] - 2026-05-25
 
 ### Fixed

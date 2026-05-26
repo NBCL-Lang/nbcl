@@ -154,12 +154,12 @@ impl Evaluator {
                     args.push(self.eval_expr(e)?);
                 }
 
-                let (func_name, is_lambda) = match &callee.kind {
+                let func_name = match &callee.kind {
                     ExprKind::Variable(name) => {
                         if let Some(Value::Lambda(internal_name)) = self.lookup_var(name) {
-                            (internal_name, true)
+                            internal_name
                         } else {
-                            (name.clone(), false)
+                            name.clone()
                         }
                     }
                     ExprKind::Field(source, field, is_safe) => {
@@ -170,7 +170,7 @@ impl Evaluator {
                                 pairs.iter().find(|(k, _)| k == field).map(|(_, v)| v.clone());
 
                             match found {
-                                Some(Value::Lambda(internal_name)) => (internal_name, true),
+                                Some(Value::Lambda(internal_name)) => internal_name,
                                 Some(other_val) => {
                                     return Err(NbclError::Runtime {
                                         message: format!(
@@ -196,12 +196,12 @@ impl Evaluator {
                         } else {
                             // Its a normal method
                             args.insert(0, receiver);
-                            (field.clone(), false)
+                            field.clone()
                         }
                     }
                     _ => {
                         if let Value::Lambda(internal_name) = self.eval_expr(callee)? {
-                            (internal_name, true)
+                            internal_name
                         } else {
                             return Err(NbclError::Runtime {
                                 message: "callee expression is not callable".into(),
@@ -213,56 +213,53 @@ impl Evaluator {
                 };
 
                 // Native function checking
-                if !is_lambda {
-                    // Native functions built into it
-                    if let Some(native_schema) = self.registry.native_functions.get(&func_name) {
-                        if args.len() != native_schema.params.len() {
-                            let expected_params: Vec<String> =
-                                native_schema.params.iter().map(|p| format!("{:?}", p)).collect();
+                if let Some(native_schema) = self.registry.native_functions.get(&func_name) {
+                    if args.len() != native_schema.params.len() {
+                        let expected_params: Vec<String> =
+                            native_schema.params.iter().map(|p| format!("{:?}", p)).collect();
+
+                        return Err(NbclError::Runtime {
+                            message: format!(
+                                "native function '{}' expected {} args, got {}",
+                                func_name,
+                                native_schema.params.len(),
+                                args.len()
+                            ),
+                            hint: Some(format!(
+                                "Usage: {}({})",
+                                func_name,
+                                expected_params.join(", ")
+                            )),
+                            span: Some(expr.span.clone()),
+                        });
+                    }
+
+                    for (i, (arg, expected)) in
+                        args.iter().zip(&native_schema.params).enumerate()
+                    {
+                        if !expected.matches_value(arg) {
+                            let hint = match (arg, expected) {
+                                (Value::Str(s), _) if s.parse::<i64>().is_ok() =>
+                                    Some("This value is a string, but the function needs a number. Try removing the quotes.".to_string()),
+                                _ => Some(format!("Check the {} argument. It must be a {:?}.", crate::utils::ordinal(i + 1), expected)),
+                            };
 
                             return Err(NbclError::Runtime {
                                 message: format!(
-                                    "native function '{}' expected {} args, got {}",
+                                    "native function '{}' arg {} expected {:?}, got {}",
                                     func_name,
-                                    native_schema.params.len(),
-                                    args.len()
+                                    i,
+                                    expected,
+                                    arg.type_name()
                                 ),
-                                hint: Some(format!(
-                                    "Usage: {}({})",
-                                    func_name,
-                                    expected_params.join(", ")
-                                )),
+                                hint,
                                 span: Some(expr.span.clone()),
                             });
                         }
-
-                        for (i, (arg, expected)) in
-                            args.iter().zip(&native_schema.params).enumerate()
-                        {
-                            if !expected.matches_value(arg) {
-                                let hint = match (arg, expected) {
-                                    (Value::Str(s), _) if s.parse::<i64>().is_ok() =>
-                                        Some("This value is a string, but the function needs a number. Try removing the quotes.".to_string()),
-                                    _ => Some(format!("Check the {} argument. It must be a {:?}.", crate::utils::ordinal(i + 1), expected)),
-                                };
-
-                                return Err(NbclError::Runtime {
-                                    message: format!(
-                                        "native function '{}' arg {} expected {:?}, got {}",
-                                        func_name,
-                                        i,
-                                        expected,
-                                        arg.type_name()
-                                    ),
-                                    hint,
-                                    span: Some(expr.span.clone()),
-                                });
-                            }
-                        }
-
-                        self.call_stack_depth -= 1;
-                        return (native_schema.body)(args);
                     }
+
+                    self.call_stack_depth -= 1;
+                    return (native_schema.body)(args);
                 }
 
                 let func_def =
