@@ -32,6 +32,8 @@ jobs:
       run: wasm-pack build --verbose --target web --features wasm
     - name: Build (pretty-errors)
       run: cargo build --verbose --features pretty-errors
+    - name: Build (metadata)
+      run: cargo build --verbose --features metadata
 
     # Integration tests
     - name: Run tests

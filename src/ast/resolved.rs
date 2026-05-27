@@ -12,7 +12,7 @@ pub struct ResolvedNode {
 
     /// Final, evaluated properties (no logic left, just data)
     #[cfg(feature = "metadata")]
-    pub props: HashMap<String, (Value, Span)>,
+    pub props: HashMap<String, (Value, crate::error::Span)>,
     #[cfg(not(feature = "metadata"))]
     pub props: HashMap<String, Value>,
 
