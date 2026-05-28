@@ -57,13 +57,15 @@ keyword = _{
 // snake_ident must not be a reserved keyword
 // The !keyword prevents "let" from parsing as an ident even though
 // it matches the character pattern.
+keyword_boundary = _{ !(ASCII_ALPHANUMERIC | "_") }
+
 snake_ident = @{
-    !(keyword ~ !ASCII_ALPHANUMERIC)
+    !(keyword ~ keyword_boundary)
     ~ (
         ASCII_ALPHA_LOWER ~ (ASCII_ALPHANUMERIC | "_")*
       | ASCII_ALPHA_UPPER ~ (ASCII_ALPHA_UPPER | ASCII_DIGIT | "_")+
     )
-    ~ !(ASCII_ALPHANUMERIC | "_")
+    ~ keyword_boundary
 }
 pascal_ident = @{
     ASCII_ALPHA_UPPER
