@@ -462,22 +462,23 @@ fn build_lambda(pair: Pair<Rule>) -> Result<ExprKind> {
     };
 
     match actual_body.as_rule() {
-        Rule::fn_body => {
-            let item = actual_body.into_inner().next().unwrap();
-            match item.as_rule() {
-                Rule::fn_item => {
-                    let child = item.into_inner().next().unwrap();
-                    match child.as_rule() {
-                        Rule::node_invocation => {
-                            body_items.push(BodyItem::Node(node::build_node_invocation(child)?));
+          Rule::fn_body => {
+            for item in actual_body.into_inner() {
+                match item.as_rule() {
+                    Rule::fn_item => {
+                        let child = item.into_inner().next().unwrap();
+                        match child.as_rule() {
+                            Rule::node_invocation => {
+                                body_items.push(BodyItem::Node(node::build_node_invocation(child)?));
+                            }
+                            Rule::stmt => {
+                                body_items.push(BodyItem::Stmt(build_stmt(child)?));
+                            }
+                            _ => {}
                         }
-                        Rule::stmt => {
-                            body_items.push(BodyItem::Stmt(build_stmt(child)?));
-                        }
-                        _ => {}
                     }
+                    _ => {}
                 }
-                _ => {}
             }
         }
         _ => {
