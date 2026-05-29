@@ -2,7 +2,7 @@
 name = "nbcl"
 description = "Configuration language designed to be easy and understandable."
 license = "Apache-2.0"
-version = "0.4.5"
+version = "0.4.6"
 homepage = "https://nbcl-lang.github.io/"
 repository = "https://github.com/NBCL-Lang/nbcl"
 edition = "2024"

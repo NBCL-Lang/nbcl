@@ -62,6 +62,8 @@ impl Evaluator {
                 })?;
 
                 let ast = crate::builder::build_file(file_pair)?;
+                let mut local_components = Vec::new();
+                let mut imported_components = Vec::new();
                 let mut import_map = Vec::new();
 
                 for item in ast.items.clone() {
@@ -76,14 +78,18 @@ impl Evaluator {
                             import_map.push((old_name, Value::Lambda(new_internal_name)))
                         }
                         TopLevelItem::ComponentDef(c) => {
+                            let name = c.name.clone();
+                            local_components.push(name.clone());
+                            self.registry.register_component(c);
+
                             if let Some(ref selection) = components {
                                 match selection {
                                     ComponentSelection::Wildcard => {
-                                        self.registry.register_component(c);
+                                        imported_components.push(name)
                                     }
                                     ComponentSelection::List(allowed_comps) => {
-                                        if allowed_comps.contains(&c.name) {
-                                            self.registry.register_component(c);
+                                        if allowed_comps.contains(&name) {
+                                            imported_components.push(name)
                                         }
                                     }
                                 }
@@ -132,9 +138,22 @@ impl Evaluator {
                             root_nodes.extend(nodes);
                         }
                         TopLevelItem::Stmt(stmt) => {
-                            self.execute_stmt(&stmt)?;
+                            let result = self.execute_stmt(&stmt)?;
+
+                            if let Value::Node(returned_nodes) = result {
+                                root_nodes.extend(returned_nodes);
+                            }
                         }
                         _ => {} // Rest are already handled
+                    }
+                }
+
+                let names_to_retain: std::collections::HashSet<String> = 
+                    imported_components.into_iter().collect();
+
+                for comp_name in local_components {
+                    if !names_to_retain.contains(&comp_name) {
+                        self.registry.components.remove(&comp_name); 
                     }
                 }
 

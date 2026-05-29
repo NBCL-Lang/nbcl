@@ -1,5 +1,0 @@
-let let_asd = 32
-print(let_asd)
-
-let set_ter = 3
-print(set_ter)
