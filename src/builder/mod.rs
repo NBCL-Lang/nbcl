@@ -158,5 +158,12 @@ fn build_fn_def(pair: Pair<Rule>) -> Result<FnDef> {
 }
 
 pub fn unquote(s: &str) -> String {
-    s.trim_matches(|c| c == '"' || c == '\'').to_string()
+    let bytes = s.as_bytes();
+    if bytes.len() >= 2 {
+        let (open, close) = (bytes[0], bytes[bytes.len() - 1]);
+        if (open == b'"' && close == b'"') || (open == b'\'' && close == b'\'') {
+            return s[1..s.len() - 1].to_string();
+        }
+    }
+    s.to_string()
 }
