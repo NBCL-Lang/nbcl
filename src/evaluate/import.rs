@@ -18,6 +18,7 @@ impl Evaluator {
         match imp.def {
             ImportDefType::Module(path_str, alias, components) => {
                 let target_path = self.module_resolver.find_target(&path_str)?;
+                self.registry.current_file = Some(target_path.clone());
 
                 // Avoiding circular imports
                 if self.loaded_files.contains(&target_path) {
@@ -157,6 +158,7 @@ impl Evaluator {
                     }
                 }
 
+                self.registry.current_file = None;
                 self.loaded_files.insert(target_path);
                 Ok(())
             }

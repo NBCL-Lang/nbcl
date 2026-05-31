@@ -31,11 +31,16 @@ pub mod pretty_error {
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "metadata", derive(serde::Serialize, serde::Deserialize))]
 pub struct Span {
+    /// Start position in bytes
     pub start: usize,
+    /// End position in bytes
     pub end: usize,
+    /// Line at which this error occoured
     pub line: usize,
+    /// Column at which this error occoured
     pub col: usize,
-    pub slice: String,
+    /// Slice of string where in which this error occoured
+    pub slice: String
 }
 
 impl Span {
@@ -78,6 +83,24 @@ impl NbclError {
             Self::Ast { span, .. } => span.clone(),
             Self::IO { .. } => None,
             Self::Runtime { span, .. } => span.clone(),
+        }
+    }
+
+    pub fn message(&self) -> String {
+        match self {
+            Self::Parse { message, .. } => message.clone(),
+            Self::Ast { message, .. } => message.clone(),
+            Self::IO { message, .. } => message.clone(),
+            Self::Runtime { message, .. } => message.clone(),
+        }
+    }
+
+    pub fn hint(&self) -> Option<String> {
+        match self {
+            Self::Parse { hint, .. } => hint.clone(),
+            Self::Ast { hint, .. } => hint.clone(),
+            Self::IO { hint, .. } => hint.clone(),
+            Self::Runtime { hint, .. } => hint.clone(),
         }
     }
 }
@@ -226,7 +249,7 @@ fn classify_expectation(positives: &[Rule]) -> (&'static str, &'static str) {
     match (is_binary_op, is_postfix) {
         (true, true) => (
             "an operator or continuation of expression",
-            "You likely have an incomplete expression. An operand is missing a right-hand side, or a statement is not terminated.",
+            "You likely have an incomplete expression or an operand is missing a right-hand side.",
         ),
         (true, false) => (
             "a binary operator",

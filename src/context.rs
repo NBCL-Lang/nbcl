@@ -1,4 +1,5 @@
 use crate::registry::Registry;
+use std::path::PathBuf;
 use std::ops::Deref;
 
 #[derive(Clone)]
@@ -9,5 +10,11 @@ impl Deref for Context {
 
     fn deref(&self) -> &Self::Target {
         &self.0
+    }
+}
+
+impl Context {
+    pub fn get_current_file(&self) -> Option<PathBuf> {
+        self.0.current_file.clone()
     }
 }

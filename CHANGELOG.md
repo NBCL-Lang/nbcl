@@ -5,6 +5,16 @@ All notable changes to `nbcl` are documented here.
 This changelog follows the [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) format,
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [UNRELEASED]
+
+### Added
+
+- `get_current_file` function to Context.
+
+### Fixed
+
+- Not being able to escape string interpolation.
+
 ## [0.4.7] - 2026-05-31
 
 ### Fixed

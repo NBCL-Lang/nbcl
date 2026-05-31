@@ -5,9 +5,10 @@ use crate::ast::utils::{NativeFnSchema, NativeNodeSchema, Type, Value};
 use crate::error::Result;
 use crate::library::Library;
 use rustc_hash::FxHashMap;
-use std::fmt;
-use std::rc::Rc;
+use std::path::PathBuf;
 use std::sync::Arc;
+use std::rc::Rc;
+use std::fmt;
 
 /// Registry containing important data about source.
 #[derive(Default, Clone)]
@@ -29,6 +30,9 @@ pub struct Registry {
 
     /// All registered libraries
     pub(crate) libraries: Vec<Library>,
+
+    /// Current file
+    pub(crate) current_file: Option<PathBuf>,
 }
 
 impl fmt::Debug for Registry {

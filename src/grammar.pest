@@ -104,8 +104,8 @@ string_lit = ${
   | "'"  ~ single_quoted_inner ~ "'"
 }
 
-double_quoted_inner = @{ (!"\"" ~ !"\\" ~ ANY | escape_seq)* }
-single_quoted_inner = @{ (!"'"  ~ !"\\" ~ ANY | escape_seq)* }
+double_quoted_inner = @{ (escape_seq | !"\"" ~ ANY)* }
+single_quoted_inner = @{ (escape_seq | !"'"  ~ ANY)* }
 
 escape_seq = @{ "\\" ~ ("n" | "t" | "r" | "\\" | "\"" | "'" | "u" ~ ASCII_HEX_DIGIT{4}) }
 
