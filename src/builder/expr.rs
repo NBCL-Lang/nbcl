@@ -115,7 +115,7 @@ pub fn build_stmt(pair: Pair<Rule>) -> Result<Stmt> {
             };
             Ok(Stmt::Return(return_type, span))
         }
-
+        Rule::if_expr => Ok(Stmt::Expr(Expr { kind: ExprKind::If(Box::new(build_if(inner)?)), span })),
         Rule::expr_stmt => Ok(Stmt::Expr(build_expr(inner.into_inner().next().unwrap())?)),
         _ => Err(NbclError::Ast {
             message: format!("unknown Statement: {:?}", inner.as_rule()),
