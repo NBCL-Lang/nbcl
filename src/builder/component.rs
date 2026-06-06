@@ -62,11 +62,8 @@ fn build_param_item(pair: Pair<Rule>) -> Result<Parameter> {
     let name = inner.next().unwrap().as_str().to_string();
     let mut is_optional = false;
 
-    for part in inner {
-        match part.as_rule() {
-            _ if part.as_str() == "?" => is_optional = true,
-            _ => {}
-        }
+    if let Some(_) = inner.next() {
+        is_optional = true;
     }
 
     Ok(Parameter { name, is_optional })

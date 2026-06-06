@@ -327,8 +327,10 @@ named_params = {
 }
 
 param_item = {
-    snake_ident ~ "?"?
+    snake_ident ~ optional_key?
 }
+
+optional_key = { "?" }
 
 // === NODES ===
 //

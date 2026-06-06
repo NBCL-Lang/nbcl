@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 - Not being able to escape string interpolation.
 - Not able to use if statements inside node body.
+- Optional params being required inside component.
 
 ## [0.4.7] - 2026-05-31
 

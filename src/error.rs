@@ -231,6 +231,7 @@ fn rule_to_human(rule: Rule) -> &'static str {
         // === Keywords ===
         Rule::in_kw => "'in' keyword",
         Rule::as_kw => "'as' keyword",
+        Rule::optional_key => "'?' key",
     }
 }
 

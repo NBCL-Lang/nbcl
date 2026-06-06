@@ -1,0 +1,14 @@
+component Server (port, address?) {
+    id_required = true
+    child_count = 0
+
+
+    Object self.id {
+        port = port
+        address = address
+    }
+}
+
+Server "ws" {
+    port = 3000
+}
