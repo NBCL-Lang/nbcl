@@ -6,7 +6,7 @@ use crate::{
     ast::utils::{NativeNodeSchema, Type, Value},
     builder::build_file,
     context::Context,
-    error::{NbclError, Result},
+    error::{NbclError, ErrorWithContext, Result},
     evaluate::{Evaluator, Scope, ScopeKind, VariableBinding},
     library::Library,
     module_resolver::{FileModuleResolver, ModuleResolver},
@@ -97,14 +97,23 @@ impl NbclEngine {
     }
 
     /// Evaluate a source AST and get the context
-    pub fn evaluate_ast_for_ctx(&self, file: File) -> Result<(ResolvedTree, Context)> {
+    pub fn evaluate_ast_for_ctx(&self, file: File) -> std::result::Result<(ResolvedTree, Context), ErrorWithContext> {
         let mut evaluator = Evaluator::new(
             self.registry.clone(),
             self.module_resolver.clone(),
             self.max_depth.clone(),
         );
 
-        let tree = evaluator.run(file)?;
+        let tree = match evaluator.run(file) {
+            Ok(tree) => tree,
+            Err(err) => {
+                let ctx = evaluator.return_context();
+                return Err(ErrorWithContext {
+                    ctx,
+                    err,
+                })
+            }
+        };
         let ctx = evaluator.return_context();
 
         Ok((tree, ctx))

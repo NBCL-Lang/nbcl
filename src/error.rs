@@ -474,3 +474,10 @@ fn write_report(
 
     write!(f, "{}", String::from_utf8_lossy(&buf))
 }
+
+// Other errors //
+
+pub struct ErrorWithContext {
+    pub ctx: crate::context::Context,
+    pub err: NbclError,
+}
