@@ -201,4 +201,9 @@ impl NbclEngine {
             span: None,
         })
     }
+
+    /// Set registry from context.
+    pub fn set_contenxt(&mut self, ctx: Context) {
+        self.registry = ctx.0;
+    }
 }
