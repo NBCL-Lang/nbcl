@@ -17,4 +17,8 @@ impl Context {
     pub fn get_current_file(&self) -> Option<PathBuf> {
         self.0.current_file.clone()
     }
+
+    pub fn extend(&mut self, other: Context) {
+        self.0.extend(other.0);
+    }
 }

@@ -81,4 +81,16 @@ impl Registry {
             }
         }
     }
+
+    pub fn extend(&mut self, other: Registry) {
+        self.components.extend(other.components);
+        self.native_nodes.extend(other.native_nodes);
+        self.native_functions.extend(other.native_functions);
+        self.functions.extend(other.functions);
+        self.globals.extend(other.globals);
+        self.libraries.extend(other.libraries);
+        if other.current_file.is_some() {
+            self.current_file = other.current_file;
+        }
+    }
 }
