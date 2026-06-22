@@ -5,7 +5,7 @@ use crate::{
     ast::source::File,
     ast::utils::{NativeNodeSchema, Type, Value},
     builder::build_file,
-    context::Context,
+    context::{Context, EvalContext},
     error::{NbclError, ErrorWithContext, Result},
     evaluate::{Evaluator, Scope, ScopeKind, VariableBinding},
     library::Library,
@@ -22,9 +22,9 @@ use std::rc::Rc;
 /// Nbcl Engine used for parsing and evaluation
 #[derive(Debug, Clone)]
 pub struct NbclEngine {
-    registry: Registry,
-    module_resolver: Rc<dyn ModuleResolver>,
-    max_depth: usize,
+    pub(crate) registry: Registry,
+    pub(crate) module_resolver: Rc<dyn ModuleResolver>,
+    pub(crate) max_depth: usize,
 }
 
 impl NbclEngine {
@@ -117,6 +117,10 @@ impl NbclEngine {
         let ctx = evaluator.return_context();
 
         Ok((tree, ctx))
+    }
+
+    pub fn eval_ast_with_eval_ctx(&self, file: File, mut ctx: EvalContext) -> Result<ResolvedTree> {
+        ctx.0.run(file)
     }
 
     /// Parse and evaluate a source string

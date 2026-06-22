@@ -15,13 +15,14 @@ use std::path::PathBuf;
 use std::rc::Rc;
 
 // Todo: Maybe add break and continue
+#[derive(Clone)]
 pub enum FlowControl {
     None,
     Return(Value),
 }
 
 /// Kinds of scopes
-#[derive(PartialEq)]
+#[derive(PartialEq, Clone)]
 pub enum ScopeKind {
     TopLevel,
     Block,     // if, for, while
@@ -36,13 +37,14 @@ pub(crate) struct VariableBinding {
 }
 
 /// Internal structure used for scope handling
-#[derive(PartialEq)]
+#[derive(PartialEq, Clone)]
 pub(crate) struct Scope {
     pub variables: FxHashMap<String, VariableBinding>,
     pub kind: ScopeKind,
 }
 
 /// An internal structure that evaluates the source AST
+#[derive(Clone)]
 pub(crate) struct Evaluator {
     registry: Registry,
     scopes: Vec<Scope>,
@@ -126,5 +128,11 @@ impl Evaluator {
 
     pub fn return_context(&self) -> Context {
         Context(self.registry.clone())
+    }
+
+    pub fn extend(&mut self, other: Evaluator) {
+        self.registry.extend(other.registry);
+        self.scopes.extend(other.scopes);
+        self.loaded_files.extend(other.loaded_files);
     }
 }

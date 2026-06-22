@@ -1,4 +1,6 @@
+use crate::evaluate::Evaluator;
 use crate::registry::Registry;
+use crate::NbclEngine;
 use std::path::PathBuf;
 use std::ops::Deref;
 
@@ -19,6 +21,30 @@ impl Context {
     }
 
     pub fn extend(&mut self, other: Context) {
+        self.0.extend(other.0);
+    }
+}
+
+#[derive(Clone)]
+pub struct EvalContext(pub(crate) Evaluator);
+
+impl EvalContext {
+    pub fn new() -> EvalContext {
+        let engine = NbclEngine::new();
+        Self::from(&engine)
+    }
+
+    pub fn from(engine: &NbclEngine) -> EvalContext {
+        let evaluator = Evaluator::new(
+            engine.registry.clone(),
+            engine.module_resolver.clone(),
+            engine.max_depth.clone(),
+        );
+
+        EvalContext(evaluator)
+    }
+
+    pub fn extend(&mut self, other: EvalContext) {
         self.0.extend(other.0);
     }
 }
