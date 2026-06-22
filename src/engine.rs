@@ -119,7 +119,7 @@ impl NbclEngine {
         Ok((tree, ctx))
     }
 
-    pub fn eval_ast_with_eval_ctx(&self, file: File, mut ctx: EvalContext) -> Result<ResolvedTree> {
+    pub fn eval_ast_with_eval_ctx(&self, file: File, ctx: &mut EvalContext) -> Result<ResolvedTree> {
         ctx.0.run(file)
     }
 
