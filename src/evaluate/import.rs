@@ -97,11 +97,11 @@ impl Evaluator {
                             }
                         }
                         // We insert globals now so they are available in Loop 2
-                        TopLevelItem::Stmt(Stmt::Const(name, expr)) => {
+                        TopLevelItem::Stmt(Stmt::Const(name, expr, _)) => {
                             let val = self.eval_expr(&expr)?;
                             import_map.push((name.clone(), val));
                         }
-                        TopLevelItem::Stmt(Stmt::Let(name, expr)) => {
+                        TopLevelItem::Stmt(Stmt::Let(name, expr, _)) => {
                             let val = self.eval_expr(&expr)?;
                             import_map.push((name.clone(), val));
                         }

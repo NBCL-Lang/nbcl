@@ -104,8 +104,8 @@ pub struct Block {
 #[derive(Debug, Clone)]
 pub enum Stmt {
     Assign(Expr, AssignOp, Expr, Span),
-    Let(String, Expr),
-    Const(String, Expr),
+    Let(String, Expr, Span),
+    Const(String, Expr, Span),
     For(Vec<String>, Expr, Block),
     While(Expr, Block),
     Return(Option<ReturnType>, Span),

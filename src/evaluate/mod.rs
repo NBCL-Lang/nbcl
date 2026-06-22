@@ -97,7 +97,7 @@ impl Evaluator {
                 TopLevelItem::Import(imp) => self.handle_import(imp.clone(), &mut root_nodes)?,
                 TopLevelItem::ComponentDef(def) => self.registry.register_component(def.clone()),
                 TopLevelItem::FnDef(def) => self.registry.register_function(def.clone()),
-                TopLevelItem::Stmt(Stmt::Const(name, expr)) => {
+                TopLevelItem::Stmt(Stmt::Const(name, expr, _)) => {
                     // We evaluate globals now so they are available in Loop 2
                     let val = self.eval_expr(expr)?;
                     self.registry.globals.insert(name.clone(), val);

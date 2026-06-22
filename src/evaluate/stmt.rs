@@ -48,9 +48,19 @@ impl Evaluator {
                 self.flow = FlowControl::Return(val.clone());
                 val
             }
-            Stmt::Const(name, expr) => {
+            Stmt::Const(name, expr, span) => {
                 let val = self.eval_expr(&expr)?;
                 if let Some(current_scope) = self.scopes.last_mut() {
+                    if let Some(binding_ref) = current_scope.variables.get(name) {
+                        if binding_ref.is_const {
+                            return Err(NbclError::Runtime {
+                                message: format!("cannot shadow a constant variable '{}'", name),
+                                hint: Some("A variable with this name was declared with 'const', or is an immutable loop/property binding.".into()),
+                                span: Some(span.clone()),
+                            });
+                        }
+                    }
+
                     current_scope
                         .variables
                         .insert(name.to_string(), VariableBinding { value: val, is_const: true });
@@ -58,9 +68,19 @@ impl Evaluator {
 
                 Value::Null
             }
-            Stmt::Let(name, expr) => {
+            Stmt::Let(name, expr, span) => {
                 let val = self.eval_expr(&expr)?;
                 if let Some(current_scope) = self.scopes.last_mut() {
+                    if let Some(binding_ref) = current_scope.variables.get(name) {
+                        if binding_ref.is_const {
+                            return Err(NbclError::Runtime {
+                                message: format!("cannot shadow a constant variable '{}'", name),
+                                hint: Some("A variable with this name was declared with 'const', or is an immutable loop/property binding.".into()),
+                                span: Some(span.clone()),
+                            });
+                        }
+                    }
+
                     current_scope
                         .variables
                         .insert(name.to_string(), VariableBinding { value: val, is_const: false });

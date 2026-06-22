@@ -14,15 +14,17 @@ pub fn build_stmt(pair: Pair<Rule>) -> Result<Stmt> {
 
     match inner.as_rule() {
         Rule::let_stmt | Rule::const_stmt => {
+            let span = Span::from_pair(&inner);
+
             let mut ii = inner.clone().into_inner();
             let name = ii.next().unwrap().as_str().to_string();
             let next = ii.next().unwrap();
 
             let value = build_expr(next)?;
             if inner.as_rule() == Rule::let_stmt {
-                Ok(Stmt::Let(name, value))
+                Ok(Stmt::Let(name, value, span))
             } else {
-                Ok(Stmt::Const(name, value))
+                Ok(Stmt::Const(name, value, span))
             }
         }
         Rule::assign_stmt => {
