@@ -1,6 +1,2 @@
-print("Hi \n")
+print({x = "2"}.len())
 
-const a = "test"
-print(3.0 + 2.0)
-
-print(null)

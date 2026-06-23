@@ -13,11 +13,16 @@ fn main() {
         std::process::exit(1);
     });
 
+    let show_ast = env::args().nth(2).unwrap_or(String::new());
+
     let engine = NbclEngine::new();
 
     match engine.parse_str(&source) {
         Ok(ast) => {
-            println!("AST: {:#?}", ast);
+            if show_ast == "--show-ast" {
+                println!("AST: {:#?}", ast);
+            }
+            
             match engine.evaluate_ast(ast) {
                 Ok(evaled) => println!("{:#?}", evaled),
                 Err(e) => println!("{}", e),

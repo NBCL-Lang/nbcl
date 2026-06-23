@@ -182,15 +182,34 @@ impl Evaluator {
                                     });
                                 }
                                 None => {
-                                    if *is_safe {
-                                        self.call_stack_depth -= 1;
-                                        return Ok(Value::Null);
+                                    let all_funcs = self
+                                        .registry
+                                        .native_functions
+                                        .keys()
+                                        .chain(self.registry.functions.keys());
+
+                                    let mut found = false;
+                                    for func in all_funcs {
+                                        if func == field {
+                                            found = true;
+                                            break;
+                                        }
                                     }
-                                    return Err(NbclError::Runtime {
-                                        message: format!("map has no field: {}", field),
-                                        hint: None,
-                                        span: Some(callee.span.clone()),
-                                    });
+
+                                    if found {
+                                        args.insert(0, receiver);
+                                        field.clone()
+                                    } else {
+                                        if *is_safe {
+                                            self.call_stack_depth -= 1;
+                                            return Ok(Value::Null);
+                                        }
+                                        return Err(NbclError::Runtime {
+                                            message: format!("map has no field: {}", field),
+                                            hint: None,
+                                            span: Some(callee.span.clone()),
+                                        });
+                                    }
                                 }
                             }
                         } else {
