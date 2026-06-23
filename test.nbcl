@@ -1,4 +1,6 @@
-print(r"Hi \n hi")
+print("Hi \n")
 
 const a = "test"
-print(f"${a}")
+print(3.0 + 2.0)
+
+print(null)

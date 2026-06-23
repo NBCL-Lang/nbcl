@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 - `EvalContext` structure.
 - `eval_ast_with_eval_ctx` function.
+- Floating value arithmetic and comparisons.
 - Format string literals (f).
 - Raw string literals (r).
 

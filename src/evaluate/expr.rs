@@ -630,6 +630,31 @@ impl Evaluator {
                 }
                 Ok(Value::Int(a % b))
             }
+            (Value::Float(a), "+", Value::Float(b)) => Ok(Value::Float(a + b)),
+            (Value::Float(a), "-", Value::Float(b)) => Ok(Value::Float(a - b)),
+            (Value::Float(a), "*", Value::Float(b)) => Ok(Value::Float(a * b)),
+            (Value::Float(a), "/", Value::Float(b)) => {
+                if *b == 0.0 {
+                    return Err(NbclError::Runtime {
+                        message: "division by zero".to_string(),
+                        hint: Some(
+                            "Try replacing the zero with another number, silly!".to_string(),
+                        ),
+                        span: Some(span.clone()),
+                    });
+                }
+                Ok(Value::Float(a / b))
+            }
+            (Value::Float(a), "%", Value::Float(b)) => {
+                if *b == 0.0 {
+                    return Err(NbclError::Runtime {
+                        message: "modulo by zero".to_string(),
+                        hint: Some("Try replacing the zero with another number.".to_string()),
+                        span: Some(span.clone()),
+                    });
+                }
+                Ok(Value::Float(a % b))
+            }
             (Value::Str(a), "+", Value::Str(b)) => Ok(Value::Str(format!("{}{}", a, b))),
 
             // Integer Comparisons
@@ -639,6 +664,14 @@ impl Evaluator {
             (Value::Int(a), "<=", Value::Int(b)) => Ok(Value::Bool(a <= b)),
             (Value::Int(a), ">", Value::Int(b)) => Ok(Value::Bool(a > b)),
             (Value::Int(a), ">=", Value::Int(b)) => Ok(Value::Bool(a >= b)),
+
+            // Float Comparisons
+            (Value::Float(a), "==", Value::Float(b)) => Ok(Value::Bool(a == b)),
+            (Value::Float(a), "!=", Value::Float(b)) => Ok(Value::Bool(a != b)),
+            (Value::Float(a), "<", Value::Float(b)) => Ok(Value::Bool(a < b)),
+            (Value::Float(a), "<=", Value::Float(b)) => Ok(Value::Bool(a <= b)),
+            (Value::Float(a), ">", Value::Float(b)) => Ok(Value::Bool(a > b)),
+            (Value::Float(a), ">=", Value::Float(b)) => Ok(Value::Bool(a >= b)),
 
             // String Comparisons
             (Value::Str(a), "==", Value::Str(b)) => Ok(Value::Bool(a == b)),
