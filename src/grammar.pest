@@ -99,9 +99,19 @@ null_lit = { "null" }
 
 // string
 // "hello"  or  'hello'
-string_lit = ${
+string_lit = { string_regular | string_f | string_raw }
+
+string_regular = ${
     "\"" ~ double_quoted_inner ~ "\""
   | "'"  ~ single_quoted_inner ~ "'"
+}
+
+string_f = ${
+    "f" ~ string_regular
+}
+
+string_raw = ${
+    "r" ~ string_regular
 }
 
 double_quoted_inner = @{ (escape_seq | !"\"" ~ ANY)* }

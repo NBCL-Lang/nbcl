@@ -150,6 +150,13 @@ pub enum ExprKind {
     Range(Box<Expr>, Box<Expr>, bool), // bool is inclusive
 }
 
+#[derive(Debug, Clone)]
+pub enum StringType {
+    Regular,
+    Format,
+    Raw
+}
+
 /// If/else expressions
 #[derive(Debug, Clone)]
 pub struct IfExpr {
@@ -178,7 +185,7 @@ pub enum Literal {
     Int(i64),
     Float(f64),
     Bool(bool),
-    Str(String),
+    Str(String, StringType),
     List(Vec<Expr>),
     Map(Vec<(String, Expr)>),
     Null,

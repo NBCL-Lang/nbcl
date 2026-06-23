@@ -11,10 +11,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 - `EvalContext` structure.
 - `eval_ast_with_eval_ctx` function.
+- Format string literals (f).
+- Raw string literals (r).
 
 ### Fixed 
 
 - Allowing constant variables to be shadowed.
+
+### Removed 
+
+- String formating in regular string literals.
 
 ## [0.5.1] - 2026-06-10
 

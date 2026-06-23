@@ -240,7 +240,20 @@ pub fn build_expr(pair: Pair<Rule>) -> Result<Expr> {
         }
         Rule::id_expression => build_expr(pair.into_inner().next().unwrap()),
         Rule::string_lit => {
-            Ok(Expr { kind: ExprKind::Literal(Literal::Str(unquote(pair.as_str()))), span })
+            let next = pair.into_inner().next().unwrap();
+            let (str_type, str_val) = match next.as_rule() {
+                Rule::string_f => {
+                    let inner = next.into_inner().next().unwrap();
+                    (StringType::Format, inner.as_str())
+                },
+               Rule::string_raw => {
+                    let inner = next.into_inner().next().unwrap();
+                    (StringType::Raw, inner.as_str())
+                },
+                _ => (StringType::Regular, next.as_str()),
+            };
+
+            Ok(Expr { kind: ExprKind::Literal(Literal::Str(unquote(str_val), str_type)), span })
         }
         Rule::primary_expr => build_expr(pair.into_inner().next().unwrap()),
         Rule::literal => Ok(Expr { kind: ExprKind::Literal(build_literal(pair)?), span }),
@@ -290,7 +303,22 @@ fn build_literal(pair: Pair<Rule>) -> Result<Literal> {
         Rule::int_lit => Ok(Literal::Int(inner.as_str().parse().unwrap())),
         Rule::float_lit => Ok(Literal::Float(inner.as_str().parse().unwrap())),
         Rule::bool_lit => Ok(Literal::Bool(inner.as_str() == "true")),
-        Rule::string_lit => Ok(Literal::Str(unquote(inner.as_str()))),
+        Rule::string_lit => {
+            let next = inner.into_inner().next().unwrap();
+            let (str_type, str_val) = match next.as_rule() {
+                Rule::string_f => {
+                    let inner = next.into_inner().next().unwrap();
+                    (StringType::Format, inner.as_str())
+                },
+               Rule::string_raw => {
+                    let inner = next.into_inner().next().unwrap();
+                    (StringType::Raw, inner.as_str())
+                },
+                _ => (StringType::Regular, next.as_str()),
+            };
+
+            Ok(Literal::Str(unquote(str_val), str_type))
+        },
         Rule::list_lit => {
             let mut exprs = Vec::new();
             for p in inner.into_inner() {

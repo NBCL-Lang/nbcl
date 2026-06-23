@@ -1,14 +1,4 @@
-component Server (port, address?) {
-    id_required = true
-    child_count = 0
+print(r"Hi \n hi")
 
-
-    Object self.id {
-        port = port
-        address = address
-    }
-}
-
-Server "ws" {
-    port = 3000
-}
+const a = "test"
+print(f"${a}")

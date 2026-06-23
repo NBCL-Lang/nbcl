@@ -513,7 +513,7 @@ impl Evaluator {
             Literal::Int(i) => Ok(Value::Int(*i)),
             Literal::Float(f) => Ok(Value::Float(*f)),
             Literal::Bool(b) => Ok(Value::Bool(*b)),
-            Literal::Str(s) => Ok(Value::Str(self.evaluate_string_interpolation(&s))),
+            Literal::Str(s, st) => Ok(Value::Str(self.evaluate_string_interpolation(&s, &st))),
             Literal::Null => Ok(Value::Null),
             Literal::List(exprs) => {
                 let mut values = Vec::new();
@@ -532,7 +532,12 @@ impl Evaluator {
         }
     }
 
-    fn evaluate_string_interpolation(&self, s: &str) -> String {
+    fn evaluate_string_interpolation(&self, s: &str, st: &StringType) -> String {
+        match st {
+            StringType::Raw => return s.to_string(),
+            _ => {}
+        }
+
         let mut result = String::new();
         let mut chars = s.chars().peekable();
 
@@ -573,7 +578,7 @@ impl Evaluator {
                     }
                     _ => result.push('\\'),
                 }
-            } else if ch == '$' && chars.peek() == Some(&'{') {
+            } else if ch == '$' && chars.peek() == Some(&'{') && let StringType::Format = st {
                 chars.next();
 
                 let mut var_name = String::new();
