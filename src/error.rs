@@ -40,7 +40,7 @@ pub struct Span {
     /// Column at which this error occoured
     pub col: usize,
     /// Slice of string where in which this error occoured
-    pub slice: String
+    pub slice: String,
 }
 
 impl Span {

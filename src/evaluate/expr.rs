@@ -578,7 +578,10 @@ impl Evaluator {
                     }
                     _ => result.push('\\'),
                 }
-            } else if ch == '$' && chars.peek() == Some(&'{') && let StringType::Format = st {
+            } else if ch == '$'
+                && chars.peek() == Some(&'{')
+                && let StringType::Format = st
+            {
                 chars.next();
 
                 let mut var_name = String::new();

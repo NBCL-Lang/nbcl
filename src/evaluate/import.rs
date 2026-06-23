@@ -85,9 +85,7 @@ impl Evaluator {
 
                             if let Some(ref selection) = components {
                                 match selection {
-                                    ComponentSelection::Wildcard => {
-                                        imported_components.push(name)
-                                    }
+                                    ComponentSelection::Wildcard => imported_components.push(name),
                                     ComponentSelection::List(allowed_comps) => {
                                         if allowed_comps.contains(&name) {
                                             imported_components.push(name)
@@ -149,12 +147,12 @@ impl Evaluator {
                     }
                 }
 
-                let names_to_retain: std::collections::HashSet<String> = 
+                let names_to_retain: std::collections::HashSet<String> =
                     imported_components.into_iter().collect();
 
                 for comp_name in local_components {
                     if !names_to_retain.contains(&comp_name) {
-                        self.registry.components.remove(&comp_name); 
+                        self.registry.components.remove(&comp_name);
                     }
                 }
 

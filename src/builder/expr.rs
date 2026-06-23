@@ -117,7 +117,9 @@ pub fn build_stmt(pair: Pair<Rule>) -> Result<Stmt> {
             };
             Ok(Stmt::Return(return_type, span))
         }
-        Rule::if_expr => Ok(Stmt::Expr(Expr { kind: ExprKind::If(Box::new(build_if(inner)?)), span })),
+        Rule::if_expr => {
+            Ok(Stmt::Expr(Expr { kind: ExprKind::If(Box::new(build_if(inner)?)), span }))
+        }
         Rule::expr_stmt => Ok(Stmt::Expr(build_expr(inner.into_inner().next().unwrap())?)),
         _ => Err(NbclError::Ast {
             message: format!("unknown Statement: {:?}", inner.as_rule()),
@@ -245,11 +247,11 @@ pub fn build_expr(pair: Pair<Rule>) -> Result<Expr> {
                 Rule::string_f => {
                     let inner = next.into_inner().next().unwrap();
                     (StringType::Format, inner.as_str())
-                },
-               Rule::string_raw => {
+                }
+                Rule::string_raw => {
                     let inner = next.into_inner().next().unwrap();
                     (StringType::Raw, inner.as_str())
-                },
+                }
                 _ => (StringType::Regular, next.as_str()),
             };
 
@@ -309,16 +311,16 @@ fn build_literal(pair: Pair<Rule>) -> Result<Literal> {
                 Rule::string_f => {
                     let inner = next.into_inner().next().unwrap();
                     (StringType::Format, inner.as_str())
-                },
-               Rule::string_raw => {
+                }
+                Rule::string_raw => {
                     let inner = next.into_inner().next().unwrap();
                     (StringType::Raw, inner.as_str())
-                },
+                }
                 _ => (StringType::Regular, next.as_str()),
             };
 
             Ok(Literal::Str(unquote(str_val), str_type))
-        },
+        }
         Rule::list_lit => {
             let mut exprs = Vec::new();
             for p in inner.into_inner() {
@@ -492,14 +494,15 @@ fn build_lambda(pair: Pair<Rule>) -> Result<ExprKind> {
     };
 
     match actual_body.as_rule() {
-          Rule::fn_body => {
+        Rule::fn_body => {
             for item in actual_body.into_inner() {
                 match item.as_rule() {
                     Rule::fn_item => {
                         let child = item.into_inner().next().unwrap();
                         match child.as_rule() {
                             Rule::node_invocation => {
-                                body_items.push(BodyItem::Node(node::build_node_invocation(child)?));
+                                body_items
+                                    .push(BodyItem::Node(node::build_node_invocation(child)?));
                             }
                             Rule::stmt => {
                                 body_items.push(BodyItem::Stmt(build_stmt(child)?));

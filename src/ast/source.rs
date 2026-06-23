@@ -154,7 +154,7 @@ pub enum ExprKind {
 pub enum StringType {
     Regular,
     Format,
-    Raw
+    Raw,
 }
 
 /// If/else expressions

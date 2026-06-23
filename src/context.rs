@@ -1,8 +1,8 @@
+use crate::NbclEngine;
 use crate::evaluate::Evaluator;
 use crate::registry::Registry;
-use crate::NbclEngine;
-use std::path::PathBuf;
 use std::ops::Deref;
+use std::path::PathBuf;
 
 #[derive(Clone)]
 pub struct Context(pub(crate) Registry);

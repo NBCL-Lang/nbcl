@@ -5,10 +5,10 @@ use crate::ast::utils::{NativeFnSchema, NativeNodeSchema, Type, Value};
 use crate::error::Result;
 use crate::library::Library;
 use rustc_hash::FxHashMap;
-use std::path::PathBuf;
-use std::sync::Arc;
-use std::rc::Rc;
 use std::fmt;
+use std::path::PathBuf;
+use std::rc::Rc;
+use std::sync::Arc;
 
 /// Registry containing important data about source.
 #[derive(Default, Clone)]
