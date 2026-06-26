@@ -170,7 +170,8 @@ pub fn build_expr(pair: Pair<Rule>) -> Result<Expr> {
         }
         Rule::assignable_lhs => {
             let mut inner = pair.into_inner();
-            let name = inner.as_str()
+            let name = inner
+                .as_str()
                 .find(|c| c == '.' || c == '[')
                 .map_or(inner.as_str(), |i| &inner.as_str()[..i])
                 .to_string();
@@ -190,7 +191,11 @@ pub fn build_expr(pair: Pair<Rule>) -> Result<Expr> {
                         }
                     }
                     Rule::expr => Expr {
-                        kind: ExprKind::Index(Box::new(res), name.clone(), Box::new(build_expr(suffix)?)),
+                        kind: ExprKind::Index(
+                            Box::new(res),
+                            name.clone(),
+                            Box::new(build_expr(suffix)?),
+                        ),
                         span: span.clone(),
                     },
                     _ => res,
@@ -200,7 +205,8 @@ pub fn build_expr(pair: Pair<Rule>) -> Result<Expr> {
         }
         Rule::postfix_expr => {
             let mut inner = pair.into_inner();
-            let name = inner.as_str()
+            let name = inner
+                .as_str()
                 .find(|c| c == '.' || c == '[')
                 .map_or(inner.as_str(), |i| &inner.as_str()[..i])
                 .to_string();
@@ -220,7 +226,11 @@ pub fn build_expr(pair: Pair<Rule>) -> Result<Expr> {
                         }
                     }
                     Rule::expr => Expr {
-                        kind: ExprKind::Index(Box::new(res), name.clone(), Box::new(build_expr(suffix)?)),
+                        kind: ExprKind::Index(
+                            Box::new(res),
+                            name.clone(),
+                            Box::new(build_expr(suffix)?),
+                        ),
                         span: span.clone(),
                     },
                     Rule::call_args => {

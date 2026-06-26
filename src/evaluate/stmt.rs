@@ -130,8 +130,8 @@ impl Evaluator {
                     }
 
                     ExprKind::Field(base, name, field_name, _is_safe) => {
-                        let binding_ref = self.scopes.iter_mut().rev()
-                            .find_map(|m| m.variables.get_mut(name));
+                        let binding_ref =
+                            self.scopes.iter_mut().rev().find_map(|m| m.variables.get_mut(name));
 
                         if let Some(b) = binding_ref {
                             if b.is_const {
@@ -178,8 +178,8 @@ impl Evaluator {
                     }
 
                     ExprKind::Index(base, name, index_expr) => {
-                        let binding_ref = self.scopes.iter_mut().rev()
-                            .find_map(|m| m.variables.get_mut(name));
+                        let binding_ref =
+                            self.scopes.iter_mut().rev().find_map(|m| m.variables.get_mut(name));
 
                         if let Some(b) = binding_ref {
                             if b.is_const {

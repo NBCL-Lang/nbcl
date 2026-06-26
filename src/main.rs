@@ -22,7 +22,7 @@ fn main() {
             if show_ast == "--show-ast" {
                 println!("AST: {:#?}", ast);
             }
-            
+
             match engine.evaluate_ast(ast) {
                 Ok(evaled) => println!("{:#?}", evaled),
                 Err(e) => println!("{}", e),
