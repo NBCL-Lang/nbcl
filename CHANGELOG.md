@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ### Fixed 
 
 - Evaluator only checking for functions inside map.
+- Evaluator allowing assignments to constant fields/indexes.
 
 ## [0.6.0] - 2026-06-23
 

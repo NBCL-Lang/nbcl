@@ -129,7 +129,20 @@ impl Evaluator {
                         }
                     }
 
-                    ExprKind::Field(base, field_name, _is_safe) => {
+                    ExprKind::Field(base, name, field_name, _is_safe) => {
+                        let binding_ref = self.scopes.iter_mut().rev()
+                            .find_map(|m| m.variables.get_mut(name));
+
+                        if let Some(b) = binding_ref {
+                            if b.is_const {
+                                return Err(NbclError::Runtime {
+                                    message: format!("cannot reassign to constant variable '{}'", name),
+                                    hint: Some("This variable was declared with 'const', or is an immutable loop/property binding.".into()),
+                                    span: Some(span.clone()),
+                                });
+                            }
+                        }
+
                         let mut target_map = self.eval_expr(&base)?;
                         if let Value::Map(ref mut entries) = target_map {
                             if let Some(pos) = entries.iter().position(|(k, _)| k == field_name) {
@@ -164,7 +177,20 @@ impl Evaluator {
                         }
                     }
 
-                    ExprKind::Index(base, index_expr) => {
+                    ExprKind::Index(base, name, index_expr) => {
+                        let binding_ref = self.scopes.iter_mut().rev()
+                            .find_map(|m| m.variables.get_mut(name));
+
+                        if let Some(b) = binding_ref {
+                            if b.is_const {
+                                return Err(NbclError::Runtime {
+                                    message: format!("cannot reassign to constant variable '{}'", name),
+                                    hint: Some("This variable was declared with 'const', or is an immutable loop/property binding.".into()),
+                                    span: Some(span.clone()),
+                                });
+                            }
+                        }
+
                         let mut target_coll = self.eval_expr(&base)?;
                         let index_val = self.eval_expr(&index_expr)?;
 
@@ -438,7 +464,7 @@ impl Evaluator {
                     span: None,
                 })
             }
-            ExprKind::Field(base, field, _) => {
+            ExprKind::Field(base, _name, field, _) => {
                 let mut parent = self.eval_expr(&base)?;
                 if let Value::Map(ref mut entries) = parent {
                     if let Some(pos) = entries.iter().position(|(k, _)| k == field) {
@@ -451,7 +477,7 @@ impl Evaluator {
                     Ok(())
                 }
             }
-            ExprKind::Index(base, index_expr) => {
+            ExprKind::Index(base, _name, index_expr) => {
                 let mut parent = self.eval_expr(&base)?;
                 let idx_val = self.eval_expr(&index_expr)?;
                 if let (Value::List(items), Value::Int(i)) = (&mut parent, idx_val) {

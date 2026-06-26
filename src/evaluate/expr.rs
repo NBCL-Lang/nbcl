@@ -53,7 +53,7 @@ impl Evaluator {
                 }
             }
 
-            ExprKind::Field(source, field, is_safe) => {
+            ExprKind::Field(source, _name, field, is_safe) => {
                 let val = self.eval_expr(source)?;
 
                 if let Value::Map(pairs) = val {
@@ -102,7 +102,7 @@ impl Evaluator {
                 }
             }
 
-            ExprKind::Index(target, index_expr) => {
+            ExprKind::Index(target, _name, index_expr) => {
                 let target_val = self.eval_expr(target)?;
                 let key_val = self.eval_expr(index_expr)?;
 
@@ -162,7 +162,7 @@ impl Evaluator {
                             name.clone()
                         }
                     }
-                    ExprKind::Field(source, field, is_safe) => {
+                    ExprKind::Field(source, _name, field, is_safe) => {
                         let receiver = self.eval_expr(source)?;
 
                         if let Value::Map(ref pairs) = receiver {

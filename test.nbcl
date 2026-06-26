@@ -1,2 +1,4 @@
-print({x = "2"}.len())
+const val = [2, 3]
+set val[1] = 2
 
+print(val)
