@@ -141,6 +141,20 @@ impl Value {
             _ => None,
         }
     }
+
+    pub fn as_string(&self) -> Option<String> {
+        match self {
+            Value::Str(s) => Some(s.clone()),
+            _ => None,
+        }
+    }
+
+    pub fn as_bool(&self) -> Option<bool> {
+        match self {
+            Value::Bool(s) => Some(*s),
+            _ => None,
+        }
+    }
 }
 
 /// Possible data types in Nbcl (used for type hints)

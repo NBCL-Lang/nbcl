@@ -1,5 +1,6 @@
 use super::{Evaluator, FlowControl, Scope, ScopeKind, VariableBinding};
 use crate::{
+    Type,
     ast::source::*,
     ast::utils::Value,
     error::{NbclError, Result, Span},
@@ -233,6 +234,14 @@ impl Evaluator {
 
                 // Native function checking
                 if let Some(native_schema) = self.registry.native_functions.get(&func_name) {
+                    for (idx, param) in native_schema.params.iter().enumerate() {
+                        if let Type::Any = param {
+                            if idx >= args.len() {
+                                args.resize(idx + 1, Value::Null);
+                            }
+                        }
+                    }
+
                     if args.len() != native_schema.params.len() {
                         let expected_params: Vec<String> =
                             native_schema.params.iter().map(|p| format!("{:?}", p)).collect();

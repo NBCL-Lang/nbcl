@@ -5,6 +5,20 @@ All notable changes to `nbcl` are documented here.
 This changelog follows the [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) format,
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [UNRELEASED]
+
+### Added 
+
+- `as_string` method to `Value`.
+- `as_bool` method to `Value`.
+- `trim` builtin for strings.
+- `trim_start` builtin for strings.
+- `trim_end` builtin for strings.
+- `to_lowercase` builtin for strings.
+- `to_uppercase` builtin for strings.
+- `split` builtin for strings.
+- Behavior to pass `Value::Null` to functions taking `Type::Any` if param not provided.
+
 ## [0.6.1] - 2026-06-26
 
 ### Fixed 

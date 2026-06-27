@@ -116,4 +116,57 @@ pub(crate) fn register_builtin_functions(registry: &mut Registry) {
         Value::Map(m) => Ok(Value::List(m.iter().map(|(_, v)| v.clone()).collect())),
         _ => unreachable!(),
     });
+
+    // == string function == //
+    registry.add_native_fn("to_lowercase", vec![Type::Str], Type::Str, |args| match &args[0] {
+        Value::Str(s) => Ok(Value::Str(s.to_lowercase())),
+        _ => unreachable!(),
+    });
+
+    registry.add_native_fn("to_uppercase", vec![Type::Str], Type::Str, |args| match &args[0] {
+        Value::Str(s) => Ok(Value::Str(s.to_uppercase())),
+        _ => unreachable!(),
+    });
+
+    registry.add_native_fn("trim", vec![Type::Str], Type::Str, |args| match &args[0] {
+        Value::Str(s) => Ok(Value::Str(s.trim().to_string())),
+        _ => unreachable!(),
+    });
+
+    registry.add_native_fn("trim_start", vec![Type::Str], Type::Str, |args| match &args[0] {
+        Value::Str(s) => Ok(Value::Str(s.trim_start().to_string())),
+        _ => unreachable!(),
+    });
+
+    registry.add_native_fn("trim_end", vec![Type::Str], Type::Str, |args| match &args[0] {
+        Value::Str(s) => Ok(Value::Str(s.trim_end().to_string())),
+        _ => unreachable!(),
+    });
+
+    registry.add_native_fn("split", vec![Type::Str, Type::Any], Type::List, |args| match &args[0] {
+        Value::Str(string) => match &args[1] {
+            Value::Str(pattern) => {
+                let values: Vec<Value> = string
+                    .split(pattern)
+                    .map(|s| Value::Str(s.to_string()))
+                    .collect();
+
+                Ok(Value::List(values))
+            }
+            Value::Null => {
+                let values: Vec<Value> = string
+                    .split_whitespace()
+                    .map(|s| Value::Str(s.to_string()))
+                    .collect();
+
+                Ok(Value::List(values))
+            }
+            _ => Err(NbclError::Runtime {
+                message: format!("split must receive a parameter"),
+                hint: None,
+                span: None,
+            }),
+        },
+        _ => unreachable!(),
+    });
 }
