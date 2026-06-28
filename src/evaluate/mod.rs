@@ -46,7 +46,7 @@ pub(crate) struct Scope {
 /// An internal structure that evaluates the source AST
 #[derive(Clone)]
 pub(crate) struct Evaluator {
-    registry: Registry,
+    pub(crate) registry: Registry,
     scopes: Vec<Scope>,
     loaded_files: HashSet<PathBuf>,
     module_resolver: Rc<dyn ModuleResolver>,

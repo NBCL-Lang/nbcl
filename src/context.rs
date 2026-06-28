@@ -4,6 +4,7 @@ use crate::registry::Registry;
 use std::ops::Deref;
 use std::path::PathBuf;
 
+/// Partial Context of registry to retreive only currently evaluated file.
 #[derive(Clone)]
 pub struct Context(pub(crate) Registry);
 
@@ -16,6 +17,7 @@ impl Deref for Context {
 }
 
 impl Context {
+    /// Helpful in providing better error diagnostics.
     pub fn get_current_file(&self) -> Option<PathBuf> {
         self.0.current_file.clone()
     }
@@ -25,6 +27,7 @@ impl Context {
     }
 }
 
+/// Full evaluation context of Evaluator
 #[derive(Clone)]
 pub struct EvalContext(pub(crate) Evaluator);
 
@@ -34,6 +37,7 @@ impl EvalContext {
         Self::from(&engine)
     }
 
+    /// Create an evaluation context from engine.
     pub fn from(engine: &NbclEngine) -> EvalContext {
         let evaluator = Evaluator::new(
             engine.registry.clone(),
@@ -44,6 +48,12 @@ impl EvalContext {
         EvalContext(evaluator)
     }
 
+    /// Helpful in providing better error diagnostics.
+    pub fn get_current_file(&self) -> Option<PathBuf> {
+        self.0.registry.current_file.clone()
+    }
+
+    /// Extend the evaluation context with another one.
     pub fn extend(&mut self, other: EvalContext) {
         self.0.extend(other.0);
     }

@@ -19,6 +19,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - `split` builtin for strings.
 - Behavior to pass `Value::Null` to functions taking `Type::Any` if param not provided.
 
+### Changed 
+
+- Make call_function take EvalContext instead of Context.
+
 ## [0.6.1] - 2026-06-26
 
 ### Fixed 

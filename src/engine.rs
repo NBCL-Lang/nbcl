@@ -96,7 +96,16 @@ impl NbclEngine {
         evaluator.run(file)
     }
 
-    /// Evaluate a source AST and get the context
+    /// Evaluate a source AST and get the [`Context`].
+    ///
+    /// [`Context`] is a minimal registry holding only partial data 
+    /// like built-in functions, in addition to which file the engine 
+    /// was currently evaluating (which is useful for error diagnostics).
+    ///
+    /// If you want to have 1:1 state where subsequent evaluations 
+    /// can use the functions/variables defined in preceeding evaluations,
+    /// you should construct the [`EvalContext`] and mutate it with 
+    /// the [`eval_ast_with_eval_ctx`] function.
     pub fn evaluate_ast_for_ctx(
         &self,
         file: File,
@@ -119,6 +128,7 @@ impl NbclEngine {
         Ok((tree, ctx))
     }
 
+    /// Evaluate a source AST with a created [`EvalContext`].
     pub fn eval_ast_with_eval_ctx(
         &self,
         file: File,
@@ -174,11 +184,10 @@ impl NbclEngine {
     }
 
     /// Call an Nbcl function (including lambdas)
-    pub fn call_function(&self, name: &str, args: Vec<Value>, ctx: &Context) -> Result<Value> {
-        let mut evaluator =
-            Evaluator::new(ctx.0.clone(), self.module_resolver.clone(), self.max_depth.clone());
+    pub fn call_function(&self, name: &str, args: Vec<Value>, ctx: &EvalContext) -> Result<Value> {
+        let mut evaluator = ctx.0.clone();
 
-        if let Some(user_fn) = ctx.functions.get(name) {
+        if let Some(user_fn) = ctx.0.registry.functions.get(name) {
             let mut function_scope = Scope::new(ScopeKind::Function);
 
             if user_fn.params.len() != args.len() {
