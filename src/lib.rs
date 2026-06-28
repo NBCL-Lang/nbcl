@@ -29,6 +29,8 @@
 //!     }
 //! }
 //! ```
+//!
+//! See [`NbclEngine`] engine for more information on API's.
 
 pub mod ast;
 pub mod context;

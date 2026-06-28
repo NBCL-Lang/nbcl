@@ -105,7 +105,7 @@ impl NbclEngine {
     /// If you want to have 1:1 state where subsequent evaluations
     /// can use the functions/variables defined in preceeding evaluations,
     /// you should construct the [`EvalContext`] and mutate it with
-    /// the [`eval_ast_with_eval_ctx`] function.
+    /// the [`NbclEngine::eval_ast_with_eval_ctx`] function.
     pub fn evaluate_ast_for_ctx(
         &self,
         file: File,

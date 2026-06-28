@@ -32,12 +32,13 @@ impl Context {
 pub struct EvalContext(pub(crate) Evaluator);
 
 impl EvalContext {
+    /// Create a fresh evaluator from default [`NbclEngine`] settings.
     pub fn new() -> EvalContext {
         let engine = NbclEngine::new();
         Self::from(&engine)
     }
 
-    /// Create an evaluation context from engine.
+    /// Create an evaluation context from [`NbclEngine`] (preserves engine metadata).
     pub fn from(engine: &NbclEngine) -> EvalContext {
         let evaluator = Evaluator::new(
             engine.registry.clone(),
@@ -48,7 +49,7 @@ impl EvalContext {
         EvalContext(evaluator)
     }
 
-    /// Helpful in providing better error diagnostics.
+    /// This function is helpful in providing better error diagnostics.
     pub fn get_current_file(&self) -> Option<PathBuf> {
         self.0.registry.current_file.clone()
     }
