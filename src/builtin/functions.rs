@@ -26,11 +26,11 @@ pub(crate) fn register_builtin_functions(registry: &mut Registry) {
                         message: "cannot parse string into int inside as_int()".to_string(),
                         hint: None,
                         span: None,
-                    })
+                    });
                 }
             };
             Ok(Value::Int(parsed))
-        },
+        }
         Value::Float(f) => Ok(Value::Int(*f as i64)),
         Value::Int(i) => Ok(Value::Int(*i)),
         _ => {
@@ -43,30 +43,28 @@ pub(crate) fn register_builtin_functions(registry: &mut Registry) {
     });
 
     // as_float(Any) -> Float
-    registry.add_native_fn("as_float", vec![Type::Any], Type::Float, |args| {
-        match &args[0] {
-            Value::Str(s) => {
-                let parsed = match s.parse::<f64>() {
-                    Ok(p) => p,
-                    Err(_) => {
-                        return Err(NbclError::Runtime {
-                            message: "cannot parse string into int inside as_int()".to_string(),
-                            hint: None,
-                            span: None,
-                        })
-                    }
-                };
-                Ok(Value::Float(parsed))
-            },
-            Value::Int(i) => Ok(Value::Float(*i as f64)),
-            Value::Float(f) => Ok(Value::Float(*f)),
-            _ => {
-                return Err(NbclError::Runtime {
-                    message: format!("as_float() not supported for type {}", args[0].type_name()),
-                    hint: None,
-                    span: None,
-                });
-            }
+    registry.add_native_fn("as_float", vec![Type::Any], Type::Float, |args| match &args[0] {
+        Value::Str(s) => {
+            let parsed = match s.parse::<f64>() {
+                Ok(p) => p,
+                Err(_) => {
+                    return Err(NbclError::Runtime {
+                        message: "cannot parse string into int inside as_int()".to_string(),
+                        hint: None,
+                        span: None,
+                    });
+                }
+            };
+            Ok(Value::Float(parsed))
+        }
+        Value::Int(i) => Ok(Value::Float(*i as f64)),
+        Value::Float(f) => Ok(Value::Float(*f)),
+        _ => {
+            return Err(NbclError::Runtime {
+                message: format!("as_float() not supported for type {}", args[0].type_name()),
+                hint: None,
+                span: None,
+            });
         }
     });
 

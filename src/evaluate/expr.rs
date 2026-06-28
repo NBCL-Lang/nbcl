@@ -550,18 +550,19 @@ impl Evaluator {
                         ListElement::Single(expr) => {
                             values.push(self.eval_expr(expr)?);
                         }
-                        ListElement::Spread(expr) => {
-                            match self.eval_expr(expr)? {
-                                Value::List(inner_list) => {
-                                    values.extend(inner_list);
-                                }
-                                other => return Err(NbclError::Runtime {
-                                    message: format!("Cannot spread non-list type: {:?}", other).into(),
+                        ListElement::Spread(expr) => match self.eval_expr(expr)? {
+                            Value::List(inner_list) => {
+                                values.extend(inner_list);
+                            }
+                            other => {
+                                return Err(NbclError::Runtime {
+                                    message: format!("Cannot spread non-list type: {:?}", other)
+                                        .into(),
                                     hint: None,
                                     span: Some(expr.span.clone()),
-                                }),
+                                });
                             }
-                        }
+                        },
                     }
                 }
                 Ok(Value::List(values))
@@ -573,18 +574,19 @@ impl Evaluator {
                         MapElement::Single(k, v) => {
                             values.push((k.clone(), self.eval_expr(v)?));
                         }
-                        MapElement::Spread(expr) => {
-                            match self.eval_expr(expr)? {
-                                Value::Map(inner_map) => {
-                                    values.extend(inner_map);
-                                }
-                                other => return Err(NbclError::Runtime {
-                                    message: format!("Cannot spread non-map type: {:?}", other).into(),
+                        MapElement::Spread(expr) => match self.eval_expr(expr)? {
+                            Value::Map(inner_map) => {
+                                values.extend(inner_map);
+                            }
+                            other => {
+                                return Err(NbclError::Runtime {
+                                    message: format!("Cannot spread non-map type: {:?}", other)
+                                        .into(),
                                     hint: None,
                                     span: Some(expr.span.clone()),
-                                }),
+                                });
                             }
-                        }
+                        },
                     }
                 }
                 Ok(Value::Map(values))
