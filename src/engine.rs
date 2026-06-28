@@ -98,13 +98,13 @@ impl NbclEngine {
 
     /// Evaluate a source AST and get the [`Context`].
     ///
-    /// [`Context`] is a minimal registry holding only partial data 
-    /// like built-in functions, in addition to which file the engine 
+    /// [`Context`] is a minimal registry holding only partial data
+    /// like built-in functions, in addition to which file the engine
     /// was currently evaluating (which is useful for error diagnostics).
     ///
-    /// If you want to have 1:1 state where subsequent evaluations 
+    /// If you want to have 1:1 state where subsequent evaluations
     /// can use the functions/variables defined in preceeding evaluations,
-    /// you should construct the [`EvalContext`] and mutate it with 
+    /// you should construct the [`EvalContext`] and mutate it with
     /// the [`eval_ast_with_eval_ctx`] function.
     pub fn evaluate_ast_for_ctx(
         &self,

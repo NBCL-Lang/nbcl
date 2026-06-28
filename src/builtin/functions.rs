@@ -143,30 +143,28 @@ pub(crate) fn register_builtin_functions(registry: &mut Registry) {
         _ => unreachable!(),
     });
 
-    registry.add_native_fn("split", vec![Type::Str, Type::Any], Type::List, |args| match &args[0] {
-        Value::Str(string) => match &args[1] {
-            Value::Str(pattern) => {
-                let values: Vec<Value> = string
-                    .split(pattern)
-                    .map(|s| Value::Str(s.to_string()))
-                    .collect();
+    registry.add_native_fn("split", vec![Type::Str, Type::Any], Type::List, |args| {
+        match &args[0] {
+            Value::Str(string) => match &args[1] {
+                Value::Str(pattern) => {
+                    let values: Vec<Value> =
+                        string.split(pattern).map(|s| Value::Str(s.to_string())).collect();
 
-                Ok(Value::List(values))
-            }
-            Value::Null => {
-                let values: Vec<Value> = string
-                    .split_whitespace()
-                    .map(|s| Value::Str(s.to_string()))
-                    .collect();
+                    Ok(Value::List(values))
+                }
+                Value::Null => {
+                    let values: Vec<Value> =
+                        string.split_whitespace().map(|s| Value::Str(s.to_string())).collect();
 
-                Ok(Value::List(values))
-            }
-            _ => Err(NbclError::Runtime {
-                message: format!("split must receive a parameter"),
-                hint: None,
-                span: None,
-            }),
-        },
-        _ => unreachable!(),
+                    Ok(Value::List(values))
+                }
+                _ => Err(NbclError::Runtime {
+                    message: format!("split must receive a parameter"),
+                    hint: None,
+                    span: None,
+                }),
+            },
+            _ => unreachable!(),
+        }
     });
 }
