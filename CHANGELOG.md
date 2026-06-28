@@ -5,6 +5,19 @@ All notable changes to `nbcl` are documented here.
 This changelog follows the [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) format,
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.7.1] - 2026-06-18
+
+### Fixed 
+
+- `as_float` built-in function.
+- `as_int` built-in function.
+
+### Changed
+
+- Renamed `as_float` to `get_float` in `Value`.
+- Renamed `as_int` to `get_int` in `Value`.
+- Renamed `as_bool` to `get_bool` in `Value`.
+
 ## [0.7.0] - 2026-06-28
 
 ### Added 

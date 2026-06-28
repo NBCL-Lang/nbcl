@@ -17,9 +17,23 @@ pub(crate) fn register_builtin_functions(registry: &mut Registry) {
     });
 
     // as_int(Any) -> Int
-    registry.add_native_fn("as_int", vec![Type::Any], Type::Int, |args| match args[0].as_int() {
-        Some(i) => Ok(Value::Int(i)),
-        None => {
+    registry.add_native_fn("as_int", vec![Type::Any], Type::Int, |args| match &args[0] {
+        Value::Str(s) => {
+            let parsed = match s.parse::<i64>() {
+                Ok(p) => p,
+                Err(_) => {
+                    return Err(NbclError::Runtime {
+                        message: "cannot parse string into int inside as_int()".to_string(),
+                        hint: None,
+                        span: None,
+                    })
+                }
+            };
+            Ok(Value::Int(parsed))
+        },
+        Value::Float(f) => Ok(Value::Int(*f as i64)),
+        Value::Int(i) => Ok(Value::Int(*i)),
+        _ => {
             return Err(NbclError::Runtime {
                 message: format!("as_int() not supported for type {}", args[0].type_name()),
                 hint: None,
@@ -30,9 +44,23 @@ pub(crate) fn register_builtin_functions(registry: &mut Registry) {
 
     // as_float(Any) -> Float
     registry.add_native_fn("as_float", vec![Type::Any], Type::Float, |args| {
-        match args[0].as_float() {
-            Some(f) => Ok(Value::Float(f)),
-            None => {
+        match &args[0] {
+            Value::Str(s) => {
+                let parsed = match s.parse::<f64>() {
+                    Ok(p) => p,
+                    Err(_) => {
+                        return Err(NbclError::Runtime {
+                            message: "cannot parse string into int inside as_int()".to_string(),
+                            hint: None,
+                            span: None,
+                        })
+                    }
+                };
+                Ok(Value::Float(parsed))
+            },
+            Value::Int(i) => Ok(Value::Float(*i as f64)),
+            Value::Float(f) => Ok(Value::Float(*f)),
+            _ => {
                 return Err(NbclError::Runtime {
                     message: format!("as_float() not supported for type {}", args[0].type_name()),
                     hint: None,

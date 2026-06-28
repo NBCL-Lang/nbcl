@@ -15,47 +15,47 @@ pub(crate) fn register_builtin_functions(registry: &mut Registry) {
         .with_global("LN_10", Value::Float(std::f64::consts::LN_10))
         // arithmetic
         .with_fn("abs", vec![Type::Int], Type::Int, |args| {
-            Ok(Value::Int(args[0].as_int().unwrap().abs()))
+            Ok(Value::Int(args[0].get_int().unwrap().abs()))
         })
         .with_fn("sqrt", vec![Type::Float], Type::Float, |args| {
-            Ok(Value::Float(args[0].as_float().unwrap().sqrt()))
+            Ok(Value::Float(args[0].get_float().unwrap().sqrt()))
         })
         .with_fn("cbrt", vec![Type::Float], Type::Float, |args| {
-            Ok(Value::Float(args[0].as_float().unwrap().cbrt()))
+            Ok(Value::Float(args[0].get_float().unwrap().cbrt()))
         })
         .with_fn("pow", vec![Type::Float, Type::Float], Type::Float, |args| {
-            let base = args[0].as_float().unwrap();
-            let exp = args[1].as_float().unwrap();
+            let base = args[0].get_float().unwrap();
+            let exp = args[1].get_float().unwrap();
             Ok(Value::Float(base.powf(exp)))
         })
         // rounding
         .with_fn("floor", vec![Type::Float], Type::Float, |args| {
-            Ok(Value::Float(args[0].as_float().unwrap().floor()))
+            Ok(Value::Float(args[0].get_float().unwrap().floor()))
         })
         .with_fn("ceil", vec![Type::Float], Type::Float, |args| {
-            Ok(Value::Float(args[0].as_float().unwrap().ceil()))
+            Ok(Value::Float(args[0].get_float().unwrap().ceil()))
         })
         .with_fn("round", vec![Type::Float], Type::Float, |args| {
-            Ok(Value::Float(args[0].as_float().unwrap().round()))
+            Ok(Value::Float(args[0].get_float().unwrap().round()))
         })
         .with_fn("trunc", vec![Type::Float], Type::Float, |args| {
-            Ok(Value::Float(args[0].as_float().unwrap().trunc()))
+            Ok(Value::Float(args[0].get_float().unwrap().trunc()))
         })
         // trigonometry
         .with_fn("sin", vec![Type::Float], Type::Float, |args| {
-            Ok(Value::Float(args[0].as_float().unwrap().sin()))
+            Ok(Value::Float(args[0].get_float().unwrap().sin()))
         })
         .with_fn("cos", vec![Type::Float], Type::Float, |args| {
-            Ok(Value::Float(args[0].as_float().unwrap().cos()))
+            Ok(Value::Float(args[0].get_float().unwrap().cos()))
         })
         .with_fn("tan", vec![Type::Float], Type::Float, |args| {
-            Ok(Value::Float(args[0].as_float().unwrap().tan()))
+            Ok(Value::Float(args[0].get_float().unwrap().tan()))
         })
         .with_fn("asin", vec![Type::Float], Type::Float, |args| {
-            Ok(Value::Float(args[0].as_float().unwrap().asin()))
+            Ok(Value::Float(args[0].get_float().unwrap().asin()))
         })
         .with_fn("atan2", vec![Type::Float, Type::Float], Type::Float, |args| {
-            Ok(Value::Float(args[0].as_float().unwrap().atan2(args[1].as_float().unwrap())))
+            Ok(Value::Float(args[0].get_float().unwrap().atan2(args[1].get_float().unwrap())))
         });
 
     // === Time Library ===
@@ -73,12 +73,12 @@ pub(crate) fn register_builtin_functions(registry: &mut Registry) {
         .with_fn("elapsed", vec![Type::Float], Type::Float, |args| {
             static START: std::sync::OnceLock<Instant> = std::sync::OnceLock::new();
             let start = START.get_or_init(Instant::now);
-            let prev_mark = args[0].as_float().unwrap();
+            let prev_mark = args[0].get_float().unwrap();
             let current = start.elapsed().as_secs_f64();
             Ok(Value::Float(current - prev_mark))
         })
         .with_fn("sleep", vec![Type::Int], Type::Null, |args| {
-            let ms = args[0].as_int().unwrap() as u64;
+            let ms = args[0].get_int().unwrap() as u64;
             std::thread::sleep(std::time::Duration::from_millis(ms));
             Ok(Value::Null)
         });

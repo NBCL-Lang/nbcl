@@ -128,28 +128,32 @@ impl Value {
         }
     }
 
-    pub fn as_int(&self) -> Option<i64> {
+    /// Get the inner int if its Value::Int
+    pub fn get_int(&self) -> Option<i64> {
         match self {
             Value::Int(i) => Some(*i),
             _ => None,
         }
     }
 
-    pub fn as_float(&self) -> Option<f64> {
+    /// Get the inner float if its Value::Float
+    pub fn get_float(&self) -> Option<f64> {
         match self {
             Value::Float(f) => Some(*f),
             _ => None,
         }
     }
 
-    pub fn as_string(&self) -> Option<String> {
+    /// Get the inner string if its Value::Str
+    pub fn get_string(&self) -> Option<String> {
         match self {
             Value::Str(s) => Some(s.clone()),
             _ => None,
         }
     }
 
-    pub fn as_bool(&self) -> Option<bool> {
+    /// Get the inner bool if its a Value::Bool
+    pub fn get_bool(&self) -> Option<bool> {
         match self {
             Value::Bool(s) => Some(*s),
             _ => None,
