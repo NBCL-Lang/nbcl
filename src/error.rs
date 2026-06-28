@@ -114,6 +114,7 @@ fn rule_to_human(rule: Rule) -> &'static str {
         Rule::mul_op => "'*', '/' or '%'",
         Rule::cmp_op => "a comparison operator ('==', '!=', '<=', '>=', '<', '>')",
         Rule::range_op => "a range operator ('..' or '..=')",
+        Rule::spread_op => "a spread operator (...)",
         Rule::dot => "'.'",
         Rule::safe_dot => "'?.'",
         Rule::accessor => "a field accessor ('.' or '?.')",
@@ -140,8 +141,10 @@ fn rule_to_human(rule: Rule) -> &'static str {
         Rule::string_raw => "a raw string literal",
         Rule::double_quoted_inner | Rule::single_quoted_inner => "string content",
         Rule::escape_seq => "an escape sequence",
+        Rule::list_element => "a list element",
         Rule::list_lit => "a list literal '[...]'",
         Rule::map_lit => "a map literal '{...}'",
+        Rule::map_element => "a map element",
         Rule::map_entry => "a map entry (key = value)",
 
         // === Expressions ===
@@ -155,6 +158,7 @@ fn rule_to_human(rule: Rule) -> &'static str {
         Rule::not_expr => "an expression",
         Rule::neg_expr => "an expression",
         Rule::postfix_expr => "an expression",
+        Rule::spread => "a spread expression",
         Rule::primary_expr => "a value, identifier, or '('",
         Rule::range_expr => "a range expression (start..end)",
         Rule::if_expr => "an 'if' expression",

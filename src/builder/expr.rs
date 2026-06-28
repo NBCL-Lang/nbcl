@@ -340,25 +340,52 @@ fn build_literal(pair: Pair<Rule>) -> Result<Literal> {
             Ok(Literal::Str(unquote(str_val), str_type))
         }
         Rule::list_lit => {
-            let mut exprs = Vec::new();
-            for p in inner.into_inner() {
-                exprs.push(build_expr(p)?);
+            let mut elements = Vec::new();
+            for element in inner.into_inner() {
+                let inner_pair = element.into_inner().next().unwrap();
+
+                match inner_pair.as_rule() {
+                    Rule::expr => {
+                        let expr = build_expr(inner_pair)?;
+                        elements.push(ListElement::Single(expr));
+                    }
+                    Rule::spread => {
+                        let mut inner = inner_pair.into_inner();
+                        let _spread_op = inner.next().unwrap();
+                        let spread_expr_pair = inner.next().unwrap();
+
+                        let expr = build_expr(spread_expr_pair)?;
+                        elements.push(ListElement::Spread(expr));
+                    }
+                    _ => unreachable!("Unexpected list element child rule"),
+                }
             }
-            Ok(Literal::List(exprs))
+            Ok(Literal::List(elements))
         }
         Rule::map_lit => {
             let mut pairs = Vec::new();
-            for p in inner.into_inner() {
-                let mut inner_pair = p.into_inner();
+            for element in inner.into_inner() {
+                let inner_pair = element.into_inner().next().unwrap();
 
-                let key = inner_pair.next().unwrap().as_str().to_string();
+                match inner_pair.as_rule() {
+                    Rule::expr => {
+                        let mut inner_pair = inner_pair.into_inner();
+                        let key = inner_pair.next().unwrap().as_str().to_string();
 
-                // skip equal statement
-                let _ = inner_pair.next().unwrap();
+                        // skip equal statement
+                        let _ = inner_pair.next().unwrap();
 
-                let value = build_expr(inner_pair.next().unwrap())?;
+                        let value = build_expr(inner_pair.next().unwrap())?;
 
-                pairs.push((key, value));
+                        pairs.push(MapElement::Single(key, value));
+                    }
+                    Rule::spread => {
+                        let spread_expr_pair = inner_pair.into_inner().next().unwrap();
+                        let expr = build_expr(spread_expr_pair)?;
+                        pairs.push(MapElement::Spread(expr));
+                    }
+                    _ => unreachable!("Unexpected map element child rule"),
+                }
             }
             Ok(Literal::Map(pairs))
         }

@@ -186,7 +186,19 @@ pub enum Literal {
     Float(f64),
     Bool(bool),
     Str(String, StringType),
-    List(Vec<Expr>),
-    Map(Vec<(String, Expr)>),
+    List(Vec<ListElement>),
+    Map(Vec<MapElement>),
     Null,
+}
+
+#[derive(Debug, Clone)]
+pub enum ListElement {
+    Single(Expr),
+    Spread(Expr),
+}
+
+#[derive(Debug, Clone)]
+pub enum MapElement {
+    Single(String, Expr),
+    Spread(Expr),
 }

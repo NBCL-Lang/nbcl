@@ -543,17 +543,49 @@ impl Evaluator {
             Literal::Bool(b) => Ok(Value::Bool(*b)),
             Literal::Str(s, st) => Ok(Value::Str(self.evaluate_string_interpolation(&s, &st))),
             Literal::Null => Ok(Value::Null),
-            Literal::List(exprs) => {
+            Literal::List(elements) => {
                 let mut values = Vec::new();
-                for e in exprs {
-                    values.push(self.eval_expr(e)?);
+                for e in elements {
+                    match e {
+                        ListElement::Single(expr) => {
+                            values.push(self.eval_expr(expr)?);
+                        }
+                        ListElement::Spread(expr) => {
+                            match self.eval_expr(expr)? {
+                                Value::List(inner_list) => {
+                                    values.extend(inner_list);
+                                }
+                                other => return Err(NbclError::Runtime {
+                                    message: format!("Cannot spread non-list type: {:?}", other).into(),
+                                    hint: None,
+                                    span: Some(expr.span.clone()),
+                                }),
+                            }
+                        }
+                    }
                 }
                 Ok(Value::List(values))
             }
-            Literal::Map(pairs) => {
+            Literal::Map(elements) => {
                 let mut values = Vec::new();
-                for (k, e) in pairs {
-                    values.push((k.clone(), self.eval_expr(e)?));
+                for e in elements {
+                    match e {
+                        MapElement::Single(k, v) => {
+                            values.push((k.clone(), self.eval_expr(v)?));
+                        }
+                        MapElement::Spread(expr) => {
+                            match self.eval_expr(expr)? {
+                                Value::Map(inner_map) => {
+                                    values.extend(inner_map);
+                                }
+                                other => return Err(NbclError::Runtime {
+                                    message: format!("Cannot spread non-map type: {:?}", other).into(),
+                                    hint: None,
+                                    span: Some(expr.span.clone()),
+                                }),
+                            }
+                        }
+                    }
                 }
                 Ok(Value::Map(values))
             }

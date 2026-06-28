@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - `to_uppercase` builtin for strings.
 - `split` builtin for strings.
 - Behavior to pass `Value::Null` to functions taking `Type::Any` if param not provided.
+- Spread feature (`...var`).
 
 ### Changed 
 
