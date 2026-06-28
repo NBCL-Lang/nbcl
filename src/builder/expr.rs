@@ -368,7 +368,12 @@ fn build_literal(pair: Pair<Rule>) -> Result<Literal> {
                 let inner_pair = element.into_inner().next().unwrap();
 
                 match inner_pair.as_rule() {
-                    Rule::expr => {
+                    Rule::spread => {
+                        let spread_expr_pair = inner_pair.into_inner().next().unwrap();
+                        let expr = build_expr(spread_expr_pair)?;
+                        pairs.push(MapElement::Spread(expr));
+                    }
+                    _ => {
                         let mut inner_pair = inner_pair.into_inner();
                         let key = inner_pair.next().unwrap().as_str().to_string();
 
@@ -378,13 +383,7 @@ fn build_literal(pair: Pair<Rule>) -> Result<Literal> {
                         let value = build_expr(inner_pair.next().unwrap())?;
 
                         pairs.push(MapElement::Single(key, value));
-                    }
-                    Rule::spread => {
-                        let spread_expr_pair = inner_pair.into_inner().next().unwrap();
-                        let expr = build_expr(spread_expr_pair)?;
-                        pairs.push(MapElement::Spread(expr));
-                    }
-                    _ => unreachable!("Unexpected map element child rule"),
+                    },
                 }
             }
             Ok(Literal::Map(pairs))
