@@ -74,7 +74,11 @@ impl Registry {
 
         match position {
             Some(index) => {
-                self.libraries[index] = library;
+                // only append
+                let lib = &mut self.libraries[index];
+                for item in library.items {
+                    lib.add_item(item);
+                }
             }
             None => {
                 self.libraries.push(library);

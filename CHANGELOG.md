@@ -5,6 +5,12 @@ All notable changes to `nbcl` are documented here.
 This changelog follows the [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) format,
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.7.3] - 2026-07-03
+
+### Fixed
+
+- Registry not using `add_item` in `add_library`.
+
 ## [0.7.2] - 2026-06-18
 
 ### Fixed 
