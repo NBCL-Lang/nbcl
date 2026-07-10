@@ -138,6 +138,8 @@ fn rule_to_human(rule: Rule) -> &'static str {
         Rule::string_lit => "a string literal",
         Rule::string_regular => "a regular string literal",
         Rule::string_f => "a formatted string literal",
+        Rule::double_quoted_f | Rule::single_quoted_f => "a formatted string literal",
+        Rule::f_interpolation => "a format interpolation '${...}'",
         Rule::string_raw => "a raw string literal",
         Rule::double_quoted_inner | Rule::single_quoted_inner => "string content",
         Rule::escape_seq => "an escape sequence",
@@ -195,6 +197,7 @@ fn rule_to_human(rule: Rule) -> &'static str {
         Rule::match_arm => "a match arm (pattern => body)",
         Rule::match_pattern => "a match pattern (literal, identifier, or '_')",
         Rule::match_underscore => "a match arm underscore ('_') wildcard",
+        Rule::negative_number => "a negative number literal",
 
         // === Functions ===
         Rule::fn_def => "a function definition ('fn name(...) { ... }')",

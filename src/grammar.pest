@@ -29,7 +29,7 @@ top_level_item = {
 
 // === Import ===
 
-as_kw           = { "as" }
+as_kw           = @{ "as" ~ keyword_boundary }
 import_layout_block = { "{" ~ (layout_list | import_all_wildcard) ~ "}" }
 layout_list         = { pascal_ident ~ ("," ~ pascal_ident)* ~ ","? }
 import_all_wildcard    = { "*" }
@@ -41,7 +41,7 @@ import_stmt     = {
   ~ snake_ident
   ~ import_layout_block?
 }
-import_lib_stmt = { "import" ~ snake_ident ~ dot ~ snake_ident }
+import_lib_stmt = { "import" ~ !ASCII_ALPHANUMERIC ~ snake_ident ~ dot ~ snake_ident }
 
 // === Identifiers ===
 //
@@ -51,7 +51,8 @@ import_lib_stmt = { "import" ~ snake_ident ~ dot ~ snake_ident }
 // Reserved keywords cannot be used as identifiers
 keyword = _{
     "any" | "set" | "let" | "const" | "fn" | "for" | "in" | "while" | "if"
-  | "else" | "match" | "return" | "import" | "true" | "false" | "null"
+  | "else" | "match" | "return" | "import" | "as" | "component"
+  | "true" | "false" | "null"
 }
 
 // snake_ident must not be a reserved keyword
@@ -88,14 +89,14 @@ literal = {
 }
 
 // numbers
-int_lit   = @{ "-"? ~ ASCII_DIGIT+ }
-float_lit = @{ "-"? ~ ASCII_DIGIT+ ~ "." ~ ASCII_DIGIT+ }
+int_lit   = @{ ASCII_DIGIT+ }
+float_lit = @{ ASCII_DIGIT+ ~ "." ~ ASCII_DIGIT+ }
 
 // boolean
-bool_lit = { "true" | "false" }
+bool_lit = @{ ("true" | "false") ~ keyword_boundary }
 
 // null
-null_lit = { "null" }
+null_lit = @{ "null" ~ keyword_boundary }
 
 // string
 // "hello"  or  'hello'
@@ -107,8 +108,18 @@ string_regular = ${
 }
 
 string_f = ${
-    "f" ~ string_regular
+    "f" ~ (double_quoted_f | single_quoted_f)
 }
+
+double_quoted_f = @{
+    "\"" ~ (escape_seq | f_interpolation | !"\"" ~ ANY)* ~ "\""
+}
+
+single_quoted_f = @{
+    "'" ~ (escape_seq | f_interpolation | !"'" ~ ANY)* ~ "'"
+}
+
+f_interpolation = @{ "${" ~ (!"}" ~ ANY)* ~ "}" }
 
 string_raw = ${
     "r" ~ string_regular
@@ -208,7 +219,7 @@ lambda_body = {
   | expr        // implicit return
 }
 
-block_body = { "{" ~ (stmt | node_invocation)* ~ expr? ~ "}" }
+block_body = { "{" ~ (stmt | node_invocation)* ~ "}" }
 
 // === Statements ===
 
@@ -254,7 +265,7 @@ let_stmt  = { "let" ~ snake_ident ~ "=" ~ expr }
 const_stmt = { "const" ~ snake_ident ~ "=" ~ expr }
 
 // for x in range/list { stmts }
-in_kw = { "in" }
+in_kw = @{ "in" ~ keyword_boundary }
 for_stmt = {
     "for" ~ for_pattern ~ in_kw ~ (range_expr | expr) ~ block_body
 }
@@ -293,12 +304,15 @@ match_arm = {
 }
 
 match_pattern = {
-    match_underscore // wildcard
+    match_underscore
+  | negative_number
   | literal
   | snake_ident
 }
 
 match_underscore = { "_" }
+
+negative_number = @{ "-" ~ (ASCII_DIGIT+ ~ "." ~ ASCII_DIGIT+ | ASCII_DIGIT+) }
 
 // === Function definitions ===
 

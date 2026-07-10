@@ -383,7 +383,7 @@ fn build_literal(pair: Pair<Rule>) -> Result<Literal> {
                         let value = build_expr(inner_pair.next().unwrap())?;
 
                         pairs.push(MapElement::Single(key, value));
-                    },
+                    }
                 }
             }
             Ok(Literal::Map(pairs))
@@ -589,6 +589,17 @@ pub fn build_block(pair: Pair<Rule>) -> Result<Block> {
                 terminator = Some(build_expr(inner_pair)?);
             }
             _ => {}
+        }
+    }
+
+    // If no explicit expr terminator, check if last stmt is an expr_stmt
+    // (handles grammar where block_body no longer has trailing expr?)
+    if terminator.is_none() {
+        if let Some(last) = body.last() {
+            if let BodyItem::Stmt(Stmt::Expr(expr)) = last {
+                terminator = Some(expr.clone());
+                body.pop();
+            }
         }
     }
 
