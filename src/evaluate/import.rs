@@ -22,6 +22,7 @@ impl Evaluator {
                     &path_str
                 )?;
                 let saved_file = self.registry.current_file.clone();
+                
                 self.registry.current_file = Some(target_path.clone());
 
                 // Avoiding circular imports
@@ -58,8 +59,12 @@ impl Evaluator {
                     NbclError::IO { message: msg, hint, path: target_path.clone() }
                 })?;
 
-                let mut tokens = NbclParser::parse(Rule::file, &source)?;
+                #[cfg(feature = "pretty-errors")]
+                let saved_source = crate::error::pretty_error::get_source();
+                #[cfg(feature = "pretty-errors")]
+                crate::error::pretty_error::set_source(&source);
 
+                let mut tokens = NbclParser::parse(Rule::file, &source)?;
                 let file_pair = tokens.next().ok_or_else(|| NbclError::Ast {
                     message: "empty file".into(),
                     hint: None,
@@ -162,6 +167,10 @@ impl Evaluator {
 
                 self.registry.current_file = saved_file;
                 self.loaded_files.insert(target_path);
+
+                #[cfg(feature = "pretty-errors")]
+                crate::error::pretty_error::set_source_raw(saved_source);
+
                 Ok(())
             }
             ImportDefType::Library(lib_name, lib_item) => {

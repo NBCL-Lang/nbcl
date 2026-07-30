@@ -15,7 +15,11 @@ pub mod pretty_error {
     }
 
     pub fn set_source(source: &str) {
-        TEMP_SOURCE.with(|s| *s.borrow_mut() = Some(source.to_string()));
+        set_source_raw(Some(source.to_string()));
+    }
+
+    pub fn set_source_raw(source: Option<String>) {
+        TEMP_SOURCE.with(|s| *s.borrow_mut() = source);
     }
 
     pub fn get_source() -> Option<String> {
