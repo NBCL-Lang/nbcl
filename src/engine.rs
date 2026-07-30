@@ -36,9 +36,30 @@ impl NbclEngine {
         crate::builtin::nodes::register_builtin_nodes(&mut registry);
 
         // default module resolver follows relative path
-        let module_resolver = Rc::new(FileModuleResolver::new(PathBuf::from(".")));
+        let module_resolver = Rc::new(FileModuleResolver);
 
         Self { registry, module_resolver, max_depth: 5 }
+    }
+
+    /// Set the root file the execution should start on.
+    ///
+    /// ## Explanation
+    ///
+    /// Let's say you are executing a file called 'main.nbcl'.
+    /// By default, the built in module resolver would find files
+    /// that 'main.nbcl' file imports based on relative directory 
+    /// (the directory where the nbcl is triggered).
+    ///
+    /// This approach leads to an issue like this: Let's say there is a
+    /// directory called 'src' and there is 'main.nbcl' and 'imported.nbcl'
+    /// inside it. If the main file as 'src/main.nbcl', and 'main.nbcl' tries
+    /// to import 'imported.nbcl' directly like this: `import "imported.nbcl" as imp`,
+    /// then it will fail because by default, nbcl looks in the relative directory, and 
+    /// in that directory, only 'src' exists.
+    ///
+    /// This issue can be fixed by assigning a root file the execution should start on.
+    pub fn set_root_file(&mut self, root_file: PathBuf) {
+        self.registry.current_file = Some(root_file);
     }
 
     /// Parse the a file into a source AST

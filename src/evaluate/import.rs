@@ -17,7 +17,11 @@ impl Evaluator {
     ) -> Result<()> {
         match imp.def {
             ImportDefType::Module(path_str, alias, components) => {
-                let target_path = self.module_resolver.find_target(&path_str)?;
+                let target_path = self.module_resolver.find_target(
+                    self.registry.current_file.clone(), 
+                    &path_str
+                )?;
+                let saved_file = self.registry.current_file.clone();
                 self.registry.current_file = Some(target_path.clone());
 
                 // Avoiding circular imports
@@ -156,7 +160,7 @@ impl Evaluator {
                     }
                 }
 
-                self.registry.current_file = None;
+                self.registry.current_file = saved_file;
                 self.loaded_files.insert(target_path);
                 Ok(())
             }

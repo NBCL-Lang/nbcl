@@ -1,3 +1,4 @@
+use std::path::PathBuf;
 use nbcl::NbclEngine;
 use std::env;
 use std::fs;
@@ -8,14 +9,16 @@ fn main() {
         std::process::exit(1);
     });
 
-    let source = fs::read_to_string(&path).unwrap_or_else(|e| {
+    let path_buf = PathBuf::from(path.clone());
+    let source = fs::read_to_string(&path_buf).unwrap_or_else(|e| {
         eprintln!("could not read {path}: {e}");
         std::process::exit(1);
     });
 
     let show_ast = env::args().nth(2).unwrap_or(String::new());
 
-    let engine = NbclEngine::new();
+    let mut engine = NbclEngine::new();
+    engine.set_root_file(path_buf);
 
     match engine.parse_str(&source) {
         Ok(ast) => {

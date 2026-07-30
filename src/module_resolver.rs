@@ -2,35 +2,37 @@
 use crate::error::{NbclError, Result};
 use std::path::{Path, PathBuf};
 
-/// Trait for implementing custm module resolvers
+/// Trait for implementing custom module resolvers
 pub trait ModuleResolver: Send + Sync + std::fmt::Debug {
     /// Resolves a module relative path into absolute path
-    fn find_target(&self, path: &str) -> Result<PathBuf>;
+    ///
+    /// ## Paramters
+    ///
+    /// - current: Current file in which this import takes place.
+    /// - path: The path the file is trying to import.
+    fn find_target(&self, current: Option<PathBuf>, path: &str) -> Result<PathBuf>;
 }
 
 /// Simple module resolver.
 #[derive(Debug, Clone)]
-pub struct FileModuleResolver {
-    file_path: PathBuf,
-}
-
-impl FileModuleResolver {
-    /// Create a new FileModuleResolver
-    pub fn new(fpath: PathBuf) -> Self {
-        Self { file_path: fpath }
-    }
-}
+pub struct FileModuleResolver;
 
 impl ModuleResolver for FileModuleResolver {
     /// Resolve a module based on relative string (e.g. test/node.nbl)
-    fn find_target(&self, path_str: &str) -> Result<PathBuf> {
+    fn find_target(&self, current_file: Option<PathBuf>, path_str: &str) -> Result<PathBuf> {
         // Determine the base directory
-        // If file_path is "main.nbl", parent() might be empty, so we default to "."
-        let current_dir = self
-            .file_path
-            .parent()
-            .filter(|p| !p.as_os_str().is_empty())
-            .unwrap_or_else(|| Path::new("."));
+        /* 
+         * We should always get the base directory based on the relative path of the 
+         * current file where the import takes place.
+         * If parent() is empty, so we default to "."
+         */
+        let relative_dir = Path::new(".");
+        let current_dir = current_file
+            .as_deref()
+            .and_then(|cf| {
+                cf.parent().filter(|p| !p.as_os_str().is_empty())
+            })
+            .unwrap_or(relative_dir);
 
         // Join and attempt to resolve the absolute path
         let full_path = current_dir.join(path_str);
