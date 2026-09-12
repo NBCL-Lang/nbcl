@@ -4,6 +4,7 @@ use crate::error::{NbclError, Result, Span};
 use crate::parser::Rule;
 use pest::iterators::Pair;
 use std::sync::atomic::{AtomicU64, Ordering};
+use std::cell::Cell;
 
 pub fn build_stmt(pair: Pair<Rule>) -> Result<Stmt> {
     let inner = match pair.as_rule() {
@@ -502,10 +503,18 @@ fn build_match_arm(pair: Pair<Rule>) -> Result<MatchArm> {
     Ok(MatchArm { pattern, body, is_var })
 }
 
+thread_local! {
+    pub static LAMBDA_GUARD: Cell<bool> = Cell::new(true);
+}
+
 pub fn generate_anon_fn_name() -> String {
     static COUNTER: AtomicU64 = AtomicU64::new(0);
     let id = COUNTER.fetch_add(1, Ordering::Relaxed);
-    format!("<lambda:{}>", id)
+    if LAMBDA_GUARD.get() {
+        format!("<nbcl:anon:lambda>:{}", id)
+    } else {
+        format!("nbclanonlambda{}", id)
+    }
 }
 
 fn build_lambda(pair: Pair<Rule>) -> Result<ExprKind> {

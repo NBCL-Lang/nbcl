@@ -204,6 +204,11 @@ impl NbclEngine {
         self.max_depth = max_depth;
     }
 
+    /// Remove lambda guard that adds illegal characters to the name to prevent use in NBCL.
+    pub fn set_lambda_guard(&self, state: bool) {
+        crate::builder::expr::LAMBDA_GUARD.set(state);
+    }
+
     /// Call an Nbcl function (including lambdas)
     pub fn call_function(&self, name: &str, args: Vec<Value>, ctx: &EvalContext) -> Result<Value> {
         let mut evaluator = ctx.0.clone();
