@@ -19,8 +19,8 @@ file = {
 }
 
 top_level_item = {
-    import_stmt
-  | import_lib_stmt
+    import_lib_stmt
+  | import_stmt
   | component_def
   | fn_def
   | node_invocation   // e.g. Window "name" { ... }  at the top level
@@ -41,7 +41,7 @@ import_stmt     = {
   ~ snake_ident
   ~ import_layout_block?
 }
-import_lib_stmt = { "import" ~ !ASCII_ALPHANUMERIC ~ snake_ident ~ dot ~ snake_ident }
+import_lib_stmt = { "import" ~ snake_ident ~ dot ~ snake_ident }
 
 // === Identifiers ===
 //
